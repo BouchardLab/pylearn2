@@ -28,12 +28,13 @@
                              #irange: %(irange)f,
                              #max_kernel_norm: %(max_ker_norm)f,
                              #}, 
-                             !obj:pylearn2.models.mlp.RectifiedLinear {
-                             layer_name: 'h2',
-                             dim: 100,
-                             istdev: %(istdev)f,
-                             max_col_norm: %(max_col_norm)f,
-               }, !obj:pylearn2.models.mlp.Softmax {
+                             #!obj:pylearn2.models.mlp.RectifiedLinear {
+                             #layer_name: 'h2',
+                             #dim: 100,
+                             #istdev: %(istdev)f,
+                             #max_col_norm: %(max_col_norm)f,
+                             #}, 
+               !obj:pylearn2.models.mlp.Softmax {
                      layer_name: 'y',
                      n_classes: 57,
                      istdev: %(ystd)f,
@@ -61,7 +62,7 @@
         monitor_iteration_mode: 'random_uniform',
         monitoring_costs: {'no_dropout': !obj:pylearn2.costs.mlp.Default {}, },
         cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
-                 [1., !obj:pylearn2.costs.mlp.dropout.Dropout {} ],
+                 [1., !obj:pylearn2.costs.mlp.Default {} ],
             ]
         },
         learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {
