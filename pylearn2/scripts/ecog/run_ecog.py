@@ -3,23 +3,24 @@ import numpy as np
 with open('ecog.yaml', 'rb') as f:
     train = f.read()
     
-init_alpha = .01
-dim = 32*258
-targets = 57
+init_alpha = .1
+dim = 784
 
-L0 = 1000
-L1 = 500
-max_col_norm = .9
-L0_std = np.sqrt(init_alpha/(dim+L0))
-L1_std = np.sqrt(init_alpha/(L0+L1))
-y_std = np.sqrt(init_alpha/(L1+targets))
+chan_0 = 32
+chan_1 = 32
+max_col_norm = .863105108422
+max_ker_norm = max_col_norm
+irange = .1
+istdev = .1
+ystd = .1
 
-params = {'L0': L0,
-          'L1': L1,
+params = {'chan_0': chan_0,
+          'chan_1': chan_1,
           'max_col_norm': max_col_norm,
-          'L0_std': L0_std,
-          'L1_std': L1_std,
-          'y_std': y_std,
+          'max_ker_norm': max_ker_norm,
+          'irange': irange,
+          'istdev': istdev,
+          'ystd': ystd,
           }
 train = train % params
 print train

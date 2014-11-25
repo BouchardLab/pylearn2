@@ -82,7 +82,7 @@
     extensions: [
         !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
              channel_name: 'valid_y_misclass',
-             save_path: "ecog_wd.pkl"
+             save_path: "ecog.pkl"
         }
     ]
 }
