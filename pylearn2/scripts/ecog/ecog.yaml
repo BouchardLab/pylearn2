@@ -10,18 +10,29 @@
                          num_channels: 1,
         },
     layers: [ 
-            !obj:pylearn2.models.mlp.RectifiedLinear {
-            layer_name: 'h0',
-            dim: %(L0)i,
-            istdev: %(L0_std)f,
-            max_col_norm: %(max_col_norm)f,
-            }, 
-            !obj:pylearn2.models.mlp.RectifiedLinear {
-            layer_name: 'h1',
-            dim: %(L1)i,
-            istdev: %(L1_std)f,
-            max_col_norm: %(max_col_norm)f,
-            }, 
+    #!obj:pylearn2.models.mlp.ConvRectifiedLinear {
+    #layer_name: 'h0',
+    #output_channels: %(chan_0)i,
+    #kernel_shape: [32, 5],
+    #pool_shape: [1, 3],
+    #pool_stride: [1, 2],
+    #irange: %(irange)f,
+    #max_kernel_norm: %(max_ker_norm)f,
+                             #}, !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+                             #layer_name: 'h1',
+                             #output_channels: %(chan_0)i,
+                             #kernel_shape: [1, 5],
+                             #pool_shape: [1, 3],
+                             #pool_stride: [1, 2],
+                             #irange: %(irange)f,
+                             #max_kernel_norm: %(max_ker_norm)f,
+                             #}, 
+                             #!obj:pylearn2.models.mlp.RectifiedLinear {
+                             #layer_name: 'h2',
+                             #dim: 100,
+                             #istdev: %(istdev)f,
+                             #max_col_norm: %(max_col_norm)f,
+                             #}, 
                !obj:pylearn2.models.mlp.Softmax {
                      layer_name: 'y',
                      n_classes: 57,
@@ -52,15 +63,7 @@
         monitor_iteration_mode: 'sequential',
         monitoring_costs: {'no_dropout': !obj:pylearn2.costs.mlp.Default {}, },
         cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
-                #[1., !obj:pylearn2.costs.mlp.Default {} ],
-                 [1., !obj:pylearn2.costs.mlp.dropout.Dropout {
-                        default_input_include_prob: .6,
-                        default_input_scale: 1.6666667
-                } ],
-                [1., !obj:pylearn2.costs.mlp.WeightDecay {
-                       coeffs: { 'h0': .001, 'h1': .001, 'y': .001 },
-                       },
-                ],
+                 [1., !obj:pylearn2.costs.mlp.Default {} ],
             ]
         },
         learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {
