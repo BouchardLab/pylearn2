@@ -1,0 +1,86 @@
+!obj:pylearn2.train.Train {
+    dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
+        filename: '/home/jesse/Development/data/ecog/filtered.h5',
+        which_set: 'train',
+        frac_train: .5,
+        center: True,
+    },
+    model: !obj:pylearn2.models.mlp.MLP {
+        input_space: !obj:pylearn2.space.Conv2DSpace {
+                         shape: [32,258],
+                         num_channels: 1,
+        },
+        layers: [ !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+                     layer_name: 'h0',
+                     output_channels: %(chan_0)i,
+                     kernel_shape: [32, 5],
+                     pool_shape: [1, 3],
+                     pool_stride: [1, 2],
+                     irange: %(irange)f,
+                     max_kernel_norm: %(max_ker_norm)f,
+                             #}, !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+                             #layer_name: 'h1',
+                             #output_channels: %(chan_0)i,
+                             #kernel_shape: [1, 5],
+                             #pool_shape: [1, 3],
+                             #pool_stride: [1, 2],
+                             #irange: %(irange)f,
+                             #max_kernel_norm: %(max_ker_norm)f,
+                             #}, !obj:pylearn2.models.mlp.RectifiedLinear {
+                             #layer_name: 'h2',
+                             #dim: 60,
+                             #istdev: %(istdev)f,
+                             #max_col_norm: %(max_col_norm)f,
+               }, !obj:pylearn2.models.mlp.Softmax {
+                     layer_name: 'y',
+                     n_classes: 57,
+                     istdev: %(ystd)f,
+                     max_col_norm: %(max_col_norm)f,
+                     }
+                ],
+    },
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+        batch_size: 75,
+        learning_rate: .000000001,
+        train_iteration_mode: 'random_uniform',
+        batches_per_iter: 50,
+        monitoring_dataset:
+            {
+                'train' : *train,
+                'valid' : !obj:pylearn2.datasets.ecog.ECoG {
+                                filename: '/home/jesse/Development/data/ecog/filtered.h5',
+                                which_set: 'valid',
+                                frac_train: .5,
+                                center: True,
+                          },
+            },
+        monitoring_batches: 20,
+        monitoring_batch_size: 50,
+        monitor_iteration_mode: 'random_uniform',
+        cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
+                 [1., !obj:pylearn2.costs.mlp.Default {}],
+            ]
+        },
+        learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {
+                decay: .99
+        },
+        termination_criterion: !obj:pylearn2.termination_criteria.And {
+            criteria: [
+                !obj:pylearn2.termination_criteria.MonitorBased {
+                    channel_name: "valid_y_misclass",
+                    prop_decrease: .95,
+                    N: 10000000
+                },
+                !obj:pylearn2.termination_criteria.EpochCounter {
+                    max_epochs: 200
+                }
+            ]
+        }
+    },
+    extensions: [
+        !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
+             channel_name: 'valid_y_misclass',
+             save_path: "ecog.pkl"
+        }
+    ]
+}
