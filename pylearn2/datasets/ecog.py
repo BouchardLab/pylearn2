@@ -14,6 +14,10 @@ from pylearn2.utils import serial
 from pylearn2.utils.rng import make_np_rng
 
 
+_split = {'train': .8, 'valid': .1, 'test': .1, 'move': .2}
+assert np.allclose(_split['train']+__split['valid']+split['test'],1.)
+assert np.allclose(_split['valid']+_split['test'], _split['move'])
+
 class ECoG(dense_design_matrix.DenseDesignMatrix):
     """
     ECoG dataset
@@ -30,7 +34,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         If True, preprocess so that data has zero mean.
     """
 
-    def __init__(self, filename, which_set, frac_train, center=False):
+    def __init__(self, filename, which_set, fold=0, seed=20141210, center=False):
         self.args = locals()
 
         if which_set not in ['train', 'valid']:
@@ -40,9 +44,11 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         with h5py.File(filename,'r') as f:
             X = f['X'].value
             y = f['y'].value
-        rng = make_np_rng()
+        rng = make_np_rng(seed)
         n_examples = X.shape[0]
         order = rng.permutation(n_examples)
+        train_start = fold*n_examples*(1.-_split['train'])
+
         n_train = int(n_examples*frac_train)
         X_train = X[order[:n_train]]
         X_valid = X[order[n_train:]]
@@ -74,4 +80,16 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         args.update(self.args)
         del args['self']
         args['which_set'] = 'valid'
+        return ECoG(**args)
+
+    def get_test_set(self):
+        """
+        .. todo::
+
+            WRITEME
+        """
+        args = {}
+        args.update(self.args)
+        del args['self']
+        args['which_set'] = 'test'
         return ECoG(**args)
