@@ -15,7 +15,7 @@ from pylearn2.utils.rng import make_np_rng
 
 
 _split = {'train': .8, 'valid': .1, 'test': .1, 'move': .2}
-assert np.allclose(_split['train']+__split['valid']+split['test'],1.)
+assert np.allclose(_split['train']+_split['valid']+_split['test'],1.)
 assert np.allclose(_split['valid']+_split['test'], _split['move'])
 
 class ECoG(dense_design_matrix.DenseDesignMatrix):
@@ -34,34 +34,69 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         If True, preprocess so that data has zero mean.
     """
 
-    def __init__(self, filename, which_set, fold=0, seed=20141210, center=False):
+    def __init__(self, filename, which_set,
+                 fold=0, seed=20141210, center=False, normalize=False):
         self.args = locals()
 
-        if which_set not in ['train', 'valid']:
+        if which_set not in ['train', 'valid', 'test']:
             raise ValueError(
                 'Unrecognized which_set value "%s".' % (which_set,) +
-                '". Valid values are ["train","valid"].')
+                '". Valid values are ["train","valid","test"].')
         with h5py.File(filename,'r') as f:
             X = f['X'].value
             y = f['y'].value
-        rng = make_np_rng(seed)
+            
+        rng = np.random.RandomState(seed)
         n_examples = X.shape[0]
         order = rng.permutation(n_examples)
-        train_start = fold*n_examples*(1.-_split['train'])
 
-        n_train = int(n_examples*frac_train)
-        X_train = X[order[:n_train]]
-        X_valid = X[order[n_train:]]
-        y_train = y[order[:n_train]]
-        y_valid = y[order[n_train:]]
+        n_train = int(n_examples*_split['train'])
+        n_valid = int(n_examples*_split['valid'])
+        n_test = n_examples-n_train-n_valid
+
+        train_start = fold*n_examples*_split['move']
+        train_end = (train_start+n_train) % n_examples
+        valid_start = train_end
+        valid_end = (valid_start+n_valid) % n_examples
+        test_start = valid_end
+        test_end = (test_start+n_test) % n_examples
+
+        if train_end > train_start:
+            train_idx = order[train_start:train_end]
+        else:
+            train_idx = np.hstack((order[train_start:],order[:train_end]))
+        if valid_end > valid_start:
+            valid_idx = order[valid_start:valid_end]
+        else:
+            valid_idx = np.hstack((order[valid_start:],order[:valid_end]))
+        if test_end > test_start:
+            test_idx = order[test_start:test_end]
+        else:
+            test_idx = np.hstack((order[test_start:],order[:test_end]))
+
+        X_train = X[train_idx]
+        X_valid = X[valid_idx]
+        X_test = X[test_idx]
+        y_train = y[train_idx]
+        y_valid = y[valid_idx]
+        y_test = y[test_idx]
+
+        self.train_mean = X_train[...,np.newaxis].mean(0)
+        self.train_std = X_train[...,np.newaxis].std(0)
+
         if which_set == 'train':
             topo_view = X_train[...,np.newaxis]
             y_final = y_train
-        else:
+        elif which_set == 'valid':
             topo_view = X_valid[...,np.newaxis]
             y_final = y_valid
+        else:
+            topo_view = X_test[...,np.newaxis]
+            y_final = y_test
         if center:
-            topo_view = topo_view-X_train[...,np.newaxis].mean(0)
+            topo_view = topo_view-self.train_mean
+        if normalize:
+            topo_view = topo_view/self.train_std
 
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
                                     y=y_final.astype('float32'),

@@ -10,16 +10,34 @@
                          num_channels: 1,
         },
     layers: [ 
-            !obj:pylearn2.models.mlp.RectifiedLinear {
+            !obj:pylearn2.models.mlp.ConvRectifiedLinear {
             layer_name: 'h0',
-            dim: %(L0)i,
-            istdev: %(L0_std)f,
+            output_channels: %(chan_0)i,
+            kernel_shape: [32, 10],
+            pool_shape: [1, 1],
+            pool_stride: [1, 1],
+            irange: %(irange)f,
+            max_kernel_norm: %(max_ker_norm)f,
+            }, 
+            #!obj:pylearn2.models.mlp.ConvRectifiedLinear {
+            #layer_name: 'h1',
+            #output_channels: %(chan_0)i,
+            #kernel_shape: [1, 5],
+            #pool_shape: [1, 3],
+            #pool_stride: [1, 2],
+            #irange: %(irange)f,
+            #max_kernel_norm: %(max_ker_norm)f,
+            #}, 
+            !obj:pylearn2.models.mlp.RectifiedLinear {
+            layer_name: 'f0',
+            dim: %(f0)i,
+            istdev: %(f0_std)f,
             max_col_norm: %(max_col_norm)f,
             }, 
             !obj:pylearn2.models.mlp.RectifiedLinear {
-            layer_name: 'h1',
-            dim: %(L1)i,
-            istdev: %(L1_std)f,
+            layer_name: 'f1',
+            dim: %(f1)i,
+            istdev: %(f1_std)f,
             max_col_norm: %(max_col_norm)f,
             }, 
                !obj:pylearn2.models.mlp.Softmax {
@@ -55,10 +73,10 @@
                 #[1., !obj:pylearn2.costs.mlp.Default {} ],
                  [1., !obj:pylearn2.costs.mlp.dropout.Dropout {
                         default_input_include_prob: .6,
-                        default_input_scale: 1.6666667
+                        default_input_scale: 1.66666667,
                 } ],
                 [1., !obj:pylearn2.costs.mlp.WeightDecay {
-                       coeffs: { 'h0': .001, 'h1': .001, 'y': .001 },
+                       coeffs: { 'h0': .001, 'f0': .001, 'f1': .001, 'y': .001 }
                        },
                 ],
             ]
@@ -82,7 +100,7 @@
     extensions: [
         !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
              channel_name: 'valid_y_misclass',
-             save_path: "ecog_wd.pkl"
+             save_path: "conv_ecog_wd.pkl"
         }
     ]
 }
