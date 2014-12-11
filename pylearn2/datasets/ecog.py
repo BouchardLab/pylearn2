@@ -33,7 +33,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     center : bool
         If True, preprocess so that data has zero mean.
     """
-
     def __init__(self, filename, which_set,
                  fold=0, seed=20141210, center=False, normalize=False):
         self.args = locals()
