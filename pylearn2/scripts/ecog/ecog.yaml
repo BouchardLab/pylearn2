@@ -3,6 +3,7 @@
         filename: '/home/jesse/Development/data/ecog/filtered.h5',
         which_set: 'train',
         center: True,
+        fold: %(fold)i,
     },
     model: !obj:pylearn2.models.mlp.MLP {
         input_space: !obj:pylearn2.space.Conv2DSpace {
@@ -60,11 +61,13 @@
                                 filename: '/home/jesse/Development/data/ecog/filtered.h5',
                                 which_set: 'valid',
                                 center: True,
+                                fold: %(fold)i,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '/home/jesse/Development/data/ecog/filtered.h5',
                                 which_set: 'test',
                                 center: True,
+                                fold: %(fold)i,
                           },
             },
         monitoring_batch_size: 50,
@@ -72,7 +75,14 @@
         monitoring_costs: {'no_dropout': !obj:pylearn2.costs.mlp.Default {}, },
         cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
                 #[1., !obj:pylearn2.costs.mlp.Default {} ],
-                 [1., !obj:pylearn2.costs.mlp.dropout.Dropout {} ],
+                 [1., !obj:pylearn2.costs.mlp.dropout.Dropout {
+                        default_input_include_prob: .6,
+                        default_input_scale: 1.6666667
+                } ],
+                [1., !obj:pylearn2.costs.mlp.WeightDecay {
+                       coeffs: { 'h0': .0001, 'h1': .0001, 'y': .0001 },
+                       },
+                ],
             ]
         },
         learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {
@@ -94,7 +104,7 @@
     extensions: [
         !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
              channel_name: 'valid_y_misclass',
-             save_path: "ecog.pkl"
+             save_path: %(filename)s,
         }
     ]
 }
