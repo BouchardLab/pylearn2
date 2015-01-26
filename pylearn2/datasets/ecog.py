@@ -28,8 +28,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         Filename for data.
     which_set : str
         'train' or 'valid'
-    frac_train : float
-        Fraction of data for training. Remaining data is for validation.
+    fold : int
+        Which fold to use.
     center : bool
         If True, preprocess so that data has zero mean.
     """

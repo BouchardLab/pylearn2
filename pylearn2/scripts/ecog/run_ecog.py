@@ -6,7 +6,7 @@ with open('ecog.yaml', 'rb') as f:
     
 fold = int(sys.argv[1])
 print 'fold: '+str(fold)
-filename = 'ecog_85_f'+str(fold)+'.pkl'
+filename = 'ecog_85_aug_f'+str(fold)+'.pkl'
 init_alpha = .01
 dim = 784
 
