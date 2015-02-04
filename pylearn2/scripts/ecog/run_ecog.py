@@ -6,11 +6,11 @@ with open('ecog.yaml', 'rb') as f:
     
 fold = int(sys.argv[1])
 print 'fold: '+str(fold)
-filename = 'ecog_85_aug_f'+str(fold)+'.pkl'
+filename = 'ecog_85_mean_reg_f'+str(fold)+'.pkl'
 init_alpha = .01
 dim = 784
 
-L0 = 100
+L0 = 150
 L1 = 100
 max_col_norm = .9
 L0_std = np.sqrt(init_alpha/(dim+L0))

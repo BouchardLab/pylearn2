@@ -42,6 +42,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             raise ValueError(
                 'Unrecognized which_set value "%s".' % (which_set,) +
                 '". Valid values are ["train","valid","test"].')
+        filename = serial.preprocess(filename)
         with h5py.File(filename,'r') as f:
             X = f['X'].value
             y = f['y'].value
@@ -81,24 +82,22 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         y_valid = y[valid_idx]
         y_test = y[test_idx]
 
-        self.train_mean = X_train[...,np.newaxis].mean(0)
-        self.train_std = X_train[...,np.newaxis].std(0)
+        self.train_mean = X_train.mean(0)
+        self.train_std = X_train.std(0)
 
         if which_set == 'train':
-            topo_view = X_train[...,np.newaxis]
+            topo_view = X_train
             y_final = y_train
         elif which_set == 'valid':
-            topo_view = X_valid[...,np.newaxis]
+            topo_view = X_valid
             y_final = y_valid
         else:
-            topo_view = X_test[...,np.newaxis]
+            topo_view = X_test
             y_final = y_test
         if center:
-            topo_view = topo_view-self.train_mean
+            topo_view = topo_view-self.train_mean[np.newaxis,...]
         if normalize:
-            topo_view = topo_view/self.train_std
-
-        topo_view = np.transpose(topo_view, axes=(0,3,2,1))
+            topo_view = topo_view/self.train_std[np.newaxis,...]
 
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
                                     y=y_final.astype('float32'),
