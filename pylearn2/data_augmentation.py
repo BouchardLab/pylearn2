@@ -6,7 +6,7 @@ from scipy.ndimage.interpolation import rotate, shift, zoom
 
 class DataAugmentation(Block):
 
-    def __init__(self, space, seed=20150111, spline_order=0, cval=0.):
+    def __init__(self, space, seed=20150111, spline_order=1, cval=0.):
         self.rng = make_np_rng(np.random.RandomState(seed),
                                which_method=['rand', 'randint'])
         assert isinstance(space, Conv2DSpace)

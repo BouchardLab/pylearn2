@@ -6,14 +6,14 @@ with open('conv_ecog.yaml', 'rb') as f:
     
 fold = int(sys.argv[1])
 print 'fold: '+str(fold)
-filename = 'ecog_85_conv_f'+str(fold)+'.pkl'
+filename = 'ecog_85_conv_mean_f'+str(fold)+'.pkl'
 init_alpha = .01
 dim = 32*258
 targets = 57
 
 chan_0 = 24
-chan_1 = 24
-chan_2 = 24
+chan_1 = 32
+chan_2 = 64
 max_col_norm = .863105108422
 max_ker_norm = max_col_norm
 irange = .0001

@@ -575,6 +575,10 @@ class RandomSliceSubsetIterator(RandomUniformSubsetIterator):
     stochastic = True
     uniform_batch_size = True
 
+    @property
+    def uneven(self):
+        return False
+
 
 class BatchwiseShuffledSequentialIterator(SequentialSubsetIterator):
     """
