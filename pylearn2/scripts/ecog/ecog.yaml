@@ -11,11 +11,11 @@
                     num_channels: 85,
                     },
             layers: [ 
-                    !obj:pylearn2.models.maxout.Maxout {
+                    !obj:pylearn2.models.mlp.Tanh {
                     layer_name: 'h0',
-                    num_units: 150,
-                    num_pieces: 2,
-                    #dim: %(L0)i,
+                    #num_units: 150,
+                    #num_pieces: 2,
+                    dim: %(L0)i,
                     irange: .005,
                     #max_col_norm: %(max_col_norm)f,
                     }, 
@@ -84,7 +84,7 @@
                     N: 100
                 },
                 !obj:pylearn2.termination_criteria.EpochCounter {
-                    max_epochs: 300
+                    max_epochs: 200
                 }
             ]
         }
@@ -96,8 +96,8 @@
         },
     !obj:pylearn2.training_algorithms.learning_rule.MomentumAdjustor {
         start: 1,
-        saturate: 20,
-        final_momentum: .8
+        saturate: 40,
+        final_momentum: .95
         }
     ]
 }
