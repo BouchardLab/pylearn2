@@ -16,8 +16,8 @@
                     #num_units: 150,
                     #num_pieces: 2,
                     dim: %(L0)i,
-                    irange: .005,
-                    #max_col_norm: %(max_col_norm)f,
+                    istdev: .005,
+                    max_col_norm: %(max_col_norm)f,
                     }, 
                     #!obj:pylearn2.models.mlp.RectifiedLinear {
                     #layer_name: 'h1',
@@ -29,7 +29,7 @@
                              layer_name: 'y',
                              n_classes: 57,
                              istdev: %(y_std)f,
-                             #max_col_norm: %(max_col_norm)f,
+                             max_col_norm: %(max_col_norm)f,
                              }
                         ],
     },
@@ -96,8 +96,8 @@
         },
     !obj:pylearn2.training_algorithms.learning_rule.MomentumAdjustor {
         start: 1,
-        saturate: 40,
-        final_momentum: .95
+        saturate: 20,
+        final_momentum: .9
         }
     ]
 }
