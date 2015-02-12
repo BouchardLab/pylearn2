@@ -2,7 +2,7 @@
     dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             filename: '${PYLEARN2_DATA_PATH}/ecog/filtered_85.h5',
             which_set: 'train',
-            center: False,
+            center: True,
             fold: %(fold)i,
     },
     model: !obj:pylearn2.models.mlp.MLP {
@@ -43,13 +43,13 @@
                 'valid' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/filtered_85.h5',
                                 which_set: 'valid',
-                                center: False,
+                                center: True,
                                 fold: %(fold)i,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/filtered_85.h5',
                                 which_set: 'test',
-                                center: False,
+                                center: True,
                                 fold: %(fold)i,
                           },
             },
@@ -81,7 +81,7 @@
                 !obj:pylearn2.termination_criteria.MonitorBased {
                     channel_name: "valid_y_misclass",
                     prop_decrease: 0.,
-                    N: 100
+                    N: 25
                 },
                 !obj:pylearn2.termination_criteria.EpochCounter {
                     max_epochs: 200
