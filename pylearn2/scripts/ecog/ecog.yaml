@@ -11,14 +11,14 @@
                     num_channels: 85,
                     },
             layers: [ 
-                    !obj:pylearn2.models.mlp.Tanh {
-                    layer_name: 'h0',
+                    #!obj:pylearn2.models.mlp.Tanh {
+                    #layer_name: 'h0',
                     #num_units: 150,
                     #num_pieces: 2,
-                    dim: %(L0)i,
-                    istdev: .005,
-                    max_col_norm: %(max_col_norm)f,
-                    }, 
+                    #dim: %(L0)i,
+                    #istdev: .005,
+                    #max_col_norm: %(max_col_norm)f,
+                    #}, 
                     #!obj:pylearn2.models.mlp.RectifiedLinear {
                     #layer_name: 'h1',
                     #dim: %(L1)i,
@@ -28,8 +28,9 @@
                        !obj:pylearn2.models.mlp.Softmax {
                              layer_name: 'y',
                              n_classes: 57,
-                             istdev: %(y_std)f,
-                             max_col_norm: %(max_col_norm)f,
+                             #istdev: %(y_std)f,
+                             istdev: 0.
+                             #max_col_norm: %(max_col_norm)f,
                              }
                         ],
     },
@@ -59,8 +60,8 @@
         cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
                 #[1., !obj:pylearn2.costs.mlp.Default {} ],
                  [1., !obj:pylearn2.costs.mlp.dropout.Dropout {
-                         input_include_probs: { 'h0': .8 },
-                         input_scales: { 'h0': 1.25}
+                         input_include_probs: { 'y': .8 },
+                         input_scales: { 'y': 1.25}
                          } ],
                 [1., !obj:pylearn2.costs.mlp.WeightDecay {
                        coeffs: { 'h0': .00001, 'h1': .00001, 'y': .00001 },
