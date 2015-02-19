@@ -378,3 +378,18 @@ def compute_f1(precision, recall):
     f1 = (2. * precision * recall /
           T.maximum(1, precision + recall))
     return f1
+
+def HingeL2(Y, Y_hat):
+    a = 1.-Y*Y_hat
+    a = T.switch(a>0., a, 0.)
+    return (.5*T.sqr(a)).mean(0).sum()
+
+def HingeL1(Y, Y_hat):
+    a = 1.-Y*Y_hat
+    a = T.switch(a>0., a, 0.)
+    return a.mean(0).sum()
+
+def Misclass(Y, Y_hat):
+    return T.neq(T.argmax(Y, axis=1),
+                 T.argmax(Y_hat, axis=1)
+                 ).astype(theano.config.floatX).mean()
