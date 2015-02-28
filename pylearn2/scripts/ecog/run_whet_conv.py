@@ -6,18 +6,21 @@ from pylearn2.utils import serial
 import numpy as np
 import whetlab
 
+
 print 'Imports done...'
 
-in_dim = 258*85
+in_shape = [1,258]
+in_channels = 85
 out_dim = 57
 min_dim = 2
 max_dim = 1000
 n_folds = 1
 exp_name = 'first_run'
 description='First run of for FC nets on ecog.'
-scratch = "exps"
+scratch = "/scratch1/scratchdirs/jlivezey"
 
-parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
+parameters = {'conv_layers': {'min': 1, 'max': 4, 'type': 'int'},
+	      'fc_layers': {'min': 0, 'max': 4, 'type': 'int'},
 	      'dim_0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_shrink': {'min': 0., 'max': 1., 'type': 'float'},
 	      'batch_size': {'min': 15, 'max': 128, 'type': 'int'},
@@ -67,14 +70,16 @@ with open('access_token.txt', 'r') as f:
 
 start = time.time()
 
+"""
 scientist = whetlab.Experiment(name=exp_name,
                                description=description,
                                parameters=parameters,
                                outcome=outcome,
                                access_token=access_token)
+                               """
 print 'Scientist created...'
 
-with open('ecog_nersc.yaml', 'rb') as f:
+with open('ecog/ecog_nersc.yaml', 'rb') as f:
     train_string = f.read()
 
 def get_final_val(fname, key):
@@ -146,12 +151,12 @@ def make_last_layer_and_cost(out_dim, **kwargs):
     return out_layer_string, out_cost_string
 
 
+"""
 job = scientist.suggest()
 job_id = scientist.get_id(job)
 """
 job = test_parameters
 job_id = 0
-"""
 
 
 valid_accuracy = np.zeros(n_folds)
@@ -188,6 +193,8 @@ for fold in xrange(n_folds):
     print 'valid: ',valid_accuracy[fold]
     print 'test: ',test_accuracy[fold]
 
+"""
 scientist.update(job, accuracy.mean())
+"""
 print 'Total time in seconds'
 print time.time()-start
