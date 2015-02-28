@@ -13,21 +13,20 @@ in_dim = 258*85
 out_dim = 57
 min_dim = 2
 max_dim = 1000
-n_folds = 1
-exp_name = 'first_run'
-description='First run of for FC nets on ecog.'
+n_folds = 10
+exp_name = 'fc_run'
+description='FC nets on ecog.'
 scratch = "exps"
+test = False
 
-parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
+parameters = {'n_layers': {'min': 1, 'max': 2, 'type': 'int'},
 	      'dim_0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_shrink': {'min': 0., 'max': 1., 'type': 'float'},
 	      'batch_size': {'min': 15, 'max': 128, 'type': 'int'},
 	      'layer_type': {'options': ['RectifiedLinear', 'Tanh', 'Sigmoid'], 'type': 'enum'},
-	      'center': {'options': ['True', 'False'], 'type': 'enum'},
 	      'cost_type': {'options': ['xent', 'h1', 'h2'], 'type': 'enum'},
-	      'init_type': {'options': ['irange', 'istdev'], 'type': 'enum'},
 	      'log_irange': {'min': -5., 'max': 0., 'type': 'float'},
-	      'log_lr': {'min': -5., 'max': 0., 'type': 'float'},
+	      'log_lr': {'min': -3., 'max': -1., 'type': 'float'},
 	      'mom_sat': {'min': 1, 'max': 50, 'type': 'int'},
 	      'final_mom': {'min': .5, 'max': 1., 'type': 'float'},
 	      'input_dropout': {'min': .3, 'max': 1., 'type': 'float'},
@@ -36,6 +35,10 @@ parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
 	      'default_input_scale': {'min': 1., 'max': 3., 'type': 'float'},
 	      'log_weight_decay': {'min': -7., 'max': 0., 'type': 'float'},
 	      'max_col_norm': {'min': 0., 'max': 3., 'type': 'float'}}
+
+
+fixed_parameters = {'center': True,
+                    'init_type': 'istdev'}
 
 test_parameters = {'n_layers': 1,
                   'dim_0':150,
@@ -68,11 +71,12 @@ with open('access_token.txt', 'r') as f:
 
 start = time.time()
 
-scientist = whetlab.Experiment(name=exp_name,
-                               description=description,
-                               parameters=parameters,
-                               outcome=outcome,
-                               access_token=access_token)
+if not test:
+    scientist = whetlab.Experiment(name=exp_name,
+                                   description=description,
+                                   parameters=parameters,
+                                   outcome=outcome,
+                                   access_token=access_token)
 print 'Scientist created...'
 
 with open(os.path.join(script_folder,'ecog_nersc.yaml'), 'rb') as f:
@@ -147,12 +151,13 @@ def make_last_layer_and_cost(out_dim, **kwargs):
     return out_layer_string, out_cost_string
 
 
-job = scientist.suggest()
-job_id = scientist.get_id(job)
-"""
-job = test_parameters
-job_id = 0
-"""
+if test:
+    job = test_parameters
+    job_id = 0
+else:
+    job = scientist.suggest()
+    job_id = scientist.get_id(job)
+    job.update(fixed_parameters)
 
 
 valid_accuracy = np.zeros(n_folds)
@@ -189,6 +194,7 @@ for fold in xrange(n_folds):
     print 'valid: ',valid_accuracy[fold]
     print 'test: ',test_accuracy[fold]
 
-scientist.update(job, valid_accuracy.mean())
+if not test:
+    scientist.update(job, valid_accuracy.mean())
 print 'Total time in seconds'
 print time.time()-start

@@ -14,9 +14,8 @@ from pylearn2.utils import serial
 from pylearn2.utils.rng import make_np_rng
 
 
-_split = {'train': .8, 'valid': .1, 'test': .1, 'move': .2}
+_split = {'train': .8, 'valid': .1, 'test': .1, 'move': .1}
 assert np.allclose(_split['train']+_split['valid']+_split['test'],1.)
-assert np.allclose(_split['valid']+_split['test'], _split['move'])
 
 class ECoG(dense_design_matrix.DenseDesignMatrix):
     """
