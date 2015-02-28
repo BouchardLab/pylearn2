@@ -56,7 +56,7 @@ test_parameters = {'n_layers': 1,
                   'max_col_norm': 2.}
 
 cost_type_map = {}
-cost_type_map['xent'] = 'dropout.Dropout'
+cost_type_map['xent'] = 'mlp.dropout.Dropout'
 cost_type_map['h1'] = 'hinge_loss.DropoutHingeLossL1'
 cost_type_map['h2'] = 'hinge_loss.DropoutHingeLossL2'
 
@@ -109,7 +109,7 @@ def make_last_layer_and_cost(out_dim, **kwargs):
                     +"},\n")
     cost_string = ("!obj:pylearn2.costs.cost.SumOfCosts {\n"
                    +"costs: [\n"
-                   +"!obj:pylearn2.costs.mlp.%(cost_obj)s {\n"
+                   +"!obj:pylearn2.costs.%(cost_obj)s {\n"
                    +"default_input_include_prob: %(default_input_include_prob)f,\n"
                    +"default_input_scale: %(default_input_scale)f,\n"
                    +"input_include_probs: { 'h0': %(input_dropout)f },\n"
