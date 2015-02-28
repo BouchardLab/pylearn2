@@ -99,8 +99,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         if normalize:
             topo_view = topo_view/self.train_std[np.newaxis,...]
 
-        y_final = 2.*y_final-1.
-
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
                                     y=y_final.astype('float32'),
                                     axes=('b',0,1,'c'))
