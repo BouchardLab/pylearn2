@@ -8,6 +8,7 @@ import whetlab
 
 print 'Imports done...'
 
+script_folder = '.'
 in_dim = 258*85
 out_dim = 57
 min_dim = 2
@@ -74,7 +75,7 @@ scientist = whetlab.Experiment(name=exp_name,
                                access_token=access_token)
 print 'Scientist created...'
 
-with open('ecog_nersc.yaml', 'rb') as f:
+with open(os.path.join(script_folder,'ecog_nersc.yaml'), 'rb') as f:
     train_string = f.read()
 
 def get_final_val(fname, key):
@@ -188,6 +189,6 @@ for fold in xrange(n_folds):
     print 'valid: ',valid_accuracy[fold]
     print 'test: ',test_accuracy[fold]
 
-scientist.update(job, accuracy.mean())
+scientist.update(job, valid_accuracy.mean())
 print 'Total time in seconds'
 print time.time()-start
