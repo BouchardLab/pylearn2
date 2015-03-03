@@ -6,8 +6,9 @@
             fold: %(fold)i,
     },
     model: !obj:pylearn2.models.mlp.MLP {
-            input_space: !obj:pylearn2.space.VectorSpace {
-                         dim: 21930
+            input_space: !obj:pylearn2.space.Conv2DSpace {
+                    shape: [1, 258],
+                    num_channels: 85,
                     },
             layers: [ 
                      %(layer_string)s
@@ -49,10 +50,10 @@
                 !obj:pylearn2.termination_criteria.MonitorBased {
                     channel_name: "valid_y_misclass",
                     prop_decrease: 0.,
-                    N: 10
+                    N: 25
                 },
                 !obj:pylearn2.termination_criteria.EpochCounter {
-                    max_epochs: %(max_epochs)i
+                    max_epochs: 10
                 }
             ]
         }

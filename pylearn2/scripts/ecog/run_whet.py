@@ -14,7 +14,7 @@ out_dim = 57
 min_dim = 2
 max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run'
+exp_name = 'fc_run2'
 description='FC nets on ecog.'
 scratch = "exps"
 test = False
@@ -27,6 +27,9 @@ parameters = {'n_layers': {'min': 1, 'max': 2, 'type': 'int'},
 	      'cost_type': {'options': ['xent', 'h1', 'h2'], 'type': 'enum'},
 	      'log_irange': {'min': -5., 'max': 0., 'type': 'float'},
 	      'log_lr': {'min': -3., 'max': -1., 'type': 'float'},
+	      'log_min_lr': {'min': -5., 'max': -1., 'type': 'float'},
+	      'log_decay_eps': {'min': -5., 'max': -1., 'type': 'float'},
+	      'max_epochs': {'min': 10, 'max': 100, 'type': 'int'},
 	      'mom_sat': {'min': 1, 'max': 50, 'type': 'int'},
 	      'final_mom': {'min': .5, 'max': 1., 'type': 'float'},
 	      'input_dropout': {'min': .3, 'max': 1., 'type': 'float'},
@@ -50,6 +53,9 @@ test_parameters = {'n_layers': 1,
                   'init_type': 'istdev',
                   'log_irange': -3.,
                   'log_lr': -3.,
+                  'log_min_lr': -3.,
+                  'log_decay_eps': -3,
+                  'log_decay_eps': -3.,
                   'mom_sat': 20,
                   'final_mom': .9,
                   'input_dropout': .5,
@@ -121,7 +127,8 @@ def make_last_layer_and_cost(out_dim, **kwargs):
                    +"input_scales: { 'h0': %(input_scale)f },\n"
                    +"},\n"
                    +"!obj:pylearn2.costs.mlp.WeightDecay {\n"
-                   +"coeffs: { 'h0': %(wd)f,\n")
+                   +"coeffs: { 'h0': %(wd)f,\n"
+                   +"'y': %(wd)f,\n")
     wd_string = "%(name)s: %(wd)f,\n"
     end_cost_string = ("},\n"
                        +"},\n"
@@ -170,6 +177,8 @@ ls = make_layers(in_dim, **ins_dict)
 lsf, cs = make_last_layer_and_cost(out_dim, **ins_dict)
 ins_dict['layer_string'] = ls+lsf
 ins_dict['cost_string'] = cs
+ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
+ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
 
 target_folder = os.path.join(scratch,exp_name)
 if not os.path.exists(target_folder):
