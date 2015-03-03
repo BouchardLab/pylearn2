@@ -164,14 +164,12 @@ if test:
 else:
     job = scientist.suggest()
     job_id = scientist.get_id(job)
-    job.update(fixed_parameters)
-
 
 valid_accuracy = np.zeros(n_folds)
 test_accuracy = np.zeros(n_folds)
 train_accuracy = np.zeros(n_folds)
 ins_dict = job.copy()
-ins_dict['lr'] = np.power(10., job['log_lr'])
+ins_dict['lr'] = np.power(10., ins_dict['log_lr'])
 ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
 ls = make_layers(in_dim, **ins_dict)
 lsf, cs = make_last_layer_and_cost(out_dim, **ins_dict)
@@ -179,6 +177,7 @@ ins_dict['layer_string'] = ls+lsf
 ins_dict['cost_string'] = cs
 ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
 ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
+ins_dict.update(fixed_parameters)
 
 target_folder = os.path.join(scratch,exp_name)
 if not os.path.exists(target_folder):
