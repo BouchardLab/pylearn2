@@ -11,18 +11,23 @@ print 'Imports done...'
 script_folder = '.'
 in_dim = 258*85
 out_dim = 57
-min_dim = 2
 max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run2'
-description='FC nets on ecog.'
+exp_name = 'fc_run_aug'
+description='FC nets on augmented ecog.'
 scratch = "exps"
 test = False
+if test:
+    min_dim = 2
+else:
+    min_dim = out_dim
 
-parameters = {'n_layers': {'min': 1, 'max': 2, 'type': 'int'},
+parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
 	      'dim_0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
-	      'dim_shrink': {'min': 0., 'max': 1., 'type': 'float'},
-	      'batch_size': {'min': 15, 'max': 128, 'type': 'int'},
+	      'dim_1': {'min': out_dim, 'max': max_dim, 'type': 'int'},
+	      'dim_2': {'min': out_dim, 'max': max_dim, 'type': 'int'},
+	      'dim_3': {'min': out_dim, 'max': max_dim, 'type': 'int'},
+	      'batch_size': {'min': 15, 'max': 256, 'type': 'int'},
 	      'layer_type': {'options': ['RectifiedLinear', 'Tanh', 'Sigmoid'], 'type': 'enum'},
 	      'cost_type': {'options': ['xent', 'h1', 'h2'], 'type': 'enum'},
 	      'log_irange': {'min': -5., 'max': 0., 'type': 'float'},
@@ -31,7 +36,7 @@ parameters = {'n_layers': {'min': 1, 'max': 2, 'type': 'int'},
 	      'log_decay_eps': {'min': -5., 'max': -1., 'type': 'float'},
 	      'max_epochs': {'min': 10, 'max': 100, 'type': 'int'},
 	      'mom_sat': {'min': 1, 'max': 50, 'type': 'int'},
-	      'final_mom': {'min': .5, 'max': 1., 'type': 'float'},
+	      'log_final_mom_eps': {'min': -2., 'max': -.30102, 'type': 'float'},
 	      'input_dropout': {'min': .3, 'max': 1., 'type': 'float'},
 	      'input_scale': {'min': 1., 'max': 3., 'type': 'float'},
 	      'default_input_include_prob': {'min': .3, 'max': 1., 'type': 'float'},
@@ -41,11 +46,15 @@ parameters = {'n_layers': {'min': 1, 'max': 2, 'type': 'int'},
 
 
 fixed_parameters = {'center': True,
-                    'init_type': 'istdev'}
+                    'init_type': 'istdev',
+                    'train_set': 'augment',
+                    'data_file': 'EC2_CV_85_nobaseline_aug.h5'}
 
-test_parameters = {'n_layers': 1,
-                  'dim_0':150,
-                  'dim_shrink': .5,
+test_parameters = {'n_layers': 4,
+                  'dim_0':min_dim+3,
+                  'dim_1':min_dim+2,
+                  'dim_2':min_dim+1,
+                  'dim_3':min_dim,
                   'batch_size': 20,
                   'layer_type': 'Tanh',
                   'center': False,
@@ -56,8 +65,9 @@ test_parameters = {'n_layers': 1,
                   'log_min_lr': -3.,
                   'log_decay_eps': -3,
                   'log_decay_eps': -3.,
+                  'max_epochs': 2,
                   'mom_sat': 20,
-                  'final_mom': .9,
+                  'log_final_mom_eps': -1.,
                   'input_dropout': .5,
                   'input_scale': 1.8,
                   'default_input_include_prob': .8,
@@ -104,11 +114,10 @@ def make_layers(in_dim, **kwargs):
     dim = int(kwargs['dim_0'])
     for ii in xrange(kwargs['n_layers']):
         this_dict = kwargs.copy()
-        this_dict['dim'] = max(int(math.ceil(dim)), min_dim)
+        this_dict['dim'] = min(max(this_dict['dim_'+str(ii)], min_dim),dim)
         this_dict['name'] = 'h'+str(ii)
         this_dict['range'] = np.power(10., kwargs['log_irange'])
         out_string += layer_string % this_dict
-        dim = dim*kwargs['dim_shrink']
     return out_string
 
 def make_last_layer_and_cost(out_dim, **kwargs):
@@ -178,6 +187,7 @@ ins_dict['layer_string'] = ls+lsf
 ins_dict['cost_string'] = cs
 ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
 ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
+ins_dict['final_mom'] = 1.-np.power(10, ins_dict['log_final_mom_eps'])
 
 target_folder = os.path.join(scratch,exp_name)
 if not os.path.exists(target_folder):
@@ -192,6 +202,7 @@ for fold in xrange(n_folds):
     print train
     train = yaml_parse.load(train)
     train.main_loop()
+    del train
     valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')
     test_accuracy[fold] = get_final_val(ins_dict['filename'], 'test_y_misclass')
     train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
