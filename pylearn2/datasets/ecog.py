@@ -106,18 +106,28 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             y_aug = y_aug.reshape(-1,*y_shape)
             X_aug = np.concatenate((X_train, X_aug))
             y_aug = np.concatenate((y_train, y_aug))
-            X_train = X_aug
-            y_train = y_aug
+            order = rng.permutation(X_aug.shape[0])
+            X_train = X_aug[order]
+            y_train = y_aug[order]
             del X_aug
             del y_aug
 
-        if which_set == 'train' or 'augment':
+        if (which_set == 'train') or (which_set == 'augment'):
+            print 'in train'
+            print which_set
+            print ''
             topo_view = X_train
             y_final = y_train
         elif which_set == 'valid':
+            print 'in valid'
+            print which_set
+            print ''
             topo_view = X_valid
             y_final = y_valid
         else:
+            print 'in test'
+            print which_set
+            print ''
             topo_view = X_test
             y_final = y_test
         if center:

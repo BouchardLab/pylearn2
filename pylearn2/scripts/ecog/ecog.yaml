@@ -1,7 +1,7 @@
 !obj:pylearn2.train.Train {
     dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
-            filename: '${PYLEARN2_DATA_PATH}/ecog/filtered_85.h5',
-            which_set: 'train',
+            filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
+            which_set: 'augment',
             center: True,
             fold: %(fold)i,
     },
@@ -16,20 +16,11 @@
                     #num_pieces: 2,
                     dim: %(L0)i,
                     istdev: .005,
-                    #max_col_norm: %(max_col_norm)f,
                     }, 
-                    #!obj:pylearn2.models.mlp.RectifiedLinear {
-                    #layer_name: 'h1',
-                    #dim: %(L1)i,
-                    #istdev: .005,
-                    ##max_col_norm: %(max_col_norm)f,
-                    #}, 
-                       !obj:pylearn2.models.mlp.Linear {
+                       !obj:pylearn2.models.mlp.Softmax {
                              layer_name: 'y',
-                             dim: 57,
-                             #istdev: %(y_std)f,
-                             istdev: 0.
-                             #max_col_norm: %(max_col_norm)f,
+                             n_classes: 57,
+                             istdev: .005,
                              }
                         ],
     },
@@ -39,15 +30,20 @@
         train_iteration_mode: 'sequential',
         monitoring_dataset:
             {
-                'train' : *train,
+                'train' : !obj:pylearn2.datasets.ecog.ECoG {
+                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
+                                which_set: 'train',
+                                center: True,
+                                fold: %(fold)i,
+                          },
                 'valid' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/filtered_85.h5',
+                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
                                 which_set: 'valid',
                                 center: True,
                                 fold: %(fold)i,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/filtered_85.h5',
+                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
                                 which_set: 'test',
                                 center: True,
                                 fold: %(fold)i,
@@ -58,7 +54,7 @@
         monitoring_costs: {'no_dropout': !obj:pylearn2.costs.mlp.Default {}, },
         cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
                 #[1., !obj:pylearn2.costs.mlp.Default {} ],
-                 [1., !obj:pylearn2.costs.hinge_loss.DropoutHingeLossL1 {
+                 [1., !obj:pylearn2.costs.mlp.dropout.Dropout {
                          input_include_probs: { 'h0': .8 },
                          input_scales: { 'h0': 1.25}
                          } ],
@@ -81,10 +77,10 @@
                 !obj:pylearn2.termination_criteria.MonitorBased {
                     channel_name: "valid_y_misclass",
                     prop_decrease: 0.,
-                    N: 25
+                    N: 10
                 },
                 !obj:pylearn2.termination_criteria.EpochCounter {
-                    max_epochs: 200
+                    max_epochs: 100
                 }
             ]
         }

@@ -6,23 +6,15 @@ with open('ecog.yaml', 'rb') as f:
     
 fold = int(sys.argv[1])
 print 'fold: '+str(fold)
-filename = 'exps/ecog_85_reg_hingel1_f'+str(fold)+'.pkl'
+filename = 'exps/ecog_85_reg_aug_zero_control_f'+str(fold)+'.pkl'
 init_alpha = .01
 dim = 784
 
 L0 = 150
 L1 = 75
 max_col_norm = .9
-L0_std = np.sqrt(init_alpha/(dim+L0))
-L1_std = np.sqrt(init_alpha/(L0+L1))
-y_std = np.sqrt(init_alpha/(L1+targets))
 
-params = {'chan_0': chan_0,
-          'chan_1': chan_1,
-          'max_col_norm': max_col_norm,
-          'L0_std': L0_std,
-          'L1_std': L1_std,
-          'y_std': y_std,
+params = {'L0': L0,
           'fold': fold,
           'filename': filename,
           }
