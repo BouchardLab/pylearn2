@@ -12,13 +12,16 @@ script_folder = '.'
 in_shape = [1, 258]
 in_channels = 85
 out_dim = 57
-min_dim = 2
 max_dim = 1000
 n_folds = 10
 exp_name = 'first_conv_run'
 description='First run of Conv nets on ecog.'
 scratch = "exps"
-test = True
+test = False
+if test:
+    min_dim = 2
+else:
+    min_dim = out_dim
 
 parameters = {'n_conv_layers': {'min': 1, 'max': 4, 'type': 'int'},
               'n_fc_layers': {'min': 0, 'max': 4, 'type': 'int'},
@@ -39,7 +42,9 @@ parameters = {'n_conv_layers': {'min': 1, 'max': 4, 'type': 'int'},
 	      'fc_dim_0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_shrink': {'min': 0., 'max': 1., 'type': 'float'},
 	      'batch_size': {'min': 15, 'max': 128, 'type': 'int'},
+	      'max_epochs': {'min': 10, 'max': 100, 'type': 'int'},
 	      'cost_type': {'options': ['xent', 'h1', 'h2'], 'type': 'enum'},
+	      'fc_layer_type': {'options': ['Linear', 'Tanh', 'Sigmoid'], 'type': 'enum'},
 	      'log_conv_irange': {'min': -5., 'max': 0., 'type': 'float'},
 	      'log_fc_irange': {'min': -5., 'max': 0., 'type': 'float'},
 	      'log_lr': {'min': -5., 'max': -1., 'type': 'float'},
@@ -57,7 +62,8 @@ parameters = {'n_conv_layers': {'min': 1, 'max': 4, 'type': 'int'},
 
 
 fixed_parameters = {'center': True,
-                    'init_type': 'istdev'}
+                    'init_type': 'istdev',
+                    'train_set': 'train'}
 
 test_parameters = {'n_conv_layers': 1,
                    'n_fc_layers': 1,
@@ -78,7 +84,8 @@ test_parameters = {'n_conv_layers': 1,
                   'fc_dim_0': 2,
                   'dim_shrink': .5,
                   'batch_size': 20,
-                  'layer_type': 'Tanh',
+                  'max_epochs': 2,
+                  'fc_layer_type': 'Tanh',
                   'center': False,
                   'cost_type': 'xent',
                   'init_type': 'istdev',
@@ -135,7 +142,7 @@ def make_layers(in_shape, **kwargs):
                     +"irange: %(range)f,\n"
                     +"max_kernel_norm: %(max_col_norm)f,\n"
                     +"},\n")
-    fc_layer_string = ("!obj:pylearn2.models.mlp.%(layer_type)s {\n"
+    fc_layer_string = ("!obj:pylearn2.models.mlp.%(fc_layer_type)s {\n"
                     +"layer_name: %(name)s,\n"
                     +"dim: %(dim)i,\n"
                     +"%(init_type)s: %(range)f,\n"
@@ -160,11 +167,11 @@ def make_layers(in_shape, **kwargs):
     cur_shp = in_shape
     for ii in xrange(kwargs['n_conv_layers']):
         this_dict = kwargs.copy()
-        k_shp = [1,this_dict['conv_0_shp']]
-        p_shp = [1,this_dict['conv_0_pshp']]
-        p_strd = [1,this_dict['conv_0_pstrd']]
+        k_shp = [1,this_dict['conv_'+str(ii)+'_shp']]
+        p_shp = [1,this_dict['conv_'+str(ii)+'_pshp']]
+        p_strd = [1,this_dict['conv_'+str(ii)+'_pstrd']]
         if k_shp[1] >= cur_shp[1]:
-            k_shp[1] = cur_shp
+            k_shp[1] = cur_shp[1]
             p_shp[1] = 1
             p_strd[1] = 1
         print 'pre'
@@ -194,7 +201,7 @@ def make_layers(in_shape, **kwargs):
 
     for ii in xrange(kwargs['n_fc_layers']):
         this_dict = kwargs.copy()
-        this_dict['dim'] = min(max(int(math.ceil(dim)), min_dim), out_dim)
+        this_dict['dim'] = min(max(int(math.ceil(dim)), min_dim), int(kwargs['dim_shrink']*out_dim))
         this_dict['name'] = 'f'+str(ii)
         this_dict['range'] = np.power(10., kwargs['log_fc_irange'])
         dim = dim*kwargs['dim_shrink']
@@ -257,13 +264,13 @@ if test:
 else:
     job = scientist.suggest()
     job_id = scientist.get_id(job)
-    job.update(fixed_parameters)
 
 
 valid_accuracy = np.zeros(n_folds)
 test_accuracy = np.zeros(n_folds)
 train_accuracy = np.zeros(n_folds)
 ins_dict = job.copy()
+ins_dict.update(fixed_parameters)
 ins_dict['lr'] = np.power(10., job['log_lr'])
 ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
 ls = make_layers(in_shape, **ins_dict)
