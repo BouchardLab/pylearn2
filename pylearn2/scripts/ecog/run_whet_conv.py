@@ -14,8 +14,8 @@ in_channels = 85
 out_dim = 57
 max_dim = 1000
 n_folds = 10
-exp_name = 'first_conv_run'
-description='First run of Conv nets on ecog.'
+exp_name = 'conv_run2'
+description='Conv nets on ecog.'
 scratch = "exps"
 test = False
 if test:
@@ -23,8 +23,8 @@ if test:
 else:
     min_dim = out_dim
 
-parameters = {'n_conv_layers': {'min': 1, 'max': 4, 'type': 'int'},
-              'n_fc_layers': {'min': 0, 'max': 4, 'type': 'int'},
+parameters = {'n_conv_layers': {'min': 1, 'max': 2, 'type': 'int'},
+              'n_fc_layers': {'min': 0, 'max': 1, 'type': 'int'},
               'channels_0': {'min': 8, 'max':64, 'type': 'int'},
               'channels_grow': {'min': 1., 'max':8., 'type': 'float'},
               'conv_0_shp': {'min': 3, 'max':50, 'type': 'int'},
@@ -44,10 +44,10 @@ parameters = {'n_conv_layers': {'min': 1, 'max': 4, 'type': 'int'},
 	      'batch_size': {'min': 15, 'max': 128, 'type': 'int'},
 	      'max_epochs': {'min': 10, 'max': 100, 'type': 'int'},
 	      'cost_type': {'options': ['xent', 'h1', 'h2'], 'type': 'enum'},
-	      'fc_layer_type': {'options': ['Linear', 'Tanh', 'Sigmoid'], 'type': 'enum'},
+	      'fc_layer_type': {'options': ['RectifiedLinear', 'Tanh', 'Sigmoid'], 'type': 'enum'},
 	      'log_conv_irange': {'min': -5., 'max': 0., 'type': 'float'},
 	      'log_fc_irange': {'min': -5., 'max': 0., 'type': 'float'},
-	      'log_lr': {'min': -5., 'max': -1., 'type': 'float'},
+	      'log_lr': {'min': -3., 'max': -1.5, 'type': 'float'},
 	      'log_min_lr': {'min': -5., 'max': -3., 'type': 'float'},
 	      'log_decay_eps': {'min': -6., 'max': -3., 'type': 'float'},
 	      'mom_sat': {'min': 1, 'max': 50, 'type': 'int'},
