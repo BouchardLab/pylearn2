@@ -38,8 +38,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
     def __init__(self, filename, which_set,
                  fold=0, seed=20141210, center=False,
-                 move = .1, load_all=None, cache_size=400000000):
+                 move = .1, level_classes=False,
+                 consonant_prediction=False,
+                 vowel_prediction=False,
+                 load_all=None, cache_size=400000000):
         self.args = locals()
+
 
         if load_all is None:
             if which_set == 'augment':
@@ -59,34 +63,80 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             if which_set == 'augment':
                 X_aug = f['X_aug'].value
                 y_aug = f['y_aug'].value
+            if consonant_prediction:
+                raise NotImplementedError
+                assert (not vowel_prediction)
+                y = f['y_consonant'].value
+            if vowel_prediction:
+                raise NotImplementedError
+                assert (not consonant_prediction)
+                y = f['y_vowel'].value
             
         rng = np.random.RandomState(seed)
-        n_examples = X.shape[0]
-        order = rng.permutation(n_examples)
 
-        n_train = int(n_examples*_split['train'])
-        n_valid = int(n_examples*_split['valid'])
-        n_test = n_examples-n_train-n_valid
+        def split_indices(indices):
+            num_idx = len(indices)
+            indices = np.array(indices, dtype=int)
+            order = rng.permutation(num_idx)
 
-        train_start = fold*n_examples*move
-        train_end = (train_start+n_train) % n_examples
-        valid_start = train_end
-        valid_end = (valid_start+n_valid) % n_examples
-        test_start = valid_end
-        test_end = (test_start+n_test) % n_examples
+            n_train = int(np.round(num_idx*_split['train']))
+            n_valid = int(np.round(num_idx*_split['valid']))
+            n_test = num_idx-n_train-n_valid
 
-        if train_end > train_start:
-            train_idx = order[train_start:train_end]
+            train_start = fold*num_idx*move
+            train_end = (train_start+n_train) % num_idx
+            valid_start = train_end
+            valid_end = (valid_start+n_valid) % num_idx
+            test_start = valid_end
+            test_end = (test_start+n_test) % num_idx
+
+            if train_end > train_start:
+                train_idx = order[train_start:train_end]
+            else:
+                train_idx = np.hstack((order[train_start:],order[:train_end]))
+            if valid_end > valid_start:
+                valid_idx = order[valid_start:valid_end]
+            else:
+                valid_idx = np.hstack((order[valid_start:],order[:valid_end]))
+            if test_end > test_start:
+                test_idx = order[test_start:test_end]
+            else:
+                test_idx = np.hstack((order[test_start:],order[:test_end]))
+            return tuple([indices[idx].tolist() for idx in [train_idx, valid_idx, test_idx]])
+
+        def check_indices(tr, va, te):
+            tr = set(tr)
+            va = set(va)
+            te = set(te)
+            union = tr | va | te
+            assert len(tr)+len(va)+len(te) == len(union)
+            max_val = max(union)
+            assert len(union)-1 == max_val
+
+        if level_classes:
+            n_classes = y.shape[1]
+            class_indices = {}
+            classes = y.argmax(axis=1)
+            for ii in xrange(n_classes):
+                class_indices[str(ii)] = np.nonzero(classes == ii)[0].tolist()
+            total = 0
+            for indices in class_indices.values():
+                total += len(indices)
+            assert total == y.shape[0]
+            train_idx = []
+            valid_idx = []
+            test_idx = []
+            for indices in class_indices.values():
+                tr, va, te = split_indices(indices)
+                train_idx += tr
+                valid_idx +=va
+                test_idx += te
         else:
-            train_idx = np.hstack((order[train_start:],order[:train_end]))
-        if valid_end > valid_start:
-            valid_idx = order[valid_start:valid_end]
-        else:
-            valid_idx = np.hstack((order[valid_start:],order[:valid_end]))
-        if test_end > test_start:
-            test_idx = order[test_start:test_end]
-        else:
-            test_idx = np.hstack((order[test_start:],order[:test_end]))
+            n_examples = X.shape[0]
+            indices = range(n_examples)
+            train_idx, valid_idx, test_idx = split_indices(indices)
+
+        check_indices(train_idx, valid_idx, test_idx)
 
         X_train = X[train_idx]
         X_valid = X[valid_idx]
@@ -113,21 +163,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             del y_aug
 
         if (which_set == 'train') or (which_set == 'augment'):
-            print 'in train'
-            print which_set
-            print ''
             topo_view = X_train
             y_final = y_train
         elif which_set == 'valid':
-            print 'in valid'
-            print which_set
-            print ''
             topo_view = X_valid
             y_final = y_valid
         else:
-            print 'in test'
-            print which_set
-            print ''
             topo_view = X_test
             y_final = y_test
         if center:

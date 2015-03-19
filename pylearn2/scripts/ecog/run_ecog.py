@@ -1,12 +1,12 @@
 from pylearn2.config import yaml_parse
 import numpy as np
 import sys
-with open('ecog.yaml', 'rb') as f:
+with open('linear.yaml', 'rb') as f:
     train = f.read()
     
 fold = int(sys.argv[1])
 print 'fold: '+str(fold)
-filename = 'exps/ecog_85_reg_aug_zero_control_f'+str(fold)+'.pkl'
+filename = 'exps/ecog_85_reg_softmax_f'+str(fold)+'.pkl'
 init_alpha = .01
 dim = 784
 

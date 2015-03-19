@@ -1,28 +1,32 @@
 from pylearn2.blocks import Block
-import numpy as np
-from pylearn2.utils.rng import make_np_rng
-from pylearn2.space import Conv2DSpace
-from scipy.ndimage.interpolation import rotate, shift, zoom
+from pylearn2.utils.rng import make_theano_rng
+from pylearn2.space import Conv2DSpace, VectorSpace
+import theano
 
-class DataAugmentation(Block):
+class ScaleAugmentation(Block):
 
-    def __init__(self, space, seed=20150111, spline_order=1, cval=0.):
-        self.rng = make_np_rng(np.random.RandomState(seed),
-                               which_method=['rand', 'randint'])
-        assert isinstance(space, Conv2DSpace)
+    def __init__(self, space, seed=20150111, mean=1., std=.05):
+        self.rng = make_theano_rng(seed, which_method=['normal'])
+        self.mean = mean
+        self.std = std
         self.space = space
-        self.spline_order = spline_order
-        self.cval = cval
-        super(DataAugmentation, self).__init__()
+        super(ScaleAugmentation, self).__init__()
 
+    def create_theano_function(self):
+        if hasattr(self, 'f'):
+            return self.f
+        else:
+            X = self.space.make_theano_batch()
+            dim = X.ndim
+            arg = (dim-1)*('x',)
+            scale = self.rng.normal(size=[X.shape[0]], avg=self.mean, std=self.std)
+            scale = scale.dimshuffle(0,*arg)
+            out = X*scale
+            return theano.function([X], out)
 
     def perform(self, X):
-        axis1 = self.rng.uniform(low=-5., high=5.)
-        X = shift(X,
-                  shift=(0, 0, axis1, 0),
-                  order=self.spline_order,
-                  mode='nearest')
-        return X
+        f = self.create_theano_function()
+        return f(X)
 
     def get_input_space(self):
         return self.space
