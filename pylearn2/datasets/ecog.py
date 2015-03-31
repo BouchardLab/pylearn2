@@ -34,6 +34,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         If True, preprocess so that data has zero mean.
     move : float
         Fraction of data to move through for each fold.
+    level_classes: bool
+        Flag for making classes even over splits or just sampling randomly.
+    consonant_prediction: bool
+        Flag for just setting y to consonant class.
+    vowel_prediction: bool
+        Flag for just setting y to vowel class.
     """
 
     def __init__(self, filename, which_set,
@@ -59,18 +65,19 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         filename = serial.preprocess(filename)
         with h5py.File(filename,'r') as f:
             X = f['X'].value
-            y = f['y'].value
+            if consonant_prediction:
+                assert not vowel_prediction
+                y = f['y_consonant'].value
+            elif vowel_prediction:
+                assert not consonant_prediction
+                y = f['y_vowel'].value
+            else:
+                y = f['y'].value
             if which_set == 'augment':
                 X_aug = f['X_aug'].value
-                y_aug = f['y_aug'].value
-            if consonant_prediction:
-                raise NotImplementedError
-                assert (not vowel_prediction)
-                y = f['y_consonant'].value
-            if vowel_prediction:
-                raise NotImplementedError
-                assert (not consonant_prediction)
-                y = f['y_vowel'].value
+                assert X_aug.shape[0] % y.shape[0] == 0
+                tile_len = int(X_aug.shape[0]/y.shape[0])
+                y_aug = np.tile(y, (tile_len, 1))
             
         rng = np.random.RandomState(seed)
 
