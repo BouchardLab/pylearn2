@@ -1,9 +1,10 @@
 !obj:pylearn2.train.Train {
     dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
-            filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
-            which_set: 'augment',
+            filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug.h5',
+            which_set: 'train',
             center: True,
             fold: %(fold)i,
+            level_classes: True,
     },
     model: !obj:pylearn2.models.mlp.MLP {
             input_space: !obj:pylearn2.space.VectorSpace {
@@ -12,41 +13,37 @@
             layers: [ 
                     !obj:pylearn2.models.mlp.Tanh {
                     layer_name: 'h0',
-                    #num_units: 150,
-                    #num_pieces: 2,
-                    dim: %(L0)i,
-                    istdev: .005,
+                    dim: 706,
+                    istdev: .00021363144,
+                    max_col_norm: 0.4618327012067067
                     }, 
                        !obj:pylearn2.models.mlp.Softmax {
                              layer_name: 'y',
                              n_classes: 57,
-                             istdev: .005,
+                             istdev: .00021363144,
                              }
                         ],
     },
     algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
-        batch_size: 20,
-        learning_rate: .001,
+        batch_size: 93,
+        learning_rate: .02182468684,
         train_iteration_mode: 'sequential',
         monitoring_dataset:
             {
-                'train' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
-                                which_set: 'train',
-                                center: True,
-                                fold: %(fold)i,
-                          },
+                'train' : *train,
                 'valid' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
+                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug.h5',
                                 which_set: 'valid',
                                 center: True,
                                 fold: %(fold)i,
+                                level_classes: True,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug_noise.h5',
+                                filename: '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug.h5',
                                 which_set: 'test',
                                 center: True,
                                 fold: %(fold)i,
+                                level_classes: True,
                           },
             },
         monitoring_batch_size: 50,
@@ -55,11 +52,13 @@
         cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
                 #[1., !obj:pylearn2.costs.mlp.Default {} ],
                  [1., !obj:pylearn2.costs.mlp.dropout.Dropout {
-                         input_include_probs: { 'h0': .8 },
-                         input_scales: { 'h0': 1.25}
+                         default_input_include_prob: 0.6991945459587083,
+                         default_input_scale: 1.9846199238472535,
+                         input_include_probs: { 'h0': 0.7275318100349784 },
+                         input_scales: { 'h0': 2.000959254762546}
                          } ],
                 [1., !obj:pylearn2.costs.mlp.WeightDecay {
-                       coeffs: { 'h0': .0001, 'h1': .0001, 'y': .0001 },
+                       coeffs: { 'h0': .00000354673, 'y': .00000354673 },
                        },
                 ],
             ]
@@ -92,8 +91,8 @@
         },
     !obj:pylearn2.training_algorithms.learning_rule.MomentumAdjustor {
         start: 1,
-        saturate: 20,
-        final_momentum: .9
+        saturate: 16,
+        final_momentum: 0.7859342918993639
         }
     ]
 }
