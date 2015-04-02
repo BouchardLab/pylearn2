@@ -11,18 +11,33 @@ print 'Imports done...'
 script_folder = '.'
 in_dim = 258*85
 out_dim = 57
+consonant_dim = 19
+vowel_dim = 3
 max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run_aug'
-description='FC nets on augmented ecog.'
+exp_name = 'fc_run_consonant'
+description='FC nets on ecog to consonant.'
 scratch = "exps"
 test = False
+
+fixed_parameters = {'center': True,
+                    'level_classes': True,
+                    'consonant_prediction': False,
+                    'vowel_prediction': False,
+                    'init_type': 'istdev',
+                    'train_set': 'train',
+                    'data_file': 'EC2_CV_85_nobaseline_aug.h5'}
+
+if fixed_parameters['consonant_prediction']:
+    out_dim = consonant_dim
+elif fixed_parameters['vowel_prediction']:
+    out_dim = vowel_dim
 if test:
     min_dim = 2
 else:
     min_dim = out_dim
 
-parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
+parameters = {'n_layers': {'min': 0, 'max': 4, 'type': 'int'},
 	      'dim_0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_1': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_2': {'min': out_dim, 'max': max_dim, 'type': 'int'},
@@ -44,11 +59,6 @@ parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
 	      'log_weight_decay': {'min': -7., 'max': 0., 'type': 'float'},
 	      'max_col_norm': {'min': 0., 'max': 3., 'type': 'float'}}
 
-
-fixed_parameters = {'center': True,
-                    'init_type': 'istdev',
-                    'train_set': 'augment',
-                    'data_file': 'EC2_CV_85_nobaseline_aug.h5'}
 
 test_parameters = {'n_layers': 4,
                   'dim_0':min_dim+3,
