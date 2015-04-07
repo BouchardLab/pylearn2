@@ -43,6 +43,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     two_headed: bool
         Flag for predicting consonant and vowel class in one network.
         Overrides consonant and vowel prediction.
+    randomize_label: bool
+        Randomly permutes the labels for the examples.
+        Meant for control runs.
     """
 
     def __init__(self, filename, which_set,
@@ -50,6 +53,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  move = .1, level_classes=False,
                  consonant_prediction=False,
                  vowel_prediction=False,
+                 two_headed=False,
+                 randomize_label=False,
                  load_all=None, cache_size=400000000):
         self.args = locals()
 
@@ -147,12 +152,18 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         check_indices(train_idx, valid_idx, test_idx)
 
-        if consonant_prediction:
+        if two_headed:
+            y = np.hstack((y_consonant, y_vowel))
+        elif consonant_prediction:
             assert not vowel_prediction
             y = y_consonant
         elif vowel_prediction:
             assert not consonant_prediction
             y = y_vowel
+
+        if randomize_label:
+            order = rng.permutation(y.shape[0])
+            y = y[order]
 
         X_train = X[train_idx]
         X_valid = X[valid_idx]
