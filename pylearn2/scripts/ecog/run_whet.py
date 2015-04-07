@@ -15,8 +15,8 @@ consonant_dim = 19
 vowel_dim = 3
 max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run_consonant'
-description='FC nets on ecog to consonant.'
+exp_name = 'fc_run_level'
+description='FC nets on leveled ecog.'
 scratch = "exps"
 test = False
 
@@ -37,7 +37,7 @@ if test:
 else:
     min_dim = out_dim
 
-parameters = {'n_layers': {'min': 0, 'max': 4, 'type': 'int'},
+parameters = {'n_layers': {'min': 1, 'max': 4, 'type': 'int'},
 	      'dim_0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_1': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'dim_2': {'min': out_dim, 'max': max_dim, 'type': 'int'},

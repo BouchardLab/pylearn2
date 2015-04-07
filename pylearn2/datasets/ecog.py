@@ -40,6 +40,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         Flag for just setting y to consonant class.
     vowel_prediction: bool
         Flag for just setting y to vowel class.
+    two_headed: bool
+        Flag for predicting consonant and vowel class in one network.
+        Overrides consonant and vowel prediction.
     """
 
     def __init__(self, filename, which_set,
@@ -65,14 +68,13 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         filename = serial.preprocess(filename)
         with h5py.File(filename,'r') as f:
             X = f['X'].value
+            y = f['y'].value
             if consonant_prediction:
                 assert not vowel_prediction
-                y = f['y_consonant'].value
+                y_consonant = f['y_consonant'].value
             elif vowel_prediction:
                 assert not consonant_prediction
-                y = f['y_vowel'].value
-            else:
-                y = f['y'].value
+                y_vowel = f['y_vowel'].value
             if which_set == 'augment':
                 X_aug = f['X_aug'].value
                 assert X_aug.shape[0] % y.shape[0] == 0
@@ -144,6 +146,13 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             train_idx, valid_idx, test_idx = split_indices(indices)
 
         check_indices(train_idx, valid_idx, test_idx)
+
+        if consonant_prediction:
+            assert not vowel_prediction
+            y = y_consonant
+        elif vowel_prediction:
+            assert not consonant_prediction
+            y = y_vowel
 
         X_train = X[train_idx]
         X_valid = X[valid_idx]
