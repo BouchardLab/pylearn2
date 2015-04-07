@@ -74,7 +74,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         with h5py.File(filename,'r') as f:
             X = f['X'].value
             y = f['y'].value
-            if consonant_prediction:
+            if two_headed:
+                y_consonant = f['y_consonant'].value
+                y_vowel = f['y_vowel'].value
+            elif consonant_prediction:
                 assert not vowel_prediction
                 y_consonant = f['y_consonant'].value
             elif vowel_prediction:
@@ -162,6 +165,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             y = y_vowel
 
         if randomize_label:
+            print 'here'
             order = rng.permutation(y.shape[0])
             y = y[order]
 
