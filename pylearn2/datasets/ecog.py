@@ -85,9 +85,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 y_vowel = f['y_vowel'].value
             if which_set == 'augment':
                 X_aug = f['X_aug'].value
-                assert X_aug.shape[0] % y.shape[0] == 0
-                tile_len = int(X_aug.shape[0]/y.shape[0])
-                y_aug = np.tile(y, (tile_len, 1))
+                assert X_aug.shape[1] == y.shape[0]
+                tile_len = X_aug.shape[0]
+                y_aug = y[np.newaxis,...]
+                y_aug = np.tile(y, (tile_len, 1, 1))
             
         rng = np.random.RandomState(seed)
 
@@ -165,7 +166,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             y = y_vowel
 
         if randomize_label:
-            print 'here'
             order = rng.permutation(y.shape[0])
             y = y[order]
 
