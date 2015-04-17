@@ -13,10 +13,10 @@ in_dim = 258*85
 out_dim = 57
 consonant_dim = 19
 vowel_dim = 3
-max_dim = 1000
+max_dim = 150#1000
 n_folds = 10
-exp_name = 'fc_run_level'
-description='FC nets on leveled ecog.'
+exp_name = 'fc_run_small'
+description='Small FC nets on ecog.'
 scratch = "exps"
 test = False
 

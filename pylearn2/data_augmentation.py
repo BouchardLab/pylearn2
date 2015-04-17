@@ -3,7 +3,7 @@ from pylearn2.utils.rng import make_theano_rng
 from pylearn2.space import Conv2DSpace, VectorSpace
 import theano
 
-clas ScaleAugmentation(Block):
+class ScaleAugmentation(Block):
 
     def __init__(self, space, seed=20150111, mean=1., std=.05):
         self.rng = make_theano_rng(seed, which_method=['normal'])
