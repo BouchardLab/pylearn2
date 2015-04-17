@@ -1,6 +1,6 @@
 !obj:pylearn2.train.Train {
     dataset: !obj:pylearn2.datasets.transformer_dataset.TransformerDataset {
-        raw: dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
+        raw: &train !obj:pylearn2.datasets.ecog.ECoG {
               filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
               which_set: %(train_set)s,
               center: %(center)s,
@@ -10,6 +10,7 @@
             space: &space !obj:pylearn2.space.VectorSpace {
                 dim: 21930,
                 },
+            },
     },
     model: !obj:pylearn2.models.mlp.MLP {
             input_space: *space,

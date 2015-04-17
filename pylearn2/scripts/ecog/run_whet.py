@@ -13,10 +13,10 @@ in_dim = 258*85
 out_dim = 57
 consonant_dim = 19
 vowel_dim = 3
-max_dim = 150#1000
+max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run_small'
-description='Small FC nets on ecog.'
+exp_name = 'fc_run_new_aug'
+description='FC nets on new augmented ecog.'
 scratch = "exps"
 test = False
 
@@ -25,7 +25,7 @@ fixed_parameters = {'center': True,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
                     'init_type': 'istdev',
-                    'train_set': 'train',
+                    'train_set': 'augment',
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5'}
 
 if fixed_parameters['consonant_prediction']:
@@ -105,7 +105,12 @@ if not test:
                                    access_token=access_token)
 print 'Scientist created...'
 
-with open(os.path.join(script_folder,'ecog_nersc.yaml'), 'rb') as f:
+if fixed_parameters['train_set'] == 'train':
+    yaml_file = 'ecog_nersc.yaml'
+elif fixed_parameters['train_set'] == 'augment':
+    yaml_file = 'ecog_nersc_aug.yaml'
+
+with open(os.path.join(script_folder, yaml_file), 'rb') as f:
     train_string = f.read()
 
 def get_final_val(fname, key):
