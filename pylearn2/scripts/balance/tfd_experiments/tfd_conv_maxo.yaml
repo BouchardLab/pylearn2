@@ -1,0 +1,146 @@
+!obj:pylearn2.train.Train {
+    dataset: &train !obj:pylearn2.datasets.tfd_semi.TFDSemi {
+        which_set: 'semisupervised',
+        one_hot: True,
+        scale: True,
+        center: True,
+        shuffle: True,
+        fold: %(fold_i)i,
+    },
+    model: !obj:pylearn2.models.mlp.MLP {
+        input_space: &space !obj:pylearn2.space.Conv2DSpace {
+                shape: [48,48],
+                num_channels: 1,
+        },
+        input_source: 'features',
+        layers: [ !obj:pylearn2.models.maxout.MaxoutConvC01B {
+                     layer_name: 'h0',
+                     pad: 0,
+                     num_channels: 32,
+                     num_pieces: 2,
+                     kernel_shape: [8, 8],
+                     pool_shape: [4, 4],
+                     pool_stride: [2, 2],
+                     irange: .005,
+                     max_kernel_norm: %(max_col_norm)f,
+                 },  !obj:pylearn2.models.maxout.Maxout {
+                     layer_name: 'h1',
+                     num_units: 240,
+                     num_pieces: 5,
+                     irange: .005,
+                     max_col_norm: %(max_col_norm)f,
+                 },  !obj:pylearn2.models.mlp.FlattenerLayer {
+                     raw_layer: !obj:pylearn2.models.mlp.CompositeLayer {
+                         layer_name: 'composite',
+                         layers: [ !obj:pylearn2.models.mlp.Softmax {
+                                     layer_name: 'y_h',
+                                     n_classes: 7,
+                                     istdev: %(ystd)f,
+                                     max_col_norm: %(max_col_norm)f,
+                             }, !obj:pylearn2.models.mlp.Linear {
+                                     layer_name: 'z_h',
+                                     dim: %(zdim)i,
+                                     istdev: %(zstd)f,
+                                     max_col_norm: %(max_col_norm)f,
+                             } ]
+                      }
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h_2',
+                     dim: %(L_2dim)i,
+                     istdev: %(L_2std)f,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h_1',
+                     dim: 4096,
+                     istdev: %(L_1std)f,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 },  !obj:pylearn2.models.mlp.SpaceConverter {
+                     layer_name: 'converter',
+                     output_space: !obj:pylearn2.space.Conv2DSpace {
+                             shape: [16,16],
+                             num_channels: 16,
+                             axes: ['c', 0, 1, 'b'],
+                     },
+                 },  !obj:pylearn2.sandbox.adversarial.deconv.Deconv {
+                     layer_name: 'h_0',
+                     num_channels: 1,
+                     output_stride: [3,3],
+                     kernel_shape: [5,5],
+                     pad_out: 1,
+                     irange: %(L_0range)f,
+                     max_kernel_norm: %(max_col_norm)f,
+                 },  !obj:pylearn2.models.mlp.SpaceConverter {
+                     layer_name: 'converter_out',
+                     output_space: !obj:pylearn2.space.Conv2DSpace {
+                             shape: [48,48],
+                             num_channels: 1,
+                             axes: ['b', 0, 1, 'c'],
+                     },
+                 }
+                ],
+    },
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+        batch_size: 50,
+        learning_rate: .000000001,
+        train_iteration_mode: 'random_slice',
+        batches_per_iter: 500,
+        monitoring_dataset:
+            {
+                'train' : *train,
+                'valid' : !obj:pylearn2.datasets.tfd_semi.TFDSemi {
+                              which_set: 'valid',
+                              one_hot: True,
+                              scale: True,
+                              center: True,
+                              shuffle: True,
+                              fold: %(fold_i)i,
+                          },
+            },
+        monitoring_costs: {'misclass': !obj:pylearn2.costs.mlp.layer_cost.LabelMisclass {
+                              },
+                           'mse': !obj:pylearn2.costs.mlp.layer_cost.AEMSE {
+                              }
+                          },
+        monitoring_batches: 1,
+        monitoring_batch_size: %(valid_batch_size)i,
+        monitor_iteration_mode: 'random_slice',
+        cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
+                [10., !obj:pylearn2.costs.mlp.layer_cost.LabelXEnt {
+        #default_input_include_prob: .8,
+        #                default_input_scale: 1.25,
+                     } ],
+                [1., !obj:pylearn2.costs.mlp.layer_cost.AEMSE {
+        #                default_input_include_prob: .8,
+        #                default_input_scale: 1.25,
+                     } ],
+                [100., !obj:pylearn2.costs.mlp.layer_cost.XCov {
+        #                default_input_include_prob: .8,
+        #                default_input_scale: 1.25,
+                     } ]
+            ]
+        },
+        learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {
+                decay: .99,
+        },
+        termination_criterion: !obj:pylearn2.termination_criteria.And {
+            criteria: [
+                !obj:pylearn2.termination_criteria.MonitorBased {
+                    channel_name: "valid_mse",
+                    prop_decrease: .95,
+                    N: 10000000
+                },
+                !obj:pylearn2.termination_criteria.EpochCounter {
+                    max_epochs: 500
+                }
+            ]
+        }
+    },
+    extensions: [
+        !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
+             channel_name: 'valid_misclass',
+             save_path: "%(save_name)s"
+        }
+    ]
+}

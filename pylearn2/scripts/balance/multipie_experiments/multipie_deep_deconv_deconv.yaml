@@ -1,0 +1,180 @@
+!obj:pylearn2.train.Train {
+    dataset: &train !obj:pylearn2.datasets.multipie_semi.MultipieSemi {
+        root_path: '/home/porter/datasets/faces/multipie/',
+        which_set: 'train',
+        one_hot: True,
+        center: True,
+        shuffle: True,
+    },
+    model: !obj:pylearn2.models.mlp.MLP {
+        input_space: &space !obj:pylearn2.space.Conv2DSpace {
+                shape: [48,48],
+                num_channels: 1,
+        },
+        input_source: 'features',
+        layers: [ !obj:pylearn2.models.mlp.ConvRectifiedLinear {
+                     layer_name: 'h0',
+                     output_channels: 32,
+                     kernel_shape: [8,8],
+                     pool_shape: [3,3],
+                     pool_stride: [2,2],
+                     irange: .01,
+                     max_kernel_norm: .9,
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h1',
+                     dim: 2000,
+                     istdev: 1.,
+                     ortho_init: True,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h15',
+                     dim: 2000,
+                     istdev: 1.,
+                     ortho_init: True,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 }, !obj:pylearn2.models.flattener.FlattenerLayer {
+                    raw_layer: !obj:pylearn2.models.mlp.CompositeLayer {
+                         layer_name: 'composite',
+                         layers: [ !obj:pylearn2.models.mlp.Softmax {
+                                     layer_name: 'y_h',
+                                     n_classes: 13,
+                                     istdev: 1.,
+                                     max_col_norm: %(max_col_norm)f,
+                             }, !obj:pylearn2.models.mlp.Softmax {
+                                     layer_name: 'y_h',
+                                     n_classes: 19,
+                                     istdev: 1.,
+                                     max_col_norm: %(max_col_norm)f,
+                             }, !obj:pylearn2.models.mlp.Linear {
+                                     layer_name: 'z_h',
+                                     dim: 793,
+                                     istdev: 1.,
+                                     ortho_init: True,
+                                     max_col_norm: %(max_col_norm)f,
+                                     init_bias: %(init_bias)f,
+                             } ]
+                    }
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h_2',
+                     dim: 2000,
+                     istdev: 1.,
+                     ortho_init: True,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h_15',
+                     dim: 2000,
+                     istdev: 1.,
+                     ortho_init: True,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 },  !obj:pylearn2.models.mlp.RectifiedLinear {
+                     layer_name: 'h_1',
+                     dim: 4608,
+                     istdev: %(L_1std)f,
+                     max_col_norm: %(max_col_norm)f,
+                     init_bias: %(init_bias)f,
+                 },  !obj:pylearn2.models.mlp.SpaceConverter {
+                     layer_name: 'converter',
+                     output_space: !obj:pylearn2.space.Conv2DSpace {
+                             shape: [6,6],
+                             num_channels: 128,
+                             axes: ['c', 0, 1, 'b'],
+                     },
+                 },  !obj:pylearn2.sandbox.adversarial.deconv.Deconv {
+                     layer_name: 'h_d2',
+                     num_channels: 128,
+                     output_stride: [2,2],
+                     kernel_shape: [6,6],
+                     pad_out: 2,
+                     irange: %(L_0range)f,
+                     max_kernel_norm: %(max_col_norm)f,
+                 },  !obj:pylearn2.sandbox.adversarial.deconv.Deconv {
+                     layer_name: 'h_d1',
+                     num_channels: 64,
+                     output_stride: [2,2],
+                     kernel_shape: [6,6],
+                     pad_out: 2,
+                     irange: %(L_0range)f,
+                     max_kernel_norm: %(max_col_norm)f,
+                 },  !obj:pylearn2.sandbox.adversarial.deconv.Deconv {
+                     layer_name: 'h_d0',
+                     num_channels: 1,
+                     output_stride: [2,2],
+                     kernel_shape: [6,6],
+                     pad_out: 2,
+                     irange: %(L_0range)f,
+                     max_kernel_norm: %(max_col_norm)f,
+                 },  !obj:pylearn2.models.mlp.SpaceConverter {
+                     layer_name: 'converter_out',
+                     output_space: *space,
+                 }
+                ],
+    },
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+        batch_size: 50,
+        learning_rate: .000000001,
+        train_iteration_mode: 'random_slice',
+        batches_per_iter: 500,
+        monitoring_dataset:
+            {
+                'train' : *train,
+                'valid' : !obj:pylearn2.datasets.multipie_semi.MultipieSemi {
+                            root_path: '/home/porter/datasets/faces/multipie/',
+                            which_set: 'valid',
+                            one_hot: True,
+                            center: True,
+                            shuffle: True,
+                          },
+            },
+        monitoring_costs: {'misclass': !obj:pylearn2.costs.mlp.layer_cost.TwoLabelXEnt {
+                                    split_index: 13,
+                              },
+                           'mse': !obj:pylearn2.costs.mlp.layer_cost.AEMSE {
+                              }
+                          },
+        monitoring_batches: 1,
+        monitoring_batch_size: %(valid_batch_size)i,
+        monitor_iteration_mode: 'random_slice',
+        cost: !obj:pylearn2.costs.cost.SumOfCosts { costs: [
+                [10., !obj:pylearn2.costs.mlp.layer_cost.TwoLabelXEnt { 
+                    split_index: 13,
+        #default_input_include_prob: .8,
+        #                default_input_scale: 1.25,
+                     } ],
+                [1., !obj:pylearn2.costs.mlp.layer_cost.AEMSE {
+        #                default_input_include_prob: .8,
+        #                default_input_scale: 1.25,
+                     } ],
+                [10000., !obj:pylearn2.costs.mlp.layer_cost.TwoXCov {
+        #                default_input_include_prob: .8,
+        #                default_input_scale: 1.25,
+                     } ]
+            ]
+        },
+        learning_rule: !obj:pylearn2.training_algorithms.learning_rule.AdaDelta {
+                decay: .99,
+        },
+        termination_criterion: !obj:pylearn2.termination_criteria.And {
+            criteria: [
+                !obj:pylearn2.termination_criteria.MonitorBased {
+                    channel_name: "valid_mse",
+                    prop_decrease: 0.,
+                    N: 100
+                },
+                !obj:pylearn2.termination_criteria.EpochCounter {
+                    max_epochs: 500
+                }
+            ]
+        }
+    },
+    extensions: [
+        !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
+             channel_name: 'valid_mse',
+             save_path: "%(save_name)s_fold%(fold_i)i.pkl"
+        }
+    ]
+}
+
