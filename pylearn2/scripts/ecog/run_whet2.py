@@ -1,7 +1,11 @@
 #!/usr/bin/env python
-import os
-from run_folds import get_result
+print 'Starting up...'
+import math, sys, os, time
+from pylearn2.config import yaml_parse
+from pylearn2.utils import serial
+from yaml_builder import build_yaml
 import numpy as np
+import whetlab
 
 print 'Imports done...'
 
@@ -17,10 +21,9 @@ exp_name = 'fc_run_new_aug'
 description='FC nets on new augmented ecog.'
 scratch = "exps"
 test = True
-seed = 20150427
-rng = np.random.RandomState(seed)
+rng = np.random.RandomState(20150427)
 
-fixed_params = {'center': True,
+fixed_parameters = {'center': True,
                     'level_classes': True,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
@@ -28,20 +31,20 @@ fixed_params = {'center': True,
                     'train_set': 'augment',
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5'}
 
-if fixed_params['consonant_prediction']:
+if fixed_parameters['consonant_prediction']:
     out_dim = consonant_dim
-elif fixed_params['vowel_prediction']:
+elif fixed_parameters['vowel_prediction']:
     out_dim = vowel_dim
-fixed_params['out_dim'] = out_dim
+fixed_parameters['out_dim'] = out_dim
 
 if test:
     min_dim = 2
     max_dim = out_dim
 else:
     min_dim = out_dim
-fixed_params['min_dim'] = min_dim
+fixed_parameters['min_dim'] = min_dim
 
-params = {'n_fc_layers': {'min': 1, 'max': 1, 'type': 'int'},
+parameters = {'n_fc_layers': {'min': 1, 'max': 1, 'type': 'int'},
 	      'fc_dim0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim1': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim2': {'min': out_dim, 'max': max_dim, 'type': 'int'},
@@ -94,18 +97,81 @@ def random_params(rng, kwargs):
                              +"' for parameter "+str(key)+'.')
     return params
 
-job = random_params(rng, params)
-job_id = seed
+
+
+outcome = {'name': 'accuracy'}
+
+with open('access_token.txt', 'r') as f:
+    access_token = f.read().splitlines()[0]
+
+start = time.time()
+
+if not test:
+    scientist = whetlab.Experiment(name=exp_name,
+                                   description=description,
+                                   parameters=parameters,
+                                   outcome=outcome,
+                                   access_token=access_token)
+print 'Scientist created...'
+
+def get_final_val(fname, key):
+    model = serial.load(fname)
+    channels = model.monitor.channels
+    return 1.-float(channels[key].val_record[-1])
+
+if test:
+    job = random_params(rng, parameters)
+    job_id = 0
+else:
+    job = scientist.suggest()
+    job_id = scientist.get_id(job)
+
+if job['n_conv_layers'] > 0:
+    fixed_parameters['conv'] = True
+    fixed_parameters['in_shape'] = in_shape
+    fixed_parameters['in_channels'] = channels
+else:
+    fixed_parameters['conv'] = False
+    fixed_parameters['in_shape'] = np.prod(in_shape)*channels
+
+valid_accuracy = np.zeros(n_folds)
+test_accuracy = np.zeros(n_folds)
+train_accuracy = np.zeros(n_folds)
+ins_dict = job.copy()
 
 target_folder = os.path.join(scratch,exp_name)
 if not (os.path.exists(target_folder) or test):
     os.mkdir(target_folder)
 
-train_params = {'n_folds': n_folds,
-                'scratch': scratch,
-                'exp_name': exp_name,
-                'job_id': job_id,
-                'in_shape': in_shape,
-                'channels': channels}
+print 'Starting training...'
 
-get_result(train_params, job, fixed_params)
+for fold in xrange(n_folds):
+    ins_dict['fold'] = fold
+    ins_dict['filename'] = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+    train = build_yaml(ins_dict, fixed_parameters)
+    print train
+    train = yaml_parse.load(train)
+    train.main_loop()
+    del train
+    valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')
+    test_accuracy[fold] = get_final_val(ins_dict['filename'], 'test_y_misclass')
+    train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
+for fold in xrange(n_folds):
+    print '--------------------------------------'
+    print 'Accuracy fold '+str(fold)+':'
+    print 'train: ',train_accuracy[fold]
+    print 'valid: ',valid_accuracy[fold]
+    print 'test: ',test_accuracy[fold]
+print '--------------------------------------'
+print 'final_train_mean: ',train_accuracy.mean()
+print 'final_valid_mean: ',valid_accuracy.mean()
+print 'final_test_mean: ',test_accuracy.mean()
+print '--------------------------------------'
+print 'final_train_std: ',train_accuracy.std()
+print 'final_valid_std: ',valid_accuracy.std()
+print 'final_test_std: ',test_accuracy.std()
+
+if not test:
+    scientist.update(job, valid_accuracy.mean())
+print 'Total time in seconds'
+print time.time()-start

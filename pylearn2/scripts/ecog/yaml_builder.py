@@ -88,21 +88,21 @@ def make_last_layer_and_cost(kwargs):
     return out_layer_string, out_cost_string
 
 
-def build_yaml(ins_dict, fixed_parameters):
+def build_yaml(ins_dict, fixed_params):
     ins_dict['lr'] = np.power(10., ins_dict['log_lr'])
     ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
     ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
     ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
     ins_dict['final_mom'] = 1.-np.power(10, ins_dict['log_final_mom_eps'])
-    ins_dict.update(fixed_parameters)
+    ins_dict.update(fixed_params)
     ins_dict['in_shape_str'] = str(ins_dict['in_shape'])
-    if fixed_parameters['conv']:
+    if fixed_params['conv']:
         ins_dict['space'] = conv_string % ins_dict
     else:
         ins_dict['space'] = fc_string % ins_dict
-    if fixed_parameters['train_set'] == 'train':
+    if fixed_params['train_set'] == 'train':
         ins_dict['dataset_string'] = train_dataset % ins_dict
-    elif fixed_parameters['train_set'] == 'augment':
+    elif fixed_params['train_set'] == 'augment':
         ins_dict['dataset_string'] = aug_dataset % ins_dict
     else:
         raise ValueError("'train_set' not found.")
