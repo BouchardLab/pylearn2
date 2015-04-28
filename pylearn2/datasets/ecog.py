@@ -46,6 +46,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     randomize_label: bool
         Randomly permutes the labels for the examples.
         Meant for control runs.
+    pct_train: float
+        Percentage of training set to use during training.
+    pm_aug_shift: int
+        Number of of time shifts to use in augmentation.
     """
 
     def __init__(self, filename, which_set,
@@ -55,6 +59,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  vowel_prediction=False,
                  two_headed=False,
                  randomize_label=False,
+                 pct_train=None,
+                 pm_aug_shift=None,
                  load_all=None, cache_size=400000000):
         self.args = locals()
 
@@ -93,6 +99,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         rng = np.random.RandomState(seed)
 
         def split_indices(indices):
+            """
+            Split indices into training/validation/testing groups.
+            """
             num_idx = len(indices)
             indices = np.array(indices, dtype=int)
             order = rng.permutation(num_idx)
@@ -123,6 +132,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             return tuple([indices[idx].tolist() for idx in [train_idx, valid_idx, test_idx]])
 
         def check_indices(tr, va, te):
+            """
+            Check that all indices were included and the training/validation/testing
+            splits are independent.
+            """
             tr = set(tr)
             va = set(va)
             te = set(te)
@@ -155,6 +168,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             train_idx, valid_idx, test_idx = split_indices(indices)
 
         check_indices(train_idx, valid_idx, test_idx)
+
+        if pct_train is not None:
+            assert pct_train > 0.
+            assert pct_train <= 1.
+            n_keep = int(np.round(pct_train*len(train_idx)))
+            train_idx = train_idx[:n_keep]
 
         if two_headed:
             y = np.hstack((y_consonant, y_vowel))
