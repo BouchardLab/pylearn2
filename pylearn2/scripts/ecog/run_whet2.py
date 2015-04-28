@@ -41,12 +41,12 @@ else:
     min_dim = out_dim
 fixed_params['min_dim'] = min_dim
 
-params = {'n_fc_layers': {'min': 0, 'max': 1, 'type': 'int'},
+params = {'n_fc_layers': {'min': 1, 'max': 1, 'type': 'int'},
 	      'fc_dim0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim1': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim2': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim3': {'min': out_dim, 'max': max_dim, 'type': 'int'},
-              'n_conv_layers': {'min': 0, 'max': 1, 'type': 'int'},
+              'n_conv_layers': {'min': 1, 'max': 1, 'type': 'int'},
               'channels_0': {'min': 8, 'max':64, 'type': 'int'},
               'channels_grow': {'min': 1., 'max':8., 'type': 'float'},
               'conv_0_shp': {'min': 3, 'max':50, 'type': 'int'},

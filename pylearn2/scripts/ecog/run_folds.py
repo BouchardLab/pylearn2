@@ -33,6 +33,9 @@ def get_result(train_params, ins_dict, fixed_params):
         ins_dict['fold'] = fold
         ins_dict['filename'] = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
         train = build_yaml(ins_dict, fixed_params)
+        yaml_file = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.yaml')
+        with open(yaml_file, 'w') as f:
+            f.write(train)
         print train
         train = yaml_parse.load(train)
         train.main_loop()
@@ -40,6 +43,7 @@ def get_result(train_params, ins_dict, fixed_params):
         train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
         valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')
         test_accuracy[fold] = get_final_val(ins_dict['filename'], 'test_y_misclass')
+
     for fold in xrange(n_folds):
         print '--------------------------------------'
         print 'Accuracy fold '+str(fold)+':'
@@ -47,13 +51,13 @@ def get_result(train_params, ins_dict, fixed_params):
         print 'valid: ',valid_accuracy[fold]
         print 'test: ',test_accuracy[fold]
     print '--------------------------------------'
-    print 'final_train_mean: ',train_accuracy.mean()
-    print 'final_valid_mean: ',valid_accuracy.mean()
-    print 'final_test_mean: ',test_accuracy.mean()
+    print 'final_train_mean_'+str(job_id)+': ',train_accuracy.mean()
+    print 'final_valid_mean'+str(job_id)+': ',valid_accuracy.mean()
+    print 'final_test_mean'+str(job_id)+': ',test_accuracy.mean()
     print '--------------------------------------'
-    print 'final_train_std: ',train_accuracy.std()
-    print 'final_valid_std: ',valid_accuracy.std()
-    print 'final_test_std: ',test_accuracy.std()
+    print 'final_train_std'+str(job_id)+': ',train_accuracy.std()
+    print 'final_valid_std'+str(job_id)+': ',valid_accuracy.std()
+    print 'final_test_std'+str(job_id)+': ',test_accuracy.std()
     print '--------------------------------------'
     print 'Total training time in seconds'
     print time.time()-start
