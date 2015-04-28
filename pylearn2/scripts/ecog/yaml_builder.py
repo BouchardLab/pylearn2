@@ -36,7 +36,7 @@ def make_layers(kwargs):
         this_dict['name'] = 'c'+str(ii)
         this_dict['range'] = np.power(10., kwargs['log_conv_irange'])
         out_string += conv_layer_string % this_dict
-        channels = channels*kwargs['channels_grow']
+        channels = int(channels*kwargs['channels_grow'])
 
     if kwargs['n_conv_layers'] > 0:
         out_dim = np.prod(cur_shp)*channels

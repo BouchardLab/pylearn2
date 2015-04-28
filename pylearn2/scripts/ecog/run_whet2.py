@@ -15,17 +15,17 @@ consonant_dim = 19
 vowel_dim = 3
 max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run_new_aug'
-description='FC nets on new augmented ecog.'
+exp_name = 'test'
+description='test'
 scratch = "exps"
-test = True
+test = False
 
 fixed_params = {'center': True,
                     'level_classes': True,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
                     'init_type': 'istdev',
-                    'train_set': 'augment',
+                    'train_set': 'train',
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5'}
 
 if fixed_params['consonant_prediction']:
@@ -41,12 +41,12 @@ else:
     min_dim = out_dim
 fixed_params['min_dim'] = min_dim
 
-params = {'n_fc_layers': {'min': 1, 'max': 1, 'type': 'int'},
+params = {'n_fc_layers': {'min': 0, 'max': 1, 'type': 'int'},
 	      'fc_dim0': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim1': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim2': {'min': out_dim, 'max': max_dim, 'type': 'int'},
 	      'fc_dim3': {'min': out_dim, 'max': max_dim, 'type': 'int'},
-              'n_conv_layers': {'min': 1, 'max': 1, 'type': 'int'},
+              'n_conv_layers': {'min': 0, 'max': 1, 'type': 'int'},
               'channels_0': {'min': 8, 'max':64, 'type': 'int'},
               'channels_grow': {'min': 1., 'max':8., 'type': 'float'},
               'conv_0_shp': {'min': 3, 'max':50, 'type': 'int'},
