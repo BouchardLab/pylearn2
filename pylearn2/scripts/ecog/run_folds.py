@@ -74,15 +74,16 @@ parameters = {'n_fc_layers': {'min': 1, 'max': 1, 'type': 'int'},
 	      'default_input_include_prob': {'min': .3, 'max': 1., 'type': 'float'},
 	      'default_input_scale': {'min': 1., 'max': 3., 'type': 'float'},
 	      'log_weight_decay': {'min': -7., 'max': 0., 'type': 'float'},
-	      'max_col_norm': {'min': 0., 'max': 3., 'type': 'float'}}
+	      'max_col_norm': {'min': 0., 'max': 3., 'type': 'float'},
+	      'max_kernel_norm': {'min': 0., 'max': 3., 'type': 'float'}}
 
 def random_params(rng, kwargs):
     params = {}
     for key, value in kwargs.iteritems():
         if value['type'] == 'float':
-            start = value['max']
+            start = value['min']
             width = value['max']-start
-            params[key] = width*rng.rand()+start
+            params[key] = float(width)*rng.rand()+start
         elif value['type'] == 'int':
             low = value['min']
             high = value['max']
@@ -131,7 +132,7 @@ if job['n_conv_layers'] > 0:
     fixed_parameters['in_channels'] = channels
 else:
     fixed_parameters['conv'] = False
-    fixed_parameters['in_dim'] = np.prod(in_shape)*channels
+    fixed_parameters['in_shape'] = np.prod(in_shape)*channels
 
 valid_accuracy = np.zeros(n_folds)
 test_accuracy = np.zeros(n_folds)

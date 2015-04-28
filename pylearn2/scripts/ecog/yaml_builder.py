@@ -95,15 +95,11 @@ def build_yaml(ins_dict, fixed_parameters):
     ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
     ins_dict['final_mom'] = 1.-np.power(10, ins_dict['log_final_mom_eps'])
     ins_dict.update(fixed_parameters)
+    ins_dict['in_shape_str'] = str(ins_dict['in_shape'])
     if fixed_parameters['conv']:
-        ins_dict['in_shape_str'] = str(ins_dict['in_shape'])
         ins_dict['space'] = conv_string % ins_dict
     else:
-        ins_dict['space'] = fc_string
-    print ins_dict
-    print ''
-    print fixed_parameters
-    print ''
+        ins_dict['space'] = fc_string % ins_dict
     if fixed_parameters['train_set'] == 'train':
         ins_dict['dataset_string'] = train_dataset % ins_dict
     elif fixed_parameters['train_set'] == 'augment':
@@ -123,7 +119,7 @@ cost_type_map['xent'] = 'mlp.dropout.Dropout'
 cost_type_map['h1'] = 'hinge_loss.DropoutHingeLossL1'
 cost_type_map['h2'] = 'hinge_loss.DropoutHingeLossL2'
 fc_string = """!obj:pylearn2.space.VectorSpace {
-             dim: %(in_dim)s
+             dim: %(in_shape_str)s
         },"""
 conv_string = """!obj:pylearn2.space.Conv2DSpace {
              shape: %(in_shape_str)s,
@@ -136,7 +132,7 @@ conv_layer_string = ("!obj:pylearn2.models.mlp.ConvRectifiedLinear {\n"
                 +"pool_shape: [%(pool_shp0)i,%(pool_shp1)i],\n"
                 +"pool_stride: [%(pool_strd0)i,%(pool_strd1)i],\n"
                 +"irange: %(range)f,\n"
-                +"max_kernel_norm: %(max_col_norm)f,\n"
+                +"max_kernel_norm: %(max_kernel_norm)f,\n"
                 +"},\n")
 fc_layer_string = ("!obj:pylearn2.models.mlp.%(fc_layer_type)s {\n"
                 +"layer_name: %(name)s,\n"
