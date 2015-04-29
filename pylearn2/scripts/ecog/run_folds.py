@@ -9,20 +9,20 @@ def get_final_val(fname, key):
     channels = model.monitor.channels
     return 1.-float(channels[key].val_record[-1])
 
-def get_result(train_params, ins_dict, fixed_params):
+def get_result(ins_dict, fixed_params):
     start = time.time()
     if ins_dict['n_conv_layers'] > 0:
         fixed_params['conv'] = True
-        fixed_params['in_shape'] = train_params['in_shape']
-        fixed_params['in_channels'] = train_params['channels']
+        fixed_params['in_shape'] = fixed_params['shape']
+        fixed_params['in_channels'] = fixed_params['channels']
     else:
         fixed_params['conv'] = False
-        fixed_params['in_shape'] = np.prod(train_params['in_shape'])*train_params['channels']
+        fixed_params['in_shape'] = np.prod(fixed_params['shape'])*fixed_params['channels']
 
-    n_folds = train_params['n_folds']
-    scratch = train_params['scratch']
-    exp_name = train_params['exp_name']
-    job_id = train_params['job_id']
+    n_folds = fixed_params['n_folds']
+    scratch = fixed_params['scratch']
+    exp_name = fixed_params['exp_name']
+    job_id = fixed_params['job_id']
     ins_dict = ins_dict.copy()
     fixed_params = fixed_params.copy()
     print 'Starting training...'
