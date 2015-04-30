@@ -45,7 +45,7 @@ def make_dir(fixed_params):
     scratch = fixed_params['scratch']
     exp_name = fixed_params['exp_name']
     target_folder = os.path.join(scratch,exp_name)
-    if not (os.path.exists(target_folder) or test):
+    if not (os.path.exists(target_folder) or fixed_params['test']):
         os.mkdir(target_folder)
     return
 

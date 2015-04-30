@@ -1,6 +1,17 @@
 import os, math
 import numpy as np
 
+
+def unlistify_job(job):
+    rval = {}
+    for key, value in job.iteritems():
+        if isinstance(value, (list, np.ndarray)) and len(value) == 1:
+            rval[key] = value[0]
+        else:
+            rval[key] = value
+    return rval
+
+
 def make_layers(kwargs):
     def get_shapes(in_shp, ker_shp, pool_shp, pool_strd):
         detector_shp = [in_s-ker_s+1 for in_s, ker_s in zip(in_shp, ker_shp)]
@@ -89,6 +100,7 @@ def make_last_layer_and_cost(kwargs):
 
 
 def build_yaml(ins_dict, fixed_params):
+    ins_dict = unlistify_job(ins_dict)
     ins_dict['lr'] = np.power(10., ins_dict['log_lr'])
     ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
     ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
