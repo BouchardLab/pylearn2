@@ -15,8 +15,8 @@ consonant_dim = 19
 vowel_dim = 3
 max_dim = 1000
 n_folds = 10
-exp_name = 'fc_run_new_aug'
-description='FC nets on new augmented ecog.'
+exp_name = 'fc_run_new_aug_level'
+description='FC nets on new augmented leveled ecog.'
 scratch = "exps"
 test = False
 

@@ -5,6 +5,7 @@
               which_set: %(train_set)s,
               center: %(center)s,
               fold: %(fold)i,
+              level_classes: %(level_classes)s,
         },
         transformer: !obj:pylearn2.data_augmentation.ScaleAugmentation {
             space: &space !obj:pylearn2.space.VectorSpace {
@@ -29,18 +30,21 @@
                                 which_set: 'train',
                                 center: %(center)s,
                                 fold: %(fold)i,
+                                level_classes: %(level_classes)s,
                           },
                 'valid' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'valid',
                                 center: %(center)s,
                                 fold: %(fold)i,
+                                level_classes: %(level_classes)s,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'test',
                                 center: %(center)s,
                                 fold: %(fold)i,
+                                level_classes: %(level_classes)s,
                           },
             },
         monitoring_batch_size: %(batch_size)s,
