@@ -48,7 +48,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         Meant for control runs.
     pct_train: float
         Percentage of training set to use during training.
-    pm_aug_shift: int
+    pm_aug_range: int
         Number of of time shifts to use in augmentation.
     """
 
@@ -60,7 +60,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  two_headed=False,
                  randomize_label=False,
                  pct_train=None,
-                 pm_aug_shift=None,
+                 pm_aug_range=None,
                  load_all=None, cache_size=400000000):
         self.args = locals()
 
@@ -200,6 +200,15 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         if which_set == 'augment':
             img_shape = X_train.shape[1:]
             y_shape = y_train.shape[1:]
+            if pm_aug_range is not None:
+                possible_range = X_aug.shape[0]
+                assert possible_range % 2 == 1
+                assert possible_range >= 2*pm_aug_range+1
+                pm_possible = int(np.round(possible_range-1)/2.)
+                idxs = slice(pm_possible-pm_aug_range, possible_range-(pm_possible-pm_aug_range))
+                print idxs
+                X_aug = X_aug[idxs]
+                y_aug = y_aug[idxs]
             X_aug = X_aug[:,train_idx]
             X_aug = X_aug.reshape(-1,*img_shape)
             y_aug = y_aug[:,train_idx]
