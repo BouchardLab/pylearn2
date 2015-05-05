@@ -2,6 +2,7 @@ from pylearn2.blocks import Block
 from pylearn2.utils.rng import make_theano_rng
 from pylearn2.space import Conv2DSpace, VectorSpace
 import theano
+from theano.compile.mode import get_default_mode
 
 class ScaleAugmentation(Block):
 
