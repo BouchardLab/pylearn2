@@ -46,7 +46,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     randomize_label: bool
         Randomly permutes the labels for the examples.
         Meant for control runs.
-    pct_train: float
+    frac_train: float
         Percentage of training set to use during training.
     pm_aug_range: int
         Number of of time shifts to use in augmentation.
@@ -59,7 +59,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  vowel_prediction=False,
                  two_headed=False,
                  randomize_label=False,
-                 pct_train=None,
+                 frac_train=None,
                  pm_aug_range=None,
                  load_all=None, cache_size=400000000):
         self.args = locals()
@@ -169,10 +169,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         check_indices(train_idx, valid_idx, test_idx)
 
-        if pct_train is not None:
-            assert pct_train > 0.
-            assert pct_train <= 1.
-            n_keep = int(np.round(pct_train*len(train_idx)))
+        if frac_train is not None:
+            assert frac_train > 0.
+            assert frac_train <= 1.
+            n_keep = int(np.round(frac_train*len(train_idx)))
             train_idx = train_idx[:n_keep]
 
         if two_headed:
