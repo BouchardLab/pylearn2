@@ -8,7 +8,7 @@ import whetlab
 
 print 'Imports done...'
 
-json_file = 'spearmint/config.json'
+json_file = 'config.json'
 opt_params, fixed_params = get_params(json_file)
 outcome = {'name': 'accuracy'}
 

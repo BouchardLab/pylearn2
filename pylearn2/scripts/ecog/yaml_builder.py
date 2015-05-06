@@ -27,7 +27,7 @@ def make_layers(kwargs):
     out_string = ""
     channels = kwargs['channels_0']
     cur_shp = in_shape
-    for ii in xrange(kwargs['n_conv_layers']):
+    for ii in xrange(max(0, kwargs['n_conv_layers'])):
         this_dict = kwargs.copy()
         k_shp = [1,this_dict['conv_'+str(ii)+'_shp']]
         p_shp = [1,this_dict['conv_'+str(ii)+'_pshp']]
@@ -55,7 +55,7 @@ def make_layers(kwargs):
         out_dim = np.prod(in_shape)
     dim = kwargs['fc_dim0']
 
-    for ii in xrange(kwargs['n_fc_layers']):
+    for ii in xrange(max(0, kwargs['n_fc_layers'])):
         this_dict = kwargs.copy()
         this_dict['dim'] = kwargs['fc_dim'+str(ii)]
         this_dict['name'] = 'f'+str(ii)
@@ -88,10 +88,10 @@ def make_last_layer_and_cost(kwargs):
     else:
         this_dict['L0'] = 'y'
     this_dict['L0']
-    for ii in xrange(0, kwargs['n_conv_layers']):
+    for ii in xrange(0, max(0, kwargs['n_conv_layers'])):
         out_cost_string += wd_string % {'name': 'c'+str(ii),
                                         'wd': this_dict['wd']}
-    for ii in xrange(0, kwargs['n_fc_layers']):
+    for ii in xrange(0, max(0, kwargs['n_fc_layers'])):
         out_cost_string += wd_string % {'name': 'f'+str(ii),
                                         'wd': this_dict['wd']}
     out_cost_string += end_cost_string

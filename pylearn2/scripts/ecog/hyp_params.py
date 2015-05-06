@@ -1,10 +1,10 @@
-import decimal, json, os
+import decimal, json, os, yaml
 
 def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
                     'frac_train': .5,
-                    'pm_aug_range': None,
+                    'pm_aug_range': 10,
                     'shape': [1, 258],
                     'channels': 85,
                     'consonant_dim': 19,
@@ -18,8 +18,8 @@ def get_params(json_file):
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'exp_name': 'test',
-                    'description':'test',
+                    'exp_name': 'fc_point5',
+                    'description':'fc_point5',
                     'scratch': 'exps'}
 
     out_dim = 57
@@ -36,7 +36,7 @@ def get_params(json_file):
     fixed_params['min_dim'] = min_dim
 
     with open(json_file, 'r') as f:
-        exp = json.load(f)
+        exp = yaml.safe_load(f)
     opt_params = exp['variables']
     fixed_params['exp_name'] = exp['experiment-name']
     fixed_params['description'] = exp['experiment-name']

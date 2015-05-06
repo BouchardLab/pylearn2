@@ -1,14 +1,14 @@
 {
     "language"        : "PYTHON",
     "main-file"       : "run_spearmint.py",
-    "experiment-name" : "test3",
+    "experiment-name" : "fc_point5",
     "likelihood"      : "GAUSSIAN",
     "resources"       : {
-	    "my-machine" : {
-		    "scheduler" : "local",
-		    "max-concurrent" : 1,
-		    "max-finished-jobs" : 100
-	    }
+        "my-machine" : {
+            "scheduler" : "local",
+            "max-concurrent" : 1,
+            "max-finished-jobs" : 100
+        }
     },
     "variables" : {
 "n_fc_layers" : { "min" : 0, "max" : 3, "type" : "int", "size" : 1 },
@@ -16,7 +16,7 @@
 "fc_dim1" : { "min" : 3, "max" : 1000, "type" : "int", "size" : 1 },
 "fc_dim2" : { "min" : 3, "max" : 1000, "type" : "int", "size" : 1 },
 "fc_dim3" : { "min" : 3, "max" : 1000, "type" : "int", "size" : 1 },
-"n_conv_layers" : { "min" : 0, "max" : 3, "type" : "int", "size" : 1 },
+"n_conv_layers" : { "min" : -1, "max" : 0, "type" : "int", "size" : 1 },
 "channels_0" : { "min" : 8, "max" : 64, "type" : "int", "size" : 1 },
 "channels_grow" : { "min" : 1, "max" : 8, "type" : "float", "size" : 1 },
 "conv_0_shp" : { "min" : 3, "max" : 50, "type" : "int", "size" : 1 },
