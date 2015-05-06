@@ -181,6 +181,8 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             level_classes: %(level_classes)s,
             consonant_prediction: %(consonant_prediction)s,
             vowel_prediction: %(vowel_prediction)s,
+            frac_train: %(frac_train)d,
+            pm_aug_range: %(pm_aug_range)i,
             fold: %(fold)i,
             },"""
 
@@ -189,6 +191,11 @@ aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.Transformer
               filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
               which_set: 'augment',
               center: %(center)s,
+              level_classes: %(level_classes)s,
+              consonant_prediction: %(consonant_prediction)s,
+              vowel_prediction: %(vowel_prediction)s,
+              frac_train: %(frac_train)d,
+              pm_aug_range: %(pm_aug_range)i,
               fold: %(fold)i,
         },
         transformer: !obj:pylearn2.data_augmentation.ScaleAugmentation {
@@ -216,6 +223,8 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+			        frac_train: %(frac_train)d,
+			        pm_aug_range: %(pm_aug_range)i,
                                 fold: %(fold)i,
                           },
                 'valid' : !obj:pylearn2.datasets.ecog.ECoG {
@@ -225,6 +234,8 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+			        frac_train: %(frac_train)d,
+			        pm_aug_range: %(pm_aug_range)i,
                                 fold: %(fold)i,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
@@ -234,6 +245,8 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+			        frac_train: %(frac_train)d,
+			        pm_aug_range: %(pm_aug_range)i,
                                 fold: %(fold)i,
                           },
             },

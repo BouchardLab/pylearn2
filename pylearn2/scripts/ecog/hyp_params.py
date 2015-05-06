@@ -3,6 +3,8 @@ import decimal, json, os
 def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
+                    'frac_train': .5,
+                    'pm_aug_range': None,
                     'shape': [1, 258],
                     'channels': 85,
                     'consonant_dim': 19,
