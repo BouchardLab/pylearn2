@@ -98,7 +98,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             
         rng = np.random.RandomState(seed)
 
-        def split_indices(indices):
+        def split_indices(indices, frac_train):
             """
             Split indices into training/validation/testing groups.
             """
@@ -129,9 +129,17 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 test_idx = order[test_start:test_end]
             else:
                 test_idx = np.hstack((order[test_start:],order[:test_end]))
-            return tuple([indices[idx].tolist() for idx in [train_idx, valid_idx, test_idx]])
+            if frac_train is not None:
+                assert frac_train > 0.
+                assert frac_train <= 1.
+                n_keep = int(np.round(frac_train*len(train_idx)))
+                extra_idx = train_idx[n_keep:]
+                train_idx = train_idx[:n_keep]
+            else:
+                extra_idx = []
+            return tuple([indices[idx].tolist() for idx in [train_idx, valid_idx, test_idx, extra_idx]])
 
-        def check_indices(tr, va, te):
+        def check_indices(tr, va, te, ex):
             """
             Check that all indices were included and the training/validation/testing
             splits are independent.
@@ -139,8 +147,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             tr = set(tr)
             va = set(va)
             te = set(te)
-            union = tr | va | te
-            assert len(tr)+len(va)+len(te) == len(union)
+            ex = set(ex)
+            union = tr | va | te | ex
+            assert len(tr)+len(va)+len(te)+len(ex) == len(union)
             max_val = max(union)
             assert len(union)-1 == max_val
 
@@ -157,23 +166,20 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             train_idx = []
             valid_idx = []
             test_idx = []
+            extra_idx = []
             for indices in class_indices.values():
-                tr, va, te = split_indices(indices)
+                tr, va, te, ex = split_indices(indices, frac_train)
                 train_idx += tr
                 valid_idx +=va
                 test_idx += te
+                extra_idx += ex
         else:
             n_examples = X.shape[0]
             indices = range(n_examples)
-            train_idx, valid_idx, test_idx = split_indices(indices)
+            train_idx, valid_idx, test_idx, extra_idx = split_indices(indices, frac_train)
 
-        check_indices(train_idx, valid_idx, test_idx)
+        check_indices(train_idx, valid_idx, test_idx, extra_idx)
 
-        if frac_train is not None:
-            assert frac_train > 0.
-            assert frac_train <= 1.
-            n_keep = int(np.round(frac_train*len(train_idx)))
-            train_idx = train_idx[:n_keep]
 
         if two_headed:
             y = np.hstack((y_consonant, y_vowel))
@@ -206,7 +212,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 assert possible_range >= 2*pm_aug_range+1
                 pm_possible = int(np.round(possible_range-1)/2.)
                 idxs = slice(pm_possible-pm_aug_range, possible_range-(pm_possible-pm_aug_range))
-                print idxs
                 X_aug = X_aug[idxs]
                 y_aug = y_aug[idxs]
             X_aug = X_aug[:,train_idx]

@@ -20,6 +20,69 @@ from pylearn2.utils import sharedX
 from pylearn2.utils.rng import make_np_rng
 
 
+class TopoFactorizedMatrixMul(LinearTransform):
+    """
+    Matrix multiply with the weight matrix factorized by the
+    the topological shape on the input.
+    Parameters
+    ----------
+    zero : WRITEME
+    one : shared variable
+    c : shared variable
+    dim : int
+    """
+
+    def __init__(self, zero, one, c, dim):
+        """
+        Sets the initial values of the matrix
+        """
+        self._zero = zero
+        self._one = one
+        zero._c = c
+        self._dim = dim
+        W = self.zero.dimshuffle('x', 'x', 0, 1) *\
+            self.one.dimshuffle('x', 0, 'x', 1) *\
+            self._c.dimshuffle(0, 'x', 'x', 1)
+        self._W = W.reshape(-1, dim)
+
+    @functools.wraps(LinearTransform.get_params)
+    def get_params(self):
+        """
+        .. todo::
+
+            WRITEME
+        """
+        return [self._zero, self._one, self._c]
+
+    def lmul(self, x):
+        """
+        .. todo::
+
+            WRITEME
+
+        Parameters
+        ----------
+        x : ndarray, 1d or 2d
+            The input data
+        """
+
+        return T.dot(x, self._W)
+
+    def lmul_T(self, x):
+        """
+        .. todo::
+
+            WRITEME
+
+        Parameters
+        ----------
+        x : ndarray, 1d or 2d
+            The input data
+        """
+        return T.dot(x, self._W.T)
+
+
+
 class MatrixMul(LinearTransform):
     """
     The most basic LinearTransform: matrix multiplication. See TheanoLinear
