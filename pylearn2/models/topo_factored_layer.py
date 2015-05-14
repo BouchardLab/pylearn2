@@ -158,3 +158,12 @@ class TopoFactorizedLinear(mlp.Linear):
             rval['min_x_min_u'] = mn.min()
 
         return rval
+
+class Tanh(mlp.Tanh, TopoFactorizedLinear):
+    pass
+
+class Sigmoid(mlp.Sigmoid, TopoFactorizedLinear):
+    pass
+
+class RectifiedLinear(mlp.RectifiedLinear, TopoFactorizedLinear):
+    pass
