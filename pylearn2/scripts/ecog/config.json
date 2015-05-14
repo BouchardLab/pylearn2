@@ -1,7 +1,7 @@
 {
     "language"        : "PYTHON",
     "main-file"       : "run_spearmint.py",
-    "experiment-name" : "fc_point6",
+    "experiment-name" : "fc_1point0",
     "likelihood"      : "GAUSSIAN",
     "resources"       : {
         "my-machine" : {

@@ -20,69 +20,6 @@ from pylearn2.utils import sharedX
 from pylearn2.utils.rng import make_np_rng
 
 
-class TopoFactorizedMatrixMul(LinearTransform):
-    """
-    Matrix multiply with the weight matrix factorized by the
-    the topological shape on the input.
-    Parameters
-    ----------
-    zero : WRITEME
-    one : shared variable
-    c : shared variable
-    dim : int
-    """
-
-    def __init__(self, zero, one, c, dim):
-        """
-        Sets the initial values of the matrix
-        """
-        self._zero = zero
-        self._one = one
-        zero._c = c
-        self._dim = dim
-        W = self.zero.dimshuffle('x', 'x', 0, 1) *\
-            self.one.dimshuffle('x', 0, 'x', 1) *\
-            self._c.dimshuffle(0, 'x', 'x', 1)
-        self._W = W.reshape(-1, dim)
-
-    @functools.wraps(LinearTransform.get_params)
-    def get_params(self):
-        """
-        .. todo::
-
-            WRITEME
-        """
-        return [self._zero, self._one, self._c]
-
-    def lmul(self, x):
-        """
-        .. todo::
-
-            WRITEME
-
-        Parameters
-        ----------
-        x : ndarray, 1d or 2d
-            The input data
-        """
-
-        return T.dot(x, self._W)
-
-    def lmul_T(self, x):
-        """
-        .. todo::
-
-            WRITEME
-
-        Parameters
-        ----------
-        x : ndarray, 1d or 2d
-            The input data
-        """
-        return T.dot(x, self._W.T)
-
-
-
 class MatrixMul(LinearTransform):
     """
     The most basic LinearTransform: matrix multiplication. See TheanoLinear
@@ -144,6 +81,49 @@ class MatrixMul(LinearTransform):
             The input data
         """
         return T.dot(x, self._W.T)
+
+
+class TopoFactorizedMatrixMul(MatrixMul):
+    """
+    Matrix multiply with the weight matrix factorized by the
+    the topological shape on the input.
+    Parameters
+    ----------
+    zero : WRITEME
+    one : shared variable
+    c : shared variable
+    dim : int
+    """
+
+    def __init__(self, out_dim, zero=None, one=None, c=None):
+        """
+        Sets the initial values of the matrix
+        """
+        params = [zero, one, c]
+        self.params = [param for param in params if param is not None]
+        assert len(self.params) > 0
+        self._dim = out_dim
+        if zero is not None:
+            zero = zero.dimshuffle('x', 'x', 0, 1)
+        if one is not None:
+            zero = one.dimshuffle('x', 0, 'x', 1)
+        if c is not None:
+            c = c.dimshuffle(0, 'x', 'x', 1)
+        reshaped_params = [zero, one, c]
+        reshaped_params = [param for param in params if param is not None]
+        W = 1.
+        for param in reshaped_params:
+            W = W*param
+        self._W = W.reshape((-1, out_dim))
+
+    @functools.wraps(LinearTransform.get_params)
+    def get_params(self):
+        """
+        .. todo::
+
+            WRITEME
+        """
+        return self.params
 
 
 def make_local_rfs(dataset, nhid, rf_shape, stride, irange = .05,

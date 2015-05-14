@@ -3,7 +3,7 @@ import decimal, json, os, yaml
 def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
-                    'frac_train': .6,
+                    'frac_train': 1.,
                     'pm_aug_range': 10,
                     'shape': [1, 258],
                     'channels': 85,
@@ -18,8 +18,8 @@ def get_params(json_file):
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'exp_name': 'fc_point6',
-                    'description':'fc_point6',
+                    'exp_name': 'fc_1point0',
+                    'description':'fc_1point0',
                     'scratch': 'exps'}
 
     out_dim = 57

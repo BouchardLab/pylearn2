@@ -1,7 +1,7 @@
-import os, time
+import cPickle, os, time
 from pylearn2.config import yaml_parse
 from pylearn2.utils import serial
-from yaml_builder import build_yaml
+from yaml_builder import build_yaml, build_dataset
 import numpy as np
 
 def get_final_val(fname, key):
@@ -9,40 +9,59 @@ def get_final_val(fname, key):
     channels = model.monitor.channels
     return 1.-float(channels[key].val_record[-1])
 
-def get_result(ins_dict, fixed_params):
-    start = time.time()
-    if ins_dict['n_conv_layers'] > 0:
-        fixed_params['conv'] = True
-        fixed_params['in_shape'] = fixed_params['shape']
-        fixed_params['in_channels'] = fixed_params['channels']
-    else:
-        fixed_params['conv'] = False
-        fixed_params['in_shape'] = np.prod(fixed_params['shape'])*fixed_params['channels']
-
+def get_result(ins_dict, fixed_params, lda=False):
     n_folds = fixed_params['n_folds']
     scratch = fixed_params['scratch']
     exp_name = fixed_params['exp_name']
     job_id = fixed_params['job_id']
-    ins_dict = ins_dict.copy()
-    fixed_params = fixed_params.copy()
-    print 'Starting training...'
     valid_accuracy = np.zeros(n_folds)
     test_accuracy = np.zeros(n_folds)
     train_accuracy = np.zeros(n_folds)
-    for fold in xrange(n_folds):
-        ins_dict['fold'] = fold
-        ins_dict['filename'] = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
-        train = build_yaml(ins_dict, fixed_params)
-        yaml_file = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.yaml')
-        with open(yaml_file, 'w') as f:
-            f.write(train)
-        print train
-        train = yaml_parse.load(train)
-        train.main_loop()
-        del train
-        train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
-        valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')
-        test_accuracy[fold] = get_final_val(ins_dict['filename'], 'test_y_misclass')
+    if lda:
+        from sklearn.lda import LDA
+        print 'Starting training...'
+        start = time.time()
+        for fold in xrange(n_folds):
+            ds_params = fixed_params.copy()
+            ds_params['fold'] = fold
+            ds = yaml_parse.load(build_dataset(ds_params))
+            model = LDA(ins_dict)
+            model.fit(ds.X)
+            vs = ds.get_validation_set()
+            ts = ds.get_test_set()
+            train_accuracy[fold] = model.score(ds.X, ds.y.argmax(axis=1))
+            valid_accuracy[fold] = model.score(vs.X, vs.y.argmax(axis=1))
+            test_accuracy[fold] = model.score(ts.X, ts.y.argmax(axis=1))
+            filename = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+            with open(filename, 'w') as f:
+                cPickle.dump(model, f)
+    else:
+        if ins_dict['n_conv_layers'] > 0:
+            fixed_params['conv'] = True
+            fixed_params['in_shape'] = fixed_params['shape']
+            fixed_params['in_channels'] = fixed_params['channels']
+        else:
+            fixed_params['conv'] = False
+            fixed_params['in_shape'] = np.prod(fixed_params['shape'])*fixed_params['channels']
+
+        ins_dict = ins_dict.copy()
+        fixed_params = fixed_params.copy()
+        print 'Starting training...'
+        start = time.time()
+        for fold in xrange(n_folds):
+            ins_dict['fold'] = fold
+            ins_dict['filename'] = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+            train = build_yaml(ins_dict, fixed_params)
+            yaml_file = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.yaml')
+            with open(yaml_file, 'w') as f:
+                f.write(train)
+            print train
+            train = yaml_parse.load(train)
+            train.main_loop()
+            del train
+            train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
+            valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')
+            test_accuracy[fold] = get_final_val(ins_dict['filename'], 'test_y_misclass')
 
     for fold in xrange(n_folds):
         print '--------------------------------------'
