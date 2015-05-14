@@ -49,18 +49,15 @@ def make_layers(kwargs):
         out_string += conv_layer_string % this_dict
         channels = int(channels*kwargs['channels_grow'])
 
-    if kwargs['n_conv_layers'] > 0:
-        out_dim = np.prod(cur_shp)*channels
-    else:
-        out_dim = np.prod(in_shape)
-    dim = kwargs['fc_dim0']
-
     for ii in xrange(kwargs['n_fc_layers']):
         this_dict = kwargs.copy()
         this_dict['dim'] = kwargs['fc_dim'+str(ii)]
         this_dict['name'] = 'f'+str(ii)
         this_dict['range'] = np.power(10., kwargs['log_fc_irange'])
-        out_string += fc_layer_string % this_dict
+        if this_dict['factorize'] and ii == 0:
+            out_string += topo_layer_string % this_dict
+        else:
+            out_string += fc_layer_string % this_dict
     return out_string
 
 def make_last_layer_and_cost(kwargs):
@@ -111,7 +108,7 @@ def build_yaml(ins_dict, fixed_params):
     if fixed_params['conv']:
         ins_dict['space'] = conv_string % ins_dict
     else:
-        ins_dict['space'] = fc_string % ins_dict
+        ins_dict['space'] = conv_string % ins_dict
     if fixed_params['train_set'] == 'train':
         ins_dict['dataset_string'] = train_dataset % ins_dict
     elif fixed_params['train_set'] == 'augment':
@@ -159,6 +156,12 @@ fc_layer_string = ("!obj:pylearn2.models.mlp.%(fc_layer_type)s {\n"
                 +"%(init_type)s: %(range)f,\n"
                 +"max_col_norm: %(max_col_norm)f,\n"
                 +"},\n")
+topo_layer_string = ("!obj:pylearn2.models.topo_factorized_layer.%(fc_layer_type)s {\n"
+                  +"layer_name: %(name)s,\n"
+                  +"dim: %(dim)i,\n"
+                  +"%(init_type)s: %(range)f,\n"
+                  +"max_col_norm: %(max_col_norm)f,\n"
+                  +"},\n")
 layer_string = ("!obj:pylearn2.models.mlp.%(final_layer_type)s {\n"
                 +"layer_name: y,\n"
                 +"%(string)s: %(dim)i,\n"

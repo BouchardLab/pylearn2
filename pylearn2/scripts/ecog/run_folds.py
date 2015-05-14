@@ -42,7 +42,9 @@ def get_result(ins_dict, fixed_params, lda=False):
             fixed_params['in_channels'] = fixed_params['channels']
         else:
             fixed_params['conv'] = False
-            fixed_params['in_shape'] = np.prod(fixed_params['shape'])*fixed_params['channels']
+            fixed_params['in_shape'] = fixed_params['shape']
+            fixed_params['in_channels'] = fixed_params['channels']
+            #fixed_params['in_shape'] = np.prod(fixed_params['shape'])*fixed_params['channels']
 
         ins_dict = ins_dict.copy()
         fixed_params = fixed_params.copy()

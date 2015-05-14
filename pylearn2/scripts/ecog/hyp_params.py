@@ -15,6 +15,7 @@ def get_params(json_file):
                     'vowel_prediction': False,
                     'center': True,
                     'test': False,
+                    'factorize': False,
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
