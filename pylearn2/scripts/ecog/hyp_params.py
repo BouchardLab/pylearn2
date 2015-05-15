@@ -11,7 +11,7 @@ def get_params(json_file):
                     'vowel_dim': 3,
                     'n_folds': 10,
                     'level_classes': True,
-                    'randomize_labels': True,
+                    'randomize_labels': False,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
                     'center': True,
@@ -20,8 +20,8 @@ def get_params(json_file):
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'exp_name': 'shuffle',
-                    'description':'shuffle',
+                    'exp_name': 'conv_level',
+                    'description':'conv_level',
                     'scratch': 'exps'}
 
     out_dim = 57

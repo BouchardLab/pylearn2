@@ -25,10 +25,10 @@ def make_layers(kwargs):
 
     in_shape = kwargs['in_shape']
     out_string = ""
-    channels = kwargs['channels_0']
     cur_shp = in_shape
     for ii in xrange(kwargs['n_conv_layers']):
         this_dict = kwargs.copy()
+        channels = kwargs['channels_'+str(ii)]
         k_shp = [1,this_dict['conv_'+str(ii)+'_shp']]
         p_shp = [1,this_dict['conv_'+str(ii)+'_pshp']]
         p_strd = [1,this_dict['conv_'+str(ii)+'_pstrd']]
@@ -47,7 +47,6 @@ def make_layers(kwargs):
         this_dict['name'] = 'c'+str(ii)
         this_dict['range'] = np.power(10., kwargs['log_conv_irange'])
         out_string += conv_layer_string % this_dict
-        channels = int(channels*kwargs['channels_grow'])
 
     for ii in xrange(kwargs['n_fc_layers']):
         this_dict = kwargs.copy()
