@@ -43,7 +43,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     two_headed: bool
         Flag for predicting consonant and vowel class in one network.
         Overrides consonant and vowel prediction.
-    randomize_label: bool
+    randomize_labels: bool
         Randomly permutes the labels for the examples.
         Meant for control runs.
     frac_train: float
@@ -58,7 +58,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  consonant_prediction=False,
                  vowel_prediction=False,
                  two_headed=False,
-                 randomize_label=False,
+                 randomize_labels=False,
                  frac_train=None,
                  pm_aug_range=None,
                  load_all=None, cache_size=400000000):
@@ -191,6 +191,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             y = y_vowel
 
         if randomize_label:
+            if which_set == 'augment':
+                raise NotImplementedError
             order = rng.permutation(y.shape[0])
             y = y[order]
 
