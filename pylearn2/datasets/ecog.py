@@ -190,7 +190,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             assert not consonant_prediction
             y = y_vowel
 
-        if randomize_label:
+        if randomize_labels:
             if which_set == 'augment':
                 raise NotImplementedError
             order = rng.permutation(y.shape[0])
