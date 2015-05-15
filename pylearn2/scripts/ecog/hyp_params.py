@@ -11,6 +11,7 @@ def get_params(json_file):
                     'vowel_dim': 3,
                     'n_folds': 10,
                     'level_classes': True,
+                    'randomize_labels': True,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
                     'center': True,
