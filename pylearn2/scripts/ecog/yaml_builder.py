@@ -191,6 +191,7 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             level_classes: %(level_classes)s,
             consonant_prediction: %(consonant_prediction)s,
             vowel_prediction: %(vowel_prediction)s,
+            randomize_labels: %(randomize_labels)s,
             fold: %(fold)i,
             },"""
 
@@ -199,6 +200,7 @@ aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.Transformer
               filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
               which_set: 'augment',
               center: %(center)s,
+              randomize_labels: %(randomize_labels)s,
               fold: %(fold)i,
         },
         transformer: !obj:pylearn2.data_augmentation.ScaleAugmentation {
@@ -226,6 +228,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+                                randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
                 'valid' : !obj:pylearn2.datasets.ecog.ECoG {
@@ -235,6 +238,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+                                randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
                 'test' : !obj:pylearn2.datasets.ecog.ECoG {
@@ -244,6 +248,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+                                randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
             },

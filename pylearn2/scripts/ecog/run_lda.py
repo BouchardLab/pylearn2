@@ -13,9 +13,9 @@ json_file = 'config.json'
 opt_params, fixed_params = get_params(json_file)
 outcome = {'name': 'accuracy'}
 
-opt_parameters = {'solver': {'options': ['svd', 'lsqr', 'eigen'], 'type': 'enum'},
-                  'shrinkage': {'options': ['auto', 'float']},
-                  'float': {'min': 0., 'max': 1., 'type': 'float'}}
+opt_params = {'solver': {'options': ['svd', 'lsqr', 'eigen'], 'type': 'enum'},
+              'shrinkage': {'options': ['auto', 'float'], 'type': 'enum'},
+              'float': {'min': 0., 'max': 1., 'type': 'float'}}
 
 seed = 20150427
 rng = np.random.RandomState(seed)
@@ -41,6 +41,7 @@ fixed_params['job_id'] = job_id
 
 make_dir(fixed_params)
 
+print job
 lda_job = {}
 lda_job['solver'] = job['solver']
 if job['solver'] != 'svd':
@@ -49,7 +50,7 @@ if job['solver'] != 'svd':
     else:
         lda_job['shrinkage'] = job['float']
 
-valid_accuracy = get_result(job, fixed_params, lda=True)
+valid_accuracy = get_result(lda_job, fixed_params, lda=True)
 
 if not fixed_params['test']:
     scientist.update(job, valid_accuracy)
