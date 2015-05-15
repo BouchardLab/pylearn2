@@ -199,6 +199,9 @@ aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.Transformer
               filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
               which_set: 'augment',
               center: %(center)s,
+              level_classes: %(level_classes)s,
+              consonant_prediction: %(consonant_prediction)s,
+              vowel_prediction: %(vowel_prediction)s,
               fold: %(fold)i,
         },
         transformer: !obj:pylearn2.data_augmentation.ScaleAugmentation {

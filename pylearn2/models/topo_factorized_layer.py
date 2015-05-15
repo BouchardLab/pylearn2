@@ -1,8 +1,11 @@
+from pylearn2.compat import OrderedDict
 from pylearn2.linear.matrixmul import TopoFactorizedMatrixMul
 from pylearn2.models import mlp
 from pylearn2.space import Conv2DSpace, VectorSpace
 from pylearn2.model_extensions.norm_constraint import MaxL2FilterNorm
 from pylearn2.utils import sharedX, wraps
+
+import theano.tensor as T
 import numpy as np
 
 class TopoFactorizedLinear(mlp.Linear):
@@ -159,11 +162,26 @@ class TopoFactorizedLinear(mlp.Linear):
 
         return rval
 
-class Tanh(mlp.Tanh, TopoFactorizedLinear):
-    pass
+class Tanh(TopoFactorizedLinear):
+    @wraps(mlp.Layer.fprop)
+    def fprop(self, state_below):
 
-class Sigmoid(mlp.Sigmoid, TopoFactorizedLinear):
-    pass
+        p = self._linear_part(state_below)
+        p = T.tanh(p)
+        return p
 
-class RectifiedLinear(mlp.RectifiedLinear, TopoFactorizedLinear):
-    pass
+class Sigmoid(TopoFactorizedLinear):
+    @wraps(mlp.Layer.fprop)
+    def fprop(self, state_below):
+
+        p = self._linear_part(state_below)
+        p = T.nnet.sigmoid(p)
+        return p
+
+class RectifiedLinear(TopoFactorizedLinear):
+    @wraps(mlp.Layer.fprop)
+    def fprop(self, state_below):
+
+        p = self._linear_part(state_below)
+        p = T.switch(p > 0., p, 0.)
+        return p

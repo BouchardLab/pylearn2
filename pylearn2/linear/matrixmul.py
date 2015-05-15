@@ -106,11 +106,11 @@ class TopoFactorizedMatrixMul(MatrixMul):
         if zero is not None:
             zero = zero.dimshuffle('x', 'x', 0, 1)
         if one is not None:
-            zero = one.dimshuffle('x', 0, 'x', 1)
+            one = one.dimshuffle('x', 0, 'x', 1)
         if c is not None:
             c = c.dimshuffle(0, 'x', 'x', 1)
         reshaped_params = [zero, one, c]
-        reshaped_params = [param for param in params if param is not None]
+        reshaped_params = [param for param in reshaped_params if param is not None]
         W = 1.
         for param in reshaped_params:
             W = W*param
