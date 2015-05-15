@@ -26,8 +26,8 @@ def get_result(ins_dict, fixed_params, lda=False):
             ds_params['fold'] = fold
             ds = yaml_parse.load(build_dataset(ds_params))
             model = LDA(ins_dict)
-            model.fit(ds.X)
-            vs = ds.get_validation_set()
+            model.fit(ds.X, ds.y.argmax(axis=1))
+            vs = ds.get_valid_set()
             ts = ds.get_test_set()
             train_accuracy[fold] = model.score(ds.X, ds.y.argmax(axis=1))
             valid_accuracy[fold] = model.score(vs.X, vs.y.argmax(axis=1))
