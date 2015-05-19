@@ -1,7 +1,7 @@
 {
     "language"        : "PYTHON",
     "main-file"       : "run_spearmint.py",
-    "experiment-name" : "conv_level_aug",
+    "experiment-name" : "conv_point5",
     "likelihood"      : "GAUSSIAN",
     "resources"       : {
         "my-machine" : {
