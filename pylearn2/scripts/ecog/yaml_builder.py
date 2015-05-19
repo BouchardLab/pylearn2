@@ -191,6 +191,8 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             consonant_prediction: %(consonant_prediction)s,
             vowel_prediction: %(vowel_prediction)s,
             randomize_labels: %(randomize_labels)s,
+            frac_train: %(frac_train)s,
+            pm_aug_range: %(pm_aug_range)s,
             fold: %(fold)i,
             },"""
 
@@ -203,6 +205,8 @@ aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.Transformer
               consonant_prediction: %(consonant_prediction)s,
               vowel_prediction: %(vowel_prediction)s,
               randomize_labels: %(randomize_labels)s,
+              frac_train: %(frac_train)s,
+              pm_aug_range: %(pm_aug_range)s,
               fold: %(fold)i,
         },
         transformer: !obj:pylearn2.data_augmentation.ScaleAugmentation {
