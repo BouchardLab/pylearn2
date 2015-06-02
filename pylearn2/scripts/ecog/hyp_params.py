@@ -3,10 +3,8 @@ import decimal, json, os, yaml
 def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
-                    'frac_train': .5,
+                    'frac_train': 1.,
                     'pm_aug_range': 10,
-                    'shape': [1, 258],
-                    'channels': 85,
                     'consonant_dim': 19,
                     'vowel_dim': 3,
                     'n_folds': 10,
@@ -14,21 +12,23 @@ def get_params(json_file):
                     'randomize_labels': False,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
+                    'audio_features': True,
                     'center': True,
                     'test': False,
                     'factorize': False,
                     'data_file': 'EC2_CV_85_nobaseline_aug.h5',
+                    'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'exp_name': 'conv_point5',
-                    'description':'conv_point5',
+                    'exp_name': 'fc_audio',
+                    'description': 'fc_audio',
                     'scratch': 'exps'}
 
     out_dim = 57
     if fixed_params['consonant_prediction']:
-        out_dim = consonant_dim
+        out_dim = fixed_params['consonant_dim']
     elif fixed_params['vowel_prediction']:
-        out_dim = vowel_dim
+        out_dim = fixed_params['vowel_dim']
     fixed_params['out_dim'] = out_dim
 
     if fixed_params['test']:
@@ -36,6 +36,16 @@ def get_params(json_file):
     else:
         min_dim = out_dim
     fixed_params['min_dim'] = min_dim
+
+    if fixed_params['audio_features']:
+        input_shape = [1, 219]
+        input_channels = 50
+        fixed_params['data_file'] = fixed_params['audio_file']
+    else:
+        input_shape = [1, 258]
+        input_channels = 85
+    fixed_params['shape'] = input_shape
+    fixed_params['channels'] = input_channels
 
     with open(json_file, 'r') as f:
         exp = yaml.safe_load(f)

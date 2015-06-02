@@ -1,7 +1,7 @@
 {
     "language"        : "PYTHON",
     "main-file"       : "run_spearmint.py",
-    "experiment-name" : "conv_point5",
+    "experiment-name" : "fc_audio",
     "likelihood"      : "GAUSSIAN",
     "resources"       : {
         "my-machine" : {
@@ -15,7 +15,7 @@
 "fc_dim0" : { "min" : 3, "max" : 1000, "type" : "int", "size" : 1 },
 "fc_dim1" : { "min" : 3, "max" : 1000, "type" : "int", "size" : 1 },
 "fc_dim2" : { "min" : 3, "max" : 1000, "type" : "int", "size" : 1 },
-"n_conv_layers" : { "min" : 1, "max" : 3, "type" : "int", "size" : 1 },
+"n_conv_layers" : { "min" : -1, "max" : 0, "type" : "int", "size" : 1 },
 "channels_0" : { "min" : 8, "max" : 128, "type" : "int", "size" : 1 },
 "channels_1" : { "min" : 8, "max" : 128, "type" : "int", "size" : 1 },
 "channels_2" : { "min" : 8, "max" : 128, "type" : "int", "size" : 1 },
