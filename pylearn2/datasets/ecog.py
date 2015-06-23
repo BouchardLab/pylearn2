@@ -81,6 +81,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             X = f['X'].value
             y = f['y'].value
             if two_headed:
+                assert not consonant_prediction
+                assert not vowel_prediction
                 y_consonant = f['y_consonant'].value
                 y_vowel = f['y_vowel'].value
             elif consonant_prediction:

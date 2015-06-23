@@ -1,7 +1,7 @@
 {
     "language"        : "PYTHON",
     "main-file"       : "run_spearmint.py",
-    "experiment-name" : "fc_audio",
+    "experiment-name" : "two_headed",
     "likelihood"      : "GAUSSIAN",
     "resources"       : {
         "my-machine" : {

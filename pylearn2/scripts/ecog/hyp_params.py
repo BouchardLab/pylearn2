@@ -9,9 +9,10 @@ def get_params(json_file):
                     'vowel_dim': 3,
                     'n_folds': 10,
                     'level_classes': True,
-                    'randomize_labels': True,
-                    'consonant_prediction': True,
+                    'randomize_labels': False,
+                    'consonant_prediction': False,
                     'vowel_prediction': False,
+                    'two_headed': True,
                     'audio_features': False,
                     'center': True,
                     'test': False,
@@ -20,8 +21,6 @@ def get_params(json_file):
                     'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'exp_name': 'fc_audio',
-                    'description': 'fc_audio',
                     'scratch': 'exps'}
 
     out_dim = 57
@@ -29,6 +28,8 @@ def get_params(json_file):
         out_dim = fixed_params['consonant_dim']
     elif fixed_params['vowel_prediction']:
         out_dim = fixed_params['vowel_dim']
+    elif fixed_params['two_headed']:
+        out_dim = fixed_params['consonant_dim']+fixed_params['vowel_dim']
     fixed_params['out_dim'] = out_dim
 
     if fixed_params['test']:

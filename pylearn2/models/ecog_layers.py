@@ -4,9 +4,28 @@ from pylearn2.models import mlp
 from pylearn2.space import Conv2DSpace, VectorSpace
 from pylearn2.model_extensions.norm_constraint import MaxL2FilterNorm
 from pylearn2.utils import sharedX, wraps
+from pylearn2.expr.nnet import two_class_prod_misclass
 
 import theano.tensor as T
 import numpy as np
+
+
+class TwoProdFlattenerLayer(mlp.FlattenerLayer):
+    @wraps(mlp.Layer.get_layer_monitoring_channels)
+    def get_layer_monitoring_channels(self, state_below=None,
+                                      state=None, targets=None):
+        rval = super(TwoProdFlattenerLayer, self).get_layer_monitoring_channels(
+                state_below=state_below,
+                state=state,
+                targets=targets)
+        if targets is not None:
+            name = 'misclass'
+            rval[name] = two_class_prod_misclass(targets,
+                                                 state,
+                                                 self.get_output_space(),
+                                                 self.raw_layer.get_output_space())
+        return rval
+
 
 class TopoFactorizedLinear(mlp.Linear):
     @wraps(mlp.Layer.set_input_space)

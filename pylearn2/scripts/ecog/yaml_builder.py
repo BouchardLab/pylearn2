@@ -67,14 +67,18 @@ def make_last_layer_and_cost(kwargs):
     this_dict['dim'] = out_dim
     this_dict['range'] = np.power(10., kwargs['log_fc_irange'])
     this_dict['wd'] = np.power(10., kwargs['log_weight_decay'])
-    if kwargs['cost_type'] == 'xent':
+    if kwargs['two_headed']:
+        final_layer_string = two_headed_layer_string
+    elif kwargs['cost_type'] == 'xent':
+        final_layer_string = layer_string
         this_dict['string'] = 'n_classes'
         this_dict['final_layer_type'] = 'Softmax'
     else:
+        final_layer_string = layer_string
         this_dict['string'] = 'dim'
         this_dict['final_layer_type'] = 'Linear'
 
-    out_layer_string = layer_string % this_dict
+    out_layer_string = final_layer_string % this_dict
 
     out_cost_string = cost_string
     if kwargs['n_conv_layers'] > 0:
@@ -98,7 +102,10 @@ def make_last_layer_and_cost(kwargs):
 def build_yaml(ins_dict, fixed_params):
     ins_dict = unlistify_job(ins_dict)
     ins_dict['lr'] = np.power(10., ins_dict['log_lr'])
-    ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
+    if fixed_params['two_headed']:
+        ins_dict['cost_obj'] = cost_type_map['xent']
+    else:
+        ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
     ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
     ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
     ins_dict['final_mom'] = 1.-np.power(10, ins_dict['log_final_mom_eps'])
@@ -167,6 +174,24 @@ layer_string = ("!obj:pylearn2.models.mlp.%(final_layer_type)s {\n"
                 +"%(init_type)s: %(range)f,\n"
                 +"max_col_norm: %(max_col_norm)f,\n"
                 +"},\n")
+two_headed_layer_string = ("!obj:pylearn2.models.ecog_layers.TwoProdFlattenerLayer {\n"
+                           +"raw_layer: !obj:pylearn2.models.mlp.CompositeLayer {\n"
+                           +"layer_name: 'y',\n"
+                           +"layers: [ !obj:pylearn2.models.mlp.Softmax {\n"
+                           +"layer_name: 'y_c',\n"
+                           +"n_classes: %(consonant_dim)i,\n"
+                           +"%(init_type)s: %(range)f,\n"
+                           +"max_col_norm: %(max_col_norm)f,\n"
+                           +"},\n"
+                           +"!obj:pylearn2.models.mlp.Softmax {\n"
+                           +"layer_name: 'y_v',\n"
+                           +"n_classes: %(vowel_dim)i,\n"
+                           +"%(init_type)s: %(range)f,\n"
+                           +"max_col_norm: %(max_col_norm)f,\n"
+                           +"},\n"
+                           +"],\n"
+                           +"},\n"
+                           +"},\n")
 cost_string = ("!obj:pylearn2.costs.cost.SumOfCosts {\n"
                +"costs: [\n"
                +"!obj:pylearn2.costs.%(cost_obj)s {\n"
@@ -190,6 +215,7 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             level_classes: %(level_classes)s,
             consonant_prediction: %(consonant_prediction)s,
             vowel_prediction: %(vowel_prediction)s,
+            two_headed: %(two_headed)s,
             randomize_labels: %(randomize_labels)s,
             frac_train: %(frac_train)s,
             pm_aug_range: %(pm_aug_range)s,
@@ -204,6 +230,7 @@ aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.Transformer
               level_classes: %(level_classes)s,
               consonant_prediction: %(consonant_prediction)s,
               vowel_prediction: %(vowel_prediction)s,
+              two_headed: %(two_headed)s,
               randomize_labels: %(randomize_labels)s,
               frac_train: %(frac_train)s,
               pm_aug_range: %(pm_aug_range)s,
@@ -234,6 +261,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+                                two_headed: %(two_headed)s,
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
@@ -244,6 +272,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+                                two_headed: %(two_headed)s,
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
@@ -254,6 +283,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
+                                two_headed: %(two_headed)s,
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
