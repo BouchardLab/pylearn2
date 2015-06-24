@@ -174,7 +174,7 @@ layer_string = ("!obj:pylearn2.models.mlp.%(final_layer_type)s {\n"
                 +"%(init_type)s: %(range)f,\n"
                 +"max_col_norm: %(max_col_norm)f,\n"
                 +"},\n")
-two_headed_layer_string = ("!obj:pylearn2.models.ecog_layers.TwoProdFlattenerLayer {\n"
+two_headed_layer_string = ("!obj:pylearn2.models.ecog_layers.MultiProdFlattenerLayer {\n"
                            +"raw_layer: !obj:pylearn2.models.mlp.CompositeLayer {\n"
                            +"layer_name: 'y',\n"
                            +"layers: [ !obj:pylearn2.models.mlp.Softmax {\n"

@@ -389,18 +389,21 @@ def HingeL1(Y, Y_hat):
     a = T.switch(a>0., a, 0.)
     return a.mean(0).sum()
 
-def Misclass(Y, Y_hat):
-    return misclass_vec(Y, Y_hat).mean()
-
 def misclass_vec(Y, Y_hat):
     return T.neq(T.argmax(Y, axis=1),
                  T.argmax(Y_hat, axis=1)
                  ).astype(theano.config.floatX)
 
-def multi_class_prod_misclass(Ys, Y_hats, flat_space, composite_space):
-    Ys = flat_space.format_as(Y, composite_space)
-    Y_hats = composite_space.undo_format_as(Y_hat, flat_space)
+def Misclass(Y, Y_hat):
+    return misclass_vec(Y, Y_hat).mean()
+
+def multi_class_prod_misclass_vec(Ys, Y_hats, flat_space, composite_space):
+    Ys = flat_space.format_as(Ys, composite_space)
+    Y_hats = composite_space.undo_format_as(Y_hats, flat_space)
     rval = 1.
     for Y, Y_hat in zip(Ys, Y_hats):
-        rval *= misclass_vec(Y, Y_hat)
-    return rval
+        rval *= (1.-misclass_vec(Y, Y_hat))
+    return 1.-rval
+
+def multi_class_prod_misclass(Ys, Y_hats, flat_space, composite_space):
+    return multi_class_prod_misclass_vec(Ys, Y_hats, flat_space, composite_space).mean()
