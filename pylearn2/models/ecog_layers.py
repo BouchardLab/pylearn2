@@ -9,8 +9,10 @@ from pylearn2.expr.nnet import multi_class_prod_misclass
 import theano.tensor as T
 import numpy as np
 
+class TwoProdFlattenerLayer(MultiProdFlattenerLayer):
+    pass
 
-class TwoProdFlattenerLayer(mlp.FlattenerLayer):
+class MultiProdFlattenerLayer(mlp.FlattenerLayer):
     @wraps(mlp.Layer.get_layer_monitoring_channels)
     def get_layer_monitoring_channels(self, state_below=None,
                                       state=None, targets=None):
