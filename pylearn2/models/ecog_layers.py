@@ -9,8 +9,6 @@ from pylearn2.expr.nnet import multi_class_prod_misclass
 import theano.tensor as T
 import numpy as np
 
-class TwoProdFlattenerLayer(MultiProdFlattenerLayer):
-    pass
 
 class MultiProdFlattenerLayer(mlp.FlattenerLayer):
     @wraps(mlp.Layer.get_layer_monitoring_channels)
@@ -27,6 +25,9 @@ class MultiProdFlattenerLayer(mlp.FlattenerLayer):
                                                    self.get_output_space(),
                                                    self.raw_layer.get_output_space())
         return rval
+
+class TwoProdFlattenerLayer(MultiProdFlattenerLayer):
+    pass
 
 
 class TopoFactorizedLinear(mlp.Linear):
