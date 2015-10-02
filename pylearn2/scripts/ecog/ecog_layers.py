@@ -101,7 +101,8 @@ class TopoFactorizedLinear(mlp.Linear):
                     desired_norms = T.clip(col_norms,
                                            self.min_col_norm,
                                            max_col_norm)
-                    updates[param] = updated_param * desired_norms / (1e-7 + col_norms)
+                    scale = desired_norms / T.maximum(1.e-7, col_norms)
+                    updates[param] = updated_param * scale
 
     @wraps(mlp.Layer.get_params)
     def get_params(self):
@@ -124,7 +125,7 @@ class TopoFactorizedLinear(mlp.Linear):
         if isinstance(coeff, str):
             coeff = float(coeff)
         assert isinstance(coeff, float) or hasattr(coeff, 'dtype')
-        params = self.transformer.get_params()
+        params = self.transformer.get_weights()
         return sum([coeff * T.sqr(param).sum() for param in params])
 
     @wraps(mlp.Layer.get_l1_weight_decay)
@@ -133,7 +134,7 @@ class TopoFactorizedLinear(mlp.Linear):
         if isinstance(coeff, str):
             coeff = float(coeff)
         assert isinstance(coeff, float) or hasattr(coeff, 'dtype')
-        params = self.transformer.get_params()
+        params = self.transformer.get_weights()
         return sum([coeff * abs(param).sum() for param in params])
 
     @wraps(mlp.Layer.get_layer_monitoring_channels)

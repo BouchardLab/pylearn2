@@ -12,7 +12,7 @@ def get_params(json_file):
                     'randomize_labels': False,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
-                    'two_headed': True,
+                    'two_headed': False,
                     'audio_features': False,
                     'center': True,
                     'test': False,

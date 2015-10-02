@@ -1,0 +1,3 @@
+[submodule "pylearn2/scripts/ecog/pca"]
+	path = pylearn2/scripts/ecog/pca
+	url = https://github.com/JesseLivezey/pca.git

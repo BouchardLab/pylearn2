@@ -182,6 +182,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         check_indices(train_idx, valid_idx, test_idx, extra_idx)
 
+        self.indices = (train_idx, valid_idx, test_idx, extra_idx)
+
 
         if two_headed:
             y = np.hstack((y_consonant, y_vowel))

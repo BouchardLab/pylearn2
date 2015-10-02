@@ -1,7 +1,7 @@
 {
     "language"        : "PYTHON",
     "main-file"       : "run_spearmint.py",
-    "experiment-name" : "two_headed",
+    "experiment-name" : "lda_pca",
     "likelihood"      : "GAUSSIAN",
     "resources"       : {
         "my-machine" : {

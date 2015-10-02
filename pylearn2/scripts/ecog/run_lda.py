@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-import os
+import os, cPickle
 from run_folds import get_result
 from run_random import random_params
 from hyp_params import get_params, make_dir
 import numpy as np
-import whetlab
-from sklearn.lda import LDA
 
 print 'Imports done...'
 
@@ -13,44 +11,35 @@ json_file = 'config.json'
 opt_params, fixed_params = get_params(json_file)
 outcome = {'name': 'accuracy'}
 
-opt_params = {'solver': {'options': ['svd', 'lsqr', 'eigen'], 'type': 'enum'},
-              'shrinkage': {'options': ['auto', 'float'], 'type': 'enum'},
-              'float': {'min': 0., 'max': 1., 'type': 'float'}}
+solvers = ['svd', 'lsqr', 'eigen']
+shrinkages = ['auto', 'float']
+fls = [0., 1.]
+pcs = 140
 
 seed = 20150427
 rng = np.random.RandomState(seed)
 
-with open('access_token.txt', 'r') as f:
-    access_token = f.read().splitlines()[0]
-
-if not fixed_params['test']:
-    scientist = whetlab.Experiment(name=fixed_params['exp_name'],
-                                   description=fixed_params['description'],
-                                   parameters=opt_params,
-                                   outcome=outcome,
-                                   access_token=access_token)
-print 'Scientist created...'
-
-if fixed_params['test']:
-    job = random_params(rng, params)
-    job_id = seed
-else:
-    job = scientist.suggest()
-    job_id = scientist.get_id(job)
+job_id = 0
 fixed_params['job_id'] = job_id
 
 make_dir(fixed_params)
 
-print job
-lda_job = {}
-lda_job['solver'] = job['solver']
-if job['solver'] != 'svd':
-    if job['shrinkage'] == 'auto':
-        lda_job['shrinkage'] = 'auto'
-    else:
-        lda_job['shrinkage'] = job['float']
+results = []
+for solver in solvers:
+    for shrinkage in shrinkages:
+        for fl in np.linspace(*fls, num=10):
+            lda_job = {}
+            lda_job['pcs'] = pcs
+            lda_job['solver'] = solver
+            if solver != 'svd':
+                if shrinkage == 'auto':
+                    lda_job['shrinkage'] = 'auto'
+                else:
+                    lda_job['shrinkage'] = fl
 
-valid_accuracy = get_result(lda_job, fixed_params, lda=True)
+            valid_accuracy = get_result(lda_job, fixed_params, lda=True)
+            results.append((valid_accuracy, lda_job))
+            job_id += 1
 
-if not fixed_params['test']:
-    scientist.update(job, valid_accuracy)
+with open('lda_pca.pkl', 'w') as f:
+    cPickle.dump(results, f)

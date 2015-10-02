@@ -10,7 +10,31 @@ import matplotlib.pyplot as plt
 import theano.tensor as T
 
 
-def dict2mat(indices_dicts, y_dims):
+def conf_mat2accuracy(c_mat, v_mat, cv_mat):
+    c_accuracy = None
+    v_accuracy = None
+    cv_accuracy = None
+    accuracy_per_cv = None
+
+    if cv_mat is not None:
+        cv_accuracy = np.zeros(len(cv_mat))
+        accuracy_per_cv = np.zeros((len(cv_mat), 57))
+        for ii, cvf in enumerate(cv_mat):
+            cv_accuracy[ii] = np.diag(cvf).sum()/cvf.sum()
+            for jj in range(57):
+                accuracy_per_cv[ii,jj] = cvf[jj,jj]/cvf[jj].sum()
+    if c_mat is not None:
+        c_accuracy = np.zeros(len(c_mat))
+        for ii, cf in enumerate(c_mat):
+            c_accuracy[ii] = np.diag(cf).sum()/cf.sum()
+    if v_mat is not None:
+        v_accuracy = np.zeros(len(v_mat))
+        for ii, vf in enumerate(v_mat):
+            v_accuracy[ii] = np.diag(vf).sum()/vf.sum()
+
+    return c_accuracy, v_accuracy, cv_accuracy, accuracy_per_cv
+
+def indx_dict2conf_mat(indices_dicts, y_dims):
     c = None
     c_dim = 19
     v = None
@@ -38,7 +62,7 @@ def dict2mat(indices_dicts, y_dims):
                 n_targets = nt
             else:
                 assert nt == n_targets
-    if cv in y_dims:
+    if cv_dim in y_dims:
         cv = np.zeros((n_folds, cv_dim, cv_dim))
         c = np.zeros((n_folds, c_dim, c_dim))
         v = np.zeros((n_folds, v_dim, v_dim))

@@ -19,19 +19,22 @@ def get_result(ins_dict, fixed_params, lda=False):
     train_accuracy = np.zeros(n_folds)
     if lda:
         from sklearn.lda import LDA
+        from pca import PCA
         print 'Starting training...'
         start = time.time()
         for fold in xrange(n_folds):
+            pca_model = PCA(dim=ins_dict['pcs'])
             ds_params = fixed_params.copy()
             ds_params['fold'] = fold
             ds = yaml_parse.load(build_dataset(ds_params))
+            X = pca_model.fit_transform(ds.X)
             model = LDA(ins_dict)
-            model.fit(ds.X, ds.y.argmax(axis=1))
+            model.fit(X, ds.y.argmax(axis=1))
             vs = ds.get_valid_set()
             ts = ds.get_test_set()
-            train_accuracy[fold] = model.score(ds.X, ds.y.argmax(axis=1))
-            valid_accuracy[fold] = model.score(vs.X, vs.y.argmax(axis=1))
-            test_accuracy[fold] = model.score(ts.X, ts.y.argmax(axis=1))
+            train_accuracy[fold] = model.score(X, ds.y.argmax(axis=1))
+            valid_accuracy[fold] = model.score(pca_model.transform(vs.X), vs.y.argmax(axis=1))
+            test_accuracy[fold] = model.score(pca_model.transform(ts.X), ts.y.argmax(axis=1))
             filename = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
             with open(filename, 'w') as f:
                 cPickle.dump(model, f)
@@ -82,5 +85,4 @@ def get_result(ins_dict, fixed_params, lda=False):
     print '--------------------------------------'
     print 'Total training time in seconds'
     print time.time()-start
-    return valid_accuracy.mean()
-
+    return valid_accuracy
