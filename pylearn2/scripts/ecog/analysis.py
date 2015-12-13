@@ -147,7 +147,10 @@ def get_model_results(model_folder, filename, fold, kwargs):
                    fold=fold,
                    **kwargs)
     ts = ds.get_test_set()
-    y_hat = model.fprop(X_sym)
+    acts = model.fprop(X_sym, return_all=True)
+    y_hat = acts[-1]
+    hidden = list(acts[:-1])
+    n_hidden = len(hidden)
     if isinstance(model.layers[-1], FlattenerLayer):
         comp_space = model.layers[-1].raw_layer.get_output_space()
         y_hat_list = list(comp_space.undo_format_as(y_hat, target_space))
@@ -159,11 +162,11 @@ def get_model_results(model_folder, filename, fold, kwargs):
         y_sym_list = [y_sym]
     misclass_sym = []
     indices_sym = []
-    for ys, yh in zip(y_hat_list, y_sym_list):
+    for yh, ys in zip(y_hat_list, y_sym_list):
         misclass_sym.append(nnet.Misclass(ys, yh))
         indices_sym.append(T.join(1, T.argmax(ys, axis=1, keepdims=True), T.argmax(yh, axis=1, keepdims=True)))
 
-    f = theano.function([X_sym, y_inpt], misclass_sym+indices_sym+y_hat_list)
+    f = theano.function([X_sym, y_inpt], misclass_sym+indices_sym+y_hat_list+hidden)
     it = ts.iterator(mode = 'sequential',
                      batch_size = ts.X.shape[0],
                      num_batches = 1,
@@ -174,6 +177,6 @@ def get_model_results(model_folder, filename, fold, kwargs):
     rvals = f(X, y)
     misclass = list(rvals[:n_targets])
     indices = list(rvals[n_targets:2*n_targets])
-    y_hats = list(rvals[2*n_targets:])
-    return misclass, indices, y_hats
-
+    y_hats = list(rvals[2*n_targets:3*n_targets])
+    hidden = list(rvals[3*n_targets:3*n_targets+n_hidden])
+    return misclass, indices, y_hats, hidden
