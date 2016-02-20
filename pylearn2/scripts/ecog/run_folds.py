@@ -9,7 +9,7 @@ def get_final_val(fname, key):
     channels = model.monitor.channels
     return 1.-float(channels[key].val_record[-1])
 
-def get_result(ins_dict, fixed_params, lda=False):
+def get_result(ins_dict, fixed_params, lda=False, kf=False):
     n_folds = fixed_params['n_folds']
     scratch = fixed_params['scratch']
     exp_name = fixed_params['exp_name']
@@ -35,6 +35,27 @@ def get_result(ins_dict, fixed_params, lda=False):
             train_accuracy[fold] = model.score(X, ds.y.argmax(axis=1))
             valid_accuracy[fold] = model.score(pca_model.transform(vs.X), vs.y.argmax(axis=1))
             test_accuracy[fold] = model.score(pca_model.transform(ts.X), ts.y.argmax(axis=1))
+            filename = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+            with open(filename, 'w') as f:
+                cPickle.dump(model, f)
+    elif kf:
+        from pykalman import KalmanFilterClassifier
+        print 'Starting training...'
+        start = time.time()
+        for fold in xrange(n_folds):
+            ds_params = fixed_params.copy()
+            ds_params['fold'] = fold
+            ds = yaml_parse.load(build_dataset(ds_params))
+            model = KalmanFilterClassifier(n_classes=fixed_params['out_dim'],
+                                           obs_dim=ins_dict['obs_dim'],
+                                           state_dim=ins_dict['state_dim'])
+            X = np.squeeze(ds.get_topological_view())
+            model.fit(X, ds.y.argmax(axis=1))
+            vs = ds.get_valid_set()
+            ts = ds.get_test_set()
+            train_accuracy[fold] = model.score(X, ds.y.argmax(axis=1))
+            valid_accuracy[fold] = model.score(np.squeeze(vs.get_topological_view()), vs.y.argmax(axis=1))
+            test_accuracy[fold] = model.score(np.squeeze(ts.get_topological_view()), ts.y.argmax(axis=1))
             filename = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
             with open(filename, 'w') as f:
                 cPickle.dump(model, f)
