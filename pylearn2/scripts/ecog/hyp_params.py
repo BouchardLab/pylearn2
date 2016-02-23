@@ -17,11 +17,15 @@ def get_params(json_file):
                     'center': True,
                     'test': False,
                     'factorize': False,
-                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
+                    'data_file': 'hdf5/EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                     'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
                     'scratch': 'exps'}
+    """
+                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
+                    'audio_file': 'audio_EC2_CV_mcep.h5',
+    """
 
     out_dim = 57
     if fixed_params['consonant_prediction']:

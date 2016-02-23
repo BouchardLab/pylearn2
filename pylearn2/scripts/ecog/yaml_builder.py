@@ -26,37 +26,39 @@ def make_layers(kwargs):
     in_shape = kwargs['in_shape']
     out_string = ""
     cur_shp = in_shape
-    for ii in xrange(kwargs['n_conv_layers']):
-        this_dict = kwargs.copy()
-        channels = kwargs['channels_'+str(ii)]
-        k_shp = [1,this_dict['conv_'+str(ii)+'_shp']]
-        p_shp = [1,this_dict['conv_'+str(ii)+'_pshp']]
-        p_strd = [1,this_dict['conv_'+str(ii)+'_pstrd']]
-        if k_shp[1] >= cur_shp[1]:
-            k_shp[1] = cur_shp[1]
-            p_shp[1] = 1
-            p_strd[1] = 1
-        cur_shp = get_shapes(cur_shp, k_shp, p_shp, p_strd)
-        this_dict['conv_shp0'] = k_shp[0]
-        this_dict['conv_shp1'] = k_shp[1]
-        this_dict['channels'] = channels
-        this_dict['pool_shp0'] = p_shp[0]
-        this_dict['pool_shp1'] = p_shp[1]
-        this_dict['pool_strd0'] = p_strd[0]
-        this_dict['pool_strd1'] = p_strd[1]
-        this_dict['name'] = 'c'+str(ii)
-        this_dict['range'] = np.power(10., kwargs['log_conv_irange'])
-        out_string += conv_layer_string % this_dict
+    if 'n_conv_layers' in kwargs.keys():
+        for ii in xrange(max(0, kwargs['n_conv_layers'])):
+            this_dict = kwargs.copy()
+            channels = kwargs['channels_'+str(ii)]
+            k_shp = [1,this_dict['conv_'+str(ii)+'_shp']]
+            p_shp = [1,this_dict['conv_'+str(ii)+'_pshp']]
+            p_strd = [1,this_dict['conv_'+str(ii)+'_pstrd']]
+            if k_shp[1] >= cur_shp[1]:
+                k_shp[1] = cur_shp[1]
+                p_shp[1] = 1
+                p_strd[1] = 1
+            cur_shp = get_shapes(cur_shp, k_shp, p_shp, p_strd)
+            this_dict['conv_shp0'] = k_shp[0]
+            this_dict['conv_shp1'] = k_shp[1]
+            this_dict['channels'] = channels
+            this_dict['pool_shp0'] = p_shp[0]
+            this_dict['pool_shp1'] = p_shp[1]
+            this_dict['pool_strd0'] = p_strd[0]
+            this_dict['pool_strd1'] = p_strd[1]
+            this_dict['name'] = 'c'+str(ii)
+            this_dict['range'] = np.power(10., kwargs['log_conv_irange'])
+            out_string += conv_layer_string % this_dict
 
-    for ii in xrange(kwargs['n_fc_layers']):
-        this_dict = kwargs.copy()
-        this_dict['dim'] = kwargs['fc_dim'+str(ii)]
-        this_dict['name'] = 'f'+str(ii)
-        this_dict['range'] = np.power(10., kwargs['log_fc_irange'])
-        if this_dict['factorize'] and ii == 0:
-            out_string += topo_layer_string % this_dict
-        else:
-            out_string += fc_layer_string % this_dict
+    if 'n_fc_layers' in kwargs.keys():
+        for ii in xrange(max(0, kwargs['n_fc_layers'])):
+            this_dict = kwargs.copy()
+            this_dict['dim'] = kwargs['fc_dim'+str(ii)]
+            this_dict['name'] = 'f'+str(ii)
+            this_dict['range'] = np.power(10., kwargs['log_fc_irange'])
+            if this_dict['factorize'] and ii == 0:
+                out_string += topo_layer_string % this_dict
+            else:
+                out_string += fc_layer_string % this_dict
     return out_string
 
 def make_last_layer_and_cost(kwargs):
@@ -81,19 +83,21 @@ def make_last_layer_and_cost(kwargs):
     out_layer_string = final_layer_string % this_dict
 
     out_cost_string = cost_string
-    if kwargs['n_conv_layers'] > 0:
+    if 'n_conv_layers' in kwargs.keys() and kwargs['n_conv_layers'] > 0:
         this_dict['L0'] = 'c0'
-    elif kwargs['n_fc_layers'] > 0:
+    elif 'n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0:
         this_dict['L0'] = 'f0'
     else:
         this_dict['L0'] = 'y'
     this_dict['L0']
-    for ii in xrange(0, kwargs['n_conv_layers']):
-        out_cost_string += wd_string % {'name': 'c'+str(ii),
-                                        'wd': this_dict['wd']}
-    for ii in xrange(0, kwargs['n_fc_layers']):
-        out_cost_string += wd_string % {'name': 'f'+str(ii),
-                                        'wd': this_dict['wd']}
+    if 'n_conv_layers' in kwargs.keys() and kwargs['n_conv_layers'] > 0:
+        for ii in xrange(kwargs['n_conv_layers']):
+            out_cost_string += wd_string % {'name': 'c'+str(ii),
+                                            'wd': this_dict['wd']}
+    if 'n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0:
+        for ii in xrange(0, kwargs['n_fc_layers']):
+            out_cost_string += wd_string % {'name': 'f'+str(ii),
+                                            'wd': this_dict['wd']}
     out_cost_string += end_cost_string
     out_cost_string = out_cost_string % this_dict
     return out_layer_string, out_cost_string
@@ -208,7 +212,7 @@ end_cost_string = ("},\n"
                    +"],\n"
                    +"},\n")
 
-train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
+train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog_new.ECoG {
             filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
             which_set: 'train',
             center: %(center)s,
@@ -223,7 +227,7 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             },"""
 
 aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.TransformerDataset {
-        raw: &train !obj:pylearn2.datasets.ecog.ECoG {
+        raw: &train !obj:pylearn2.datasets.ecog_new.ECoG {
               filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
               which_set: 'augment',
               center: %(center)s,
@@ -254,7 +258,7 @@ yaml_string = """!obj:pylearn2.train.Train {
         train_iteration_mode: 'sequential',
         monitoring_dataset:
             {
-                'train' : !obj:pylearn2.datasets.ecog.ECoG {
+                'train' : !obj:pylearn2.datasets.ecog_new.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'train',
                                 center: %(center)s,
@@ -265,7 +269,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
-                'valid' : !obj:pylearn2.datasets.ecog.ECoG {
+                'valid' : !obj:pylearn2.datasets.ecog_new.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'valid',
                                 center: %(center)s,
@@ -276,7 +280,7 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
-                'test' : !obj:pylearn2.datasets.ecog.ECoG {
+                'test' : !obj:pylearn2.datasets.ecog_new.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'test',
                                 center: %(center)s,

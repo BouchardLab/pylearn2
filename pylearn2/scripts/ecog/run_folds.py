@@ -60,15 +60,12 @@ def get_result(ins_dict, fixed_params, lda=False, kf=False):
             with open(filename, 'w') as f:
                 cPickle.dump(model, f)
     else:
-        if ins_dict['n_conv_layers'] > 0:
+        if 'n_conv_layers' in ins_dict.keys() and ins_dict['n_conv_layers'] > 0:
             fixed_params['conv'] = True
-            fixed_params['in_shape'] = fixed_params['shape']
-            fixed_params['in_channels'] = fixed_params['channels']
         else:
             fixed_params['conv'] = False
-            fixed_params['in_shape'] = fixed_params['shape']
-            fixed_params['in_channels'] = fixed_params['channels']
-            #fixed_params['in_shape'] = np.prod(fixed_params['shape'])*fixed_params['channels']
+        fixed_params['in_shape'] = fixed_params['shape']
+        fixed_params['in_channels'] = fixed_params['channels']
 
         ins_dict = ins_dict.copy()
         fixed_params = fixed_params.copy()
