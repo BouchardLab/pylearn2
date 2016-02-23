@@ -48,7 +48,7 @@ def get_params(json_file):
         fixed_params['data_file'] = fixed_params['audio_file']
     else:
         input_shape = [1, 258]
-        input_channels = 85
+        input_channels = 88
     fixed_params['shape'] = input_shape
     fixed_params['channels'] = input_channels
 

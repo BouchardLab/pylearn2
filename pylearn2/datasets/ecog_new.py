@@ -82,7 +82,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         filename = serial.preprocess(filename)
         with h5py.File(filename,'r') as f:
             X = f['X'].value
-            y = f['y'].value
+            y = f['y'].value.astype(int)
             if two_headed:
                 assert not consonant_prediction
                 assert not vowel_prediction
@@ -261,8 +261,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         if center:
             topo_view = topo_view-self.train_mean[np.newaxis,...]
 
+        order = rng.permutation(topo_view.shape[0])
+        topo_view = topo_view[order]
+        y_final = y_final[order]
+
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
-                                    y=y_final.astype('float32'),
+                                    y=y_final[:, np.newaxis],
                                     #load_all=load_all,
                                     #cache_size=cache_size,
                                     axes=('b',0,1,'c'),
