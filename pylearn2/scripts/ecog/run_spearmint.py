@@ -12,4 +12,4 @@ def main(job_id, job):
 
     make_dir(fixed_params)
 
-    return -get_result(job, fixed_params)
+    return -get_result(job, fixed_params).mean()
