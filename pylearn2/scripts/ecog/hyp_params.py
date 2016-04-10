@@ -32,7 +32,7 @@ def get_params(json_file):
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
     
-    ds = ecog_new.ECoG(fixed_paras['data_file'], 'train')
+    ds = ecog_new.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']), 'train')
     X_shape = ds.get_topological_view().shape
     n_cvs = len(set(ds.y.ravel()))
 
@@ -51,7 +51,7 @@ def get_params(json_file):
         min_dim = out_dim
     fixed_params['min_dim'] = min_dim
 
-    fixed_params['shape'] = X_shape[1:3]
+    fixed_params['shape'] = list(X_shape[1:3])
     fixed_params['channels'] = X_shape[-1]
 
     with open(json_file, 'r') as f:
