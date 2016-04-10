@@ -101,7 +101,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             Split indices into training/validation/testing groups.
             """
             num_idx = len(indices)
-            if num_idx >= min_cvs:
+            if (num_idx >= min_cvs) and (num_idx > 3):
                 indices = np.array(indices, dtype=int)
                 order = rng.permutation(num_idx)
 

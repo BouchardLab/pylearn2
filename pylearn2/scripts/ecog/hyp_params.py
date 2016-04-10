@@ -1,5 +1,7 @@
 import decimal, json, os, yaml
 
+from pylearn2.datasets import ecog, ecog_new
+
 def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
@@ -17,7 +19,7 @@ def get_params(json_file):
                     'center': True,
                     'test': False,
                     'factorize': False,
-                    'data_file': 'hdf5/EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
+                    'data_file': 'hdf5/GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                     'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
@@ -27,7 +29,14 @@ def get_params(json_file):
                     'audio_file': 'audio_EC2_CV_mcep.h5',
     """
 
-    out_dim = 57
+    if fixed_params['audio_features']:
+        fixed_params['data_file'] = fixed_params['audio_file']
+    
+    ds = ecog_new.ECoG(fixed_paras['data_file'], 'train')
+    X_shape = ds.get_topological_view().shape
+    n_cvs = len(set(ds.y.ravel()))
+
+    out_dim = n_cvs
     if fixed_params['consonant_prediction']:
         out_dim = fixed_params['consonant_dim']
     elif fixed_params['vowel_prediction']:
@@ -42,15 +51,8 @@ def get_params(json_file):
         min_dim = out_dim
     fixed_params['min_dim'] = min_dim
 
-    if fixed_params['audio_features']:
-        input_shape = [1, 219]
-        input_channels = 50
-        fixed_params['data_file'] = fixed_params['audio_file']
-    else:
-        input_shape = [1, 258]
-        input_channels = 88
-    fixed_params['shape'] = input_shape
-    fixed_params['channels'] = input_channels
+    fixed_params['shape'] = X_shape[1:3]
+    fixed_params['channels'] = X_shape[-1]
 
     with open(json_file, 'r') as f:
         exp = yaml.safe_load(f)
