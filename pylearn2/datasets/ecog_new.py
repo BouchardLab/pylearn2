@@ -264,11 +264,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         y_final = y_final[order]
 
         available_indxs = sorted(set(y_final))
-        print available_indxs
         curr_idx = 0
         y_condensed = np.zeros_like(y_final)
         for old_idx in range(max(available_indxs)+1):
-            print old_idx, old_idx in available_indxs
             if old_idx in available_indxs:
                 y_condensed[y_final == old_idx] = curr_idx
                 curr_idx += 1
