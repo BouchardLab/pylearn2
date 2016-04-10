@@ -17,7 +17,6 @@ from pylearn2.utils.rng import make_np_rng
 _split = {'train': .8, 'valid': .1, 'test': .1}
 assert np.allclose(_split['train']+_split['valid']+_split['test'],1.)
 
-#class ECoG(hdf5.HDF5Dataset):
 class ECoG(dense_design_matrix.DenseDesignMatrix):
     """
     ECoG dataset
@@ -53,8 +52,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     """
 
     def __init__(self, filename, which_set,
-                 fold=0, seed=20141210, center=False,
-                 move = .1, level_classes=False,
+                 fold=0, seed=20141210, center=True,
+                 move = .1, level_classes=True,
                  consonant_prediction=False,
                  vowel_prediction=False,
                  two_headed=False,
@@ -64,15 +63,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  y_labels=57,
                  vowel_labels=3,
                  consonant_labels=19,
-                 load_all=None, cache_size=400000000):
+                 min_cvs=20):
         self.args = locals()
 
-
-        if load_all is None:
-            if which_set == 'augment':
-                load_all = False
-            else:
-                load_all = True
 
         if which_set not in ['train', 'valid', 'test', 'augment']:
             raise ValueError(
@@ -103,12 +96,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             
         rng = np.random.RandomState(seed)
 
-        def split_indices(indices, frac_train):
+        def split_indices(indices, frac_train, min_cvs):
             """
             Split indices into training/validation/testing groups.
             """
             num_idx = len(indices)
-            if num_idx >= 3:
+            if num_idx >= min_cvs:
                 indices = np.array(indices, dtype=int)
                 order = rng.permutation(num_idx)
 
@@ -169,6 +162,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             assert len(union)-1 == max_val
             assert len(tr)+len(va)+len(te)+len(ex) == len(union)
 
+        self.present_cvs = np.zeros(y_labels, dtype=int)
         if level_classes:
             n_classes = y_labels
             class_indices = {}
@@ -182,8 +176,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             valid_idx = []
             test_idx = []
             extra_idx = []
-            for indices in class_indices.values():
-                tr, va, te, ex = split_indices(indices, frac_train)
+            for ii, key in enumerate(sorted(class_indices.keys())):
+                tr, va, te, ex = split_indices(class_indices[key], frac_train, min_cvs)
+                if len(tr) > 0:
+                    self.present_cvs[ii] = 1
                 train_idx += tr
                 valid_idx += va
                 test_idx += te
@@ -191,7 +187,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         else:
             n_examples = X.shape[0]
             indices = range(n_examples)
-            train_idx, valid_idx, test_idx, extra_idx = split_indices(indices, frac_train)
+            train_idx, valid_idx, test_idx, extra_idx = split_indices(indices, frac_train, min_cvs)
 
         check_indices(train_idx, valid_idx, test_idx, extra_idx)
 
@@ -249,6 +245,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             del X_aug
             del y_aug
 
+
+
         if (which_set == 'train') or (which_set == 'augment'):
             topo_view = X_train
             y_final = y_train
@@ -265,10 +263,19 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         topo_view = topo_view[order]
         y_final = y_final[order]
 
+        available_indxs = sorted(set(y_final))
+        curr_idx = 0
+        y_condensed = np.zeros_like(y_final)
+        for old_idx in range(max(available_indxs)+1):
+            if old_idx in available_indxs:
+                y_condensed[y_final == old_idx] = curr_idx
+                curr_idx += 1
+        n_classes = curr_idx
+        self.y_final = y_final
+
+
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
-                                    y=y_final[:, np.newaxis],
-                                    #load_all=load_all,
-                                    #cache_size=cache_size,
+                                    y=y_condensed[:, np.newaxis],
                                     axes=('b',0,1,'c'),
                                     y_labels=n_classes)
 

@@ -21,6 +21,7 @@ for ii, f in enumerate(files):
             std[0,ii] = float(lines[-8].split(' ')[-1])
             std[1,ii] = float(lines[-7].split(' ')[-1])
             std[2,ii] = float(lines[-6].split(' ')[-1])
+
 max_idx = error[1].argmax()
 print os.path.join(folder,files[error.argmax()])
 print 'train: ', error[0, max_idx], std[0, max_idx]
