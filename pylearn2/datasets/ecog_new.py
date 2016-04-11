@@ -63,7 +63,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  y_labels=57,
                  vowel_labels=3,
                  consonant_labels=19,
-                 min_cvs=20):
+                 min_cvs=20,
+                 condense=True):
         self.args = locals()
 
 
@@ -262,20 +263,22 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         order = rng.permutation(topo_view.shape[0])
         topo_view = topo_view[order]
         y_final = y_final[order]
-
-        available_indxs = sorted(set(y_final))
-        curr_idx = 0
-        y_condensed = np.zeros_like(y_final)
-        for old_idx in range(max(available_indxs)+1):
-            if old_idx in available_indxs:
-                y_condensed[y_final == old_idx] = curr_idx
-                curr_idx += 1
-        n_classes = curr_idx
         self.y_final = y_final
+        
+        if condense:
+            available_indxs = sorted(set(y_final))
+            curr_idx = 0
+            y_condensed = np.zeros_like(y_final)
+            for old_idx in range(max(available_indxs)+1):
+                if old_idx in available_indxs:
+                    y_condensed[y_final == old_idx] = curr_idx
+                    curr_idx += 1
+            n_classes = curr_idx
+            y_final = y_condensed
 
 
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
-                                    y=y_condensed[:, np.newaxis],
+                                    y=y_final[:, np.newaxis],
                                     axes=('b',0,1,'c'),
                                     y_labels=n_classes)
 

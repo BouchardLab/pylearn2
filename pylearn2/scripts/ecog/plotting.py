@@ -71,12 +71,12 @@ def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None)
                         plt.ylabel('electrodes')
     plt.show()
     
-def create_dendrogram(X, y, labels):
+def create_dendrogram(X, y, labels, has_data):
     """
     Create dendrogram from data X. Averages over labels y.
     """
     vecs = np.zeros((len(labels), X.shape[1]))
-    for ii, label in enumerate(labels):
+    for ii in has_data:
         vecs[ii] = X[y == ii].mean(0)
     z = cluster.hierarchy.ward(vecs)
     r = cluster.hierarchy.dendrogram(z, labels = labels,

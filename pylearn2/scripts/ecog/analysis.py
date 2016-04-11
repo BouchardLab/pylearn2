@@ -1,6 +1,6 @@
 from pylearn2.utils import serial
 from pylearn2.config import yaml_parse
-from pylearn2.datasets import ecog
+from pylearn2.datasets import ecog, ecog_new
 from pylearn2.space import VectorSpace, Conv2DSpace, CompositeSpace
 from pylearn2.expr import nnet
 from pylearn2.models.mlp import FlattenerLayer
@@ -128,7 +128,7 @@ def indx_dict2conf_mat(indices_dicts, y_dims):
     return c, v, cv
 
 
-def get_model_results(model_folder, filename, fold, kwargs):
+def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
     kwargs = copy.deepcopy(kwargs)
     file_loc = os.path.join(model_folder, filename)
     model = serial.load(file_loc)
@@ -137,15 +137,14 @@ def get_model_results(model_folder, filename, fold, kwargs):
     y_inpt = target_space.make_theano_batch()
     y_sym = y_inpt
     input_space = model.get_input_space()
-    if kwargs['audio']:
-        data_file = '${PYLEARN2_DATA_PATH}/ecog/audio_EC2_CV_mcep.h5'
+    if new:
+        ec = ecog_new
     else:
-        data_file = '${PYLEARN2_DATA_PATH}/ecog/EC2_CV_85_nobaseline_aug.h5'
-    del kwargs['audio']
-    ds = ecog.ECoG(data_file,
-                   which_set='train',
-                   fold=fold,
-                   **kwargs)
+        ec = ecog
+    ds = ec.ECoG(data_file,
+                 which_set='train',
+                 fold=fold,
+                 **kwargs)
     ts = ds.get_test_set()
     acts = model.fprop(X_sym, return_all=True)
     y_hat = acts[-1]
