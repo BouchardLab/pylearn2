@@ -269,9 +269,11 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             available_indxs = sorted(set(y_final))
             curr_idx = 0
             y_condensed = np.zeros_like(y_final)
+            self.mapping = np.inf * np.ones(y_labels, dtype=int)
             for old_idx in range(max(available_indxs)+1):
                 if old_idx in available_indxs:
                     y_condensed[y_final == old_idx] = curr_idx
+                    self.mapping[old_idx] = curr_idx
                     curr_idx += 1
             n_classes = curr_idx
             y_final = y_condensed

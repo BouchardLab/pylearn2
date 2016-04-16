@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import cluster
 
+
 def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None):
     """
     Plot all trials individually.
@@ -69,19 +70,17 @@ def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None)
                         plt.title(string)
                         plt.xlabel('time')
                         plt.ylabel('electrodes')
-    plt.show()
     
 def create_dendrogram(X, y, labels, has_data):
     """
     Create dendrogram from data X. Averages over labels y.
     """
-    vecs = np.zeros((len(labels), X.shape[1]))
-    for ii in has_data:
-        vecs[ii] = X[y == ii].mean(0)
+    vecs = np.zeros((len(has_data), X.shape[1]))
+    for ii, idx in enumerate(has_data):
+        vecs[ii] = X[y == idx].mean(0)
     z = cluster.hierarchy.ward(vecs)
-    r = cluster.hierarchy.dendrogram(z, labels = labels,
+    r = cluster.hierarchy.dendrogram(z, labels = labels[has_data],
                                      orientation='left')
-    plt.show()
     return z, r
 
         

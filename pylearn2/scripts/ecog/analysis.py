@@ -4,11 +4,37 @@ from pylearn2.datasets import ecog, ecog_new
 from pylearn2.space import VectorSpace, Conv2DSpace, CompositeSpace
 from pylearn2.expr import nnet
 from pylearn2.models.mlp import FlattenerLayer
-import os, h5py, theano, cPickle, copy
+import os, h5py, theano, cPickle, copy, itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import theano.tensor as T
+from sklearn.linear_model import LogisticRegression as LR
 
+
+def time_accuracy(file_name, ec, kwargs, folds=10):
+    """
+    Classify data independently at each point in time.
+    """
+    ds = ecog.ECoG(file_name, which_set='train', **kwargs)
+    X_shape = ds.get_topological_view().shape
+    n_time = X_shape[2]
+    accuracy = np.zeros((10, n_time))
+    for fold in range(folds):
+        print('fold: {}'.format(fold))
+        ds = ec.ECoG(file_name,
+                     which_set='train',
+                     fold=fold,
+                     **kwargs)
+        ts = ds.get_test_set()
+        vs = ds.get_valid_set()
+        train_X = np.concatenate((ds.get_topological_view(), vs.get_topological_view()), axis=0)
+        train_y = np.concatenate((ds.y, vs.y), axis=0)
+        test_X = ts.get_topological_view()
+        test_y = ts.y
+        for tt in range(n_time):
+            svm = LR(solver='lbfgs', multi_class='multinomial').fit(train_X[:, 0, tt], train_y.ravel())
+            accuracy[fold, tt] = svm.score(test_X[:, 0, tt], test_y.ravel())
+    return accuracy
 
 def conf_mat2accuracy(c_mat, v_mat, cv_mat):
     c_accuracy = None
@@ -179,3 +205,132 @@ def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
     y_hats = list(rvals[2*n_targets:3*n_targets])
     hidden = list(rvals[3*n_targets:3*n_targets+n_hidden])
     return misclass, indices, y_hats, hidden
+
+def get_articulator_state_matrix():
+    consonants = sorted(['b', 'd', 'f', 'g', 'h', 'k', 'l', 'm', 'n', 'p', 'r', 's', 'sh', 't', 'th', 'v', 'w', 'y', 'z'])
+    vowels = sorted(['aa', 'ee', 'oo'])
+    assert len(set(consonants)) == 19
+    assert len(set(vowels)) == 3
+    cvs = sorted([c+v for c, v in itertools.product(consonants, vowels)])
+    assert len(set(cvs)) == 57
+    labels = ['lips', 'tongue', 'larynx', 'jaw', 'back tounge', 'high tongue']
+    
+    features = np.zeros((57, 6), dtype=int)
+    # b
+    features[:3, (0, 2, 3)] = 1
+    # d
+    features[3:6, (1, 2, 3)] = 1
+    # f
+    features[6:9, (0, 3)] = 1
+    # g
+    features[9:12, (1, 2)] = 1
+    # h
+    # None
+    # k
+    features[15:18, 1] = 1
+    # l
+    features[18:21, (1, 2, 3)] = 1
+    # m
+    features[21:24, (0, 2, 3)] = 1
+    # n
+    features[24:27, (1, 2, 3)] = 1
+    # p
+    features[27:30, (0, 3)] = 1
+    # r
+    features[30:33, (1, 2, 3)] = 1
+    # s
+    features[33:36, (1, 3)] = 1
+    # sh
+    features[36:39, (1, 3)] = 1
+    # t
+    features[39:42, (1, 3)] = 1
+    # th
+    features[42:45, (1, 3)] = 1
+    # v
+    features[45:48, (0, 2, 3)] = 1
+    # w
+    features[48:51, (0, 1, 2, 3)] = 1
+    # y
+    features[51:54, (1, 2, 3)] = 1
+    # z
+    features[54:, (1, 2, 3)] = 1
+
+    # Vowels
+    # aa
+    features[::3, 4] = 1
+    # ee
+    features[1::3, 5] = 1
+    # oo
+    features[2::3, (4, 5)] = 1
+    import matplotlib.pyplot as plt
+    plt.imshow(features.T, cmap='gray', interpolation='nearest')
+    plt.grid(True)
+    return (cvs, labels, features)
+
+def get_phonetic_feature_matrix():
+    consonants = sorted(['b', 'd', 'f', 'g', 'h', 'k', 'l', 'm', 'n', 'p',
+                         'r', 's', 'sh', 't', 'th', 'v', 'w', 'y', 'z'])
+    vowels = sorted(['aa', 'ee', 'oo'])
+    assert len(set(consonants)) == 19
+    assert len(set(vowels)) == 3
+    cvs = sorted([c+v for c, v in itertools.product(consonants, vowels)])
+    assert len(set(cvs)) == 57
+    labels = ['bilabial', 'secondary labial', 'labiodental', 'dental',
+              'alveolar', 'post alveolar', 'velar', 'voiced', 'mandibular',
+              'oral stop', 'fricative', 'approximate', 'nasal stop',
+              'lateral', 'rhotic', 'back tongue', 'high tongue',
+              'lip rounding', 'jaw open']
+    assert len(set(labels)) == 19
+    pmv = {'place': slice(0, 9), 'manner': slice(9, 15), 'vowel': slice(15, 19)}
+    
+    features = np.zeros((57, 19), dtype=int)
+    # b
+    features[:3, (0, 7, 8, 9)] = 1
+    # d
+    features[3:6, (4, 7, 8, 9)] = 1
+    # f
+    features[6:9, (2, 8, 10)] = 1
+    # g
+    features[9:12, (6, 7, 9)] = 1
+    # h
+    # None
+    # k
+    features[15:18, (6, 9)] = 1
+    # l
+    features[18:21, (4, 7, 8, 13)] = 1
+    # m
+    features[21:24, (0, 7, 8, 12)] = 1
+    # n
+    features[24:27, (4, 7, 8, 9, 12)] = 1
+    # p
+    features[27:30, (0, 8, 9)] = 1
+    # r
+    features[30:33, (1, 5, 7, 8, 11, 14)] = 1
+    # s
+    features[33:36, (4, 8, 10)] = 1
+    # sh
+    features[36:39, (1, 5, 8, 10)] = 1
+    # t
+    features[39:42, (4, 8, 9)] = 1
+    # th
+    features[42:45, (3, 8, 10)] = 1
+    # v
+    features[45:48, (2, 7, 8, 10)] = 1
+    # w
+    features[48:51, (0, 6, 7, 8, 11)] = 1
+    # y
+    features[51:54, (5, 7, 8, 11)] = 1
+    # z
+    features[54:, (4, 7, 8, 10)] = 1
+
+    # Vowels
+    # aa
+    features[::3, (15, 18)] = 1
+    # ee
+    features[1::3, 16] = 1
+    # oo
+    features[2::3, (15, 16, 17)] = 1
+    import matplotlib.pyplot as plt
+    plt.imshow(features.T, cmap='gray', interpolation='nearest')
+    plt.grid(True)
+    return (cvs, labels, features)
