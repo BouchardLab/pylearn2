@@ -3,6 +3,41 @@ import numpy as np
 from scipy import cluster
 
 
+def plot_cv_counts(y, title, save_path, cvs=57):
+    nums = np.zeros(cvs)
+    for ii in range(cvs):
+        nums[ii] = (y == ii).sum()
+    min_n = nums.min().astype(int)
+    max_n = nums.max().astype(int)
+    hist = np.zeros(max_n+1)
+    for n in nums:
+        hist[n] += 1
+    fig = plt.figure()
+    plt.bar(range(max_n+1), hist)
+    plt.xlabel('Examples per CV')
+    plt.ylabel('Counts')
+    if title:
+        plt.title(title)
+    if save_path:
+        plt.savefig(save_path)
+    return fig
+
+def plot_cv_accuracy(accuracy_per_cv, labels, has_data=None, save_path=None):
+    folds, cvs = accuracy_per_cv.shape
+    if has_data is not None:
+        has_data = np.arange(cvs)
+    accuracy_per_cv = accuracy_per_cv[:, has_data]
+    labels = labels[has_data]
+    fig = plt.figure()
+    plt.bar(range(cvs), accuracy_per_cv.mean(axis=0), color='g',
+            yerr=accuracy_per_cv.std(axis=0)/np.sqrt(folds))
+    plt.title('Accuracy (Fold Averaged)')
+    plt.xticks(np.arange(cvs)+.5, labels, rotation=90)
+    if save_path:
+        plt.savefig(save_path)
+    return fig
+    
+
 def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None):
     """
     Plot all trials individually.
@@ -71,19 +106,25 @@ def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None)
                         plt.xlabel('time')
                         plt.ylabel('electrodes')
     
-def create_dendrogram(X, y, labels, has_data, color_threshold=None):
+def create_dendrogram(X, y, labels, has_data, color_threshold=None,
+                      title=None, save_path=None):
     """
     Create dendrogram from data X. Averages over labels y.
     """
     vecs = np.zeros((len(has_data), X.shape[1]))
+    y = y.ravel()
     for ii, idx in enumerate(has_data):
         vecs[ii] = X[y == idx].mean(0)
     z = cluster.hierarchy.ward(vecs)
     r = cluster.hierarchy.dendrogram(z, labels = labels[has_data],
                                      orientation='left', color_threshold=color_threshold)
+    if title:
+        plt.title(title)
+    if save_path:
+        plt.savefig(save_path)
     return z, r
 
-def corr_box_plot(p, m, v):
+def corr_box_plot(p, m, v, title=None, save_path=None):
     place_25 = np.sort(p)[np.round(int(p.size*.25))]
     place_med = np.median(p)
     place_75 = np.sort(p)[np.round(int(p.size*.75))]
@@ -103,4 +144,8 @@ def corr_box_plot(p, m, v):
     data = [v, m, p]
     f = plt.figure()
     plt.boxplot(data, **box_params)
+    if title:
+        plt.title(title)
+    if save_path:
+        plt.savefig(save_path)
     return f

@@ -11,6 +11,13 @@ import theano.tensor as T
 from sklearn.linear_model import LogisticRegression as LR
 
 
+def load_raw_data(ds):
+    ts = ds.get_test_set()
+    vs = ds.get_valid_set()
+    X = np.concatenate((ds.X, ts.X, vs.X), axis=0)
+    y = np.concatenate((ds.y, ts.y, vs.y), axis=0).ravel()
+    return X, y
+
 def condensed_2_dense(new, indices_dicts, y_hat_dicts, logits_dicts, ds):
     if new:
         y_dims = [57]
