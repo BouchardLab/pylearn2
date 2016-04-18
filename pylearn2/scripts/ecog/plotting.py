@@ -71,7 +71,7 @@ def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None)
                         plt.xlabel('time')
                         plt.ylabel('electrodes')
     
-def create_dendrogram(X, y, labels, has_data):
+def create_dendrogram(X, y, labels, has_data, color_threshold=None):
     """
     Create dendrogram from data X. Averages over labels y.
     """
@@ -80,7 +80,27 @@ def create_dendrogram(X, y, labels, has_data):
         vecs[ii] = X[y == idx].mean(0)
     z = cluster.hierarchy.ward(vecs)
     r = cluster.hierarchy.dendrogram(z, labels = labels[has_data],
-                                     orientation='left')
+                                     orientation='left', color_threshold=color_threshold)
     return z, r
 
-        
+def corr_box_plot(p, m, v):
+    place_25 = np.sort(p)[np.round(int(p.size*.25))]
+    place_med = np.median(p)
+    place_75 = np.sort(p)[np.round(int(p.size*.75))]
+    manner_25 = np.sort(m)[np.round(int(m.size*.25))]
+    manner_med = np.median(m)
+    manner_75 = np.sort(m)[np.round(int(m.size*.75))]
+    vowel_25 = np.sort(v)[np.round(int(v.size*.25))]
+    vowel_med = np.median(v)
+    vowel_75 = np.sort(v)[np.round(int(v.size*.75))]
+    box_params = {'notch': False,
+                  'sym': '',
+                  'vert': False,
+                  'whis': 0,
+                  'labels': ('Vowel configuration', 'Constriction degree', 'Constriction location'),
+                  'medianprops': {'color': 'black', 'linewidth': 2},
+                  'boxprops': {'color': 'gray', 'linewidth': 2}}
+    data = [v, m, p]
+    f = plt.figure()
+    plt.boxplot(data, **box_params)
+    return f

@@ -11,6 +11,37 @@ import theano.tensor as T
 from sklearn.linear_model import LogisticRegression as LR
 
 
+def condensed_2_dense(new, indices_dicts, y_hat_dicts, logits_dicts, ds):
+    if new:
+        y_dims = [57]
+        indices_dicts2 = []
+        y_hat_dicts2 = []
+        logits_dicts2 = []
+        for ii, (ind, yhd, lgd) in enumerate(zip(indices_dicts, y_hat_dicts, logits_dicts)):
+            ind2 = {}
+            yhd2 = {}
+            lgd2 = {}
+            for key in ind.keys():
+                indices2 = np.zeros_like(ind[key])
+                y_hat2 = np.zeros((yhd[key][0].shape[0], y_dims[0]))
+                logits2 = -np.inf * np.ones_like(y_hat2) 
+                for old, new in enumerate(ds.mapping):
+                    if not np.isinf(new):
+                        indices2[ind[key] == new] = old
+                        y_hat2[:, old] = yhd[key][0][:, int(new)]
+                        logits2[:, old] = lgd[key][0][:, int(new)]
+                ind2[key] = indices2
+                yhd2[key] = [y_hat2]
+                lgd2[key] = logits2
+            indices_dicts2.append(ind2)
+            y_hat_dicts2.append(yhd2)
+            logits_dicts2.append(lgd2)
+    else:
+        indices_dicts2 = indices_dicts
+        y_hat_dicts2 = y_hat_dicts
+        logits_dicts2 = logits_dicts
+    return (indices_dicts2, y_hat_dicts2, logits_dicts2)
+
 def time_accuracy(file_name, ec, kwargs, folds=10):
     """
     Classify data independently at each point in time.
@@ -167,6 +198,15 @@ def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
         ec = ecog_new
     else:
         ec = ecog
+        try:
+            del kwargs['condense']
+        except:
+            pass
+        try:
+            del kwargs['min_cvs']
+        except:
+            pass
+
     ds = ec.ECoG(data_file,
                  which_set='train',
                  fold=fold,
@@ -187,11 +227,13 @@ def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
         y_sym_list = [y_sym]
     misclass_sym = []
     indices_sym = []
+    logits_sym = []
     for yh, ys in zip(y_hat_list, y_sym_list):
         misclass_sym.append(nnet.Misclass(ys, yh))
         indices_sym.append(T.join(1, T.argmax(ys, axis=1, keepdims=True), T.argmax(yh, axis=1, keepdims=True)))
+        logits_sym.append(nnet.arg_of_softmax(yh))
 
-    f = theano.function([X_sym, y_inpt], misclass_sym+indices_sym+y_hat_list+hidden)
+    f = theano.function([X_sym, y_inpt], misclass_sym+indices_sym+y_hat_list+logits_sym+hidden)
     it = ts.iterator(mode = 'sequential',
                      batch_size = ts.X.shape[0],
                      num_batches = 1,
@@ -203,8 +245,9 @@ def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
     misclass = list(rvals[:n_targets])
     indices = list(rvals[n_targets:2*n_targets])
     y_hats = list(rvals[2*n_targets:3*n_targets])
-    hidden = list(rvals[3*n_targets:3*n_targets+n_hidden])
-    return misclass, indices, y_hats, hidden
+    logits = list(rvals[3*n_targets:4*n_targets])
+    hidden = list(rvals[4*n_targets:4*n_targets+n_hidden])
+    return misclass, indices, y_hats, logits, hidden
 
 def get_articulator_state_matrix():
     consonants = sorted(['b', 'd', 'f', 'g', 'h', 'k', 'l', 'm', 'n', 'p', 'r', 's', 'sh', 't', 'th', 'v', 'w', 'y', 'z'])
@@ -264,7 +307,6 @@ def get_articulator_state_matrix():
     features[2::3, (4, 5)] = 1
     import matplotlib.pyplot as plt
     plt.imshow(features.T, cmap='gray', interpolation='nearest')
-    plt.grid(True)
     return (cvs, labels, features)
 
 def get_phonetic_feature_matrix():
@@ -332,5 +374,21 @@ def get_phonetic_feature_matrix():
     features[2::3, (15, 16, 17)] = 1
     import matplotlib.pyplot as plt
     plt.imshow(features.T, cmap='gray', interpolation='nearest')
-    plt.grid(True)
-    return (cvs, labels, features)
+    return (cvs, labels, pmv, features)
+
+def cross_correlate(X1, X2):
+    """
+    Calculates cross correlation matrix.
+    
+    X1: ndarray
+        First set of variables (n, features)
+    X2 : ndarray
+        Second set of variables (m, features)
+    """
+    print X1.shape, X1.mean(1).shape
+    print X2.shape, X2.mean(1).shape
+    X1 = X1 - X1.mean(axis=1, keepdims=True)
+    X1 = X1 / X1.std(axis=1, keepdims=True)
+    X2 = X2 - X2.mean(axis=1, keepdims=True)
+    X2 = X2 / X2.std(axis=1, keepdims=True)
+    return X1.dot(X2.T)/X1.shape[1]
