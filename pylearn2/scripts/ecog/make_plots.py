@@ -1,27 +1,19 @@
 #!/usr/bin/env python
-from pylearn2.utils import serial
-from pylearn2.config import yaml_parse
 from pylearn2.datasets import ecog, ecog_new
-from pylearn2.space import VectorSpace, Conv2DSpace, CompositeSpace
-from pylearn2.expr import nnet
 
-import os, h5py, theano, cPickle, argparse
+import os, h5py, argparse
 import numpy as np
-import theano.tensor as T
 
 import matplotlib
 matplotlib.use('Agg')
 from pylab import rcParams
-from matplotlib import rc
 import matplotlib.pyplot as plt
 
 import analysis
 import plotting
-from scipy.spatial import distance
-from scipy import cluster
 
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
+
+rcParams.update({'figure.autolayout': True})
 
 def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.pkl'):
     subject = os.path.basename(data_file).split('_')[0].lower()
@@ -30,7 +22,8 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
              for model_folder in model_folders]
     print(files)
     
-    with h5py.File('/home/jesse/Development/data/ecog/EC2_CV.h5', 'r') as f:
+    with h5py.File(os.path.join(os.environ['HOME'],
+                                'Development/data/ecog/EC2_CV.h5'), 'r') as f:
         ecog_E_lbls = f['Descriptors']['Event_ELbls'].value
 
     kwargs = {'move': .1,
