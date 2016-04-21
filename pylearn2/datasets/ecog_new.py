@@ -63,7 +63,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  y_labels=57,
                  vowel_labels=3,
                  consonant_labels=19,
-                 min_cvs=20,
+                 min_cvs=10,
                  condense=True):
         self.args = locals()
 
