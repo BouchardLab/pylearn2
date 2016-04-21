@@ -3,6 +3,7 @@ from pylearn2.datasets import ecog, ecog_new
 
 import os, h5py, argparse
 import numpy as np
+import scipy as sp
 
 import matplotlib
 matplotlib.use('Agg')
@@ -114,8 +115,17 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
                        which_set='train',
                        **kwargs)
     cvs, labels, pmv, features = analysis.get_phonetic_feature_matrix()
+    p = features[has_data].T[pmv['place']].T
+    p_dist = analysis.compute_pairwise_distances(p,
+            sp.spatial.distance.hamming)
+    m = features[has_data].T[pmv['manner']].T
+    m_dist = analysis.compute_pairwise_distances(m,
+            sp.spatial.distance.hamming)
+    v = features[has_data].T[pmv['vowel']].T
+    v_dist = analysis.compute_pairwise_distances(v,
+            sp.spatial.distance.hamming)
     # Raw data
-    X, y0 = analysis.load_raw_data(ds)
+    X, y0 = analysis.load_raw_data()
     fname = subject + '_' + 'dend_raw.pdf'
     plotting.create_dendrogram(X, y0, ecog_E_lbls, has_data, title=subject+' raw',
                                save_path=os.path.join(plot_folder, fname))
@@ -124,12 +134,14 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     for ii in range(len(classes)):
         Xp[ii] = X[y0 == ii].mean(axis=0)
 
-    cc = analysis.cross_correlate(Xp.T, features[has_data].T).T
-    p = cc[pmv['place']].ravel()
-    m = cc[pmv['manner']].ravel()
-    v = cc[pmv['vowel']].ravel()
+    X_dist = analysis.compute_pairwise_distances(Xp,
+            sp.spatial.distance.euclidean)
+
+    ccp = analysis.correlate(X_dist, p_dist)
+    ccm = analysis.correlate(X_dist, m_dist)
+    ccv = analysis.correlate(X_dist, v_dist)
     fname = subject + '_' + 'corr_raw.pdf'
-    plotting.corr_box_plot(p, m, v, title=subject+' raw',
+    plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' raw',
                            save_path=os.path.join(plot_folder, fname))
     # Logits + Y_hat
     lgs = tuple()
@@ -152,12 +164,14 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     for ii in range(len(classes)):
         logitsp[ii] = logits[y == ii].mean(axis=0)
 
-    cc = analysis.cross_correlate(logitsp.T, features[has_data].T).T
-    p = cc[pmv['place']].ravel()
-    m = cc[pmv['manner']].ravel()
-    v = cc[pmv['vowel']].ravel()
+    logits_dist = analysis.compute_pairwise_distances(logitsp,
+            sp.spatial.distance.euclidean)
+
+    ccp = analysis.correlate(logits_dist, p_dist)
+    ccm = analysis.correlate(logits_dist, m_dist)
+    ccv = analysis.correlate(logits_dist, v_dist)
     fname = subject + '_' + 'corr_logits.pdf'
-    plotting.corr_box_plot(p, m, v, title=subject+' logits',
+    plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' logits',
                            save_path=os.path.join(plot_folder, fname))
     # Y_hat
     fname = subject + '_' + 'dend_yhat.pdf'
@@ -167,12 +181,14 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     for ii in range(len(classes)):
         y_hatp[ii] = y_hat[y == ii].mean(axis=0)
 
-    cc = analysis.cross_correlate(y_hatp.T, features[has_data].T).T
-    p = cc[pmv['place']].ravel()
-    m = cc[pmv['manner']].ravel()
-    v = cc[pmv['vowel']].ravel()
+    y_hat_dist = analysis.compute_pairwise_distances(y_hatp,
+            sp.spatial.distance.euclidean)
+
+    ccp = analysis.correlate(y_hat_dist, p_dist)
+    ccm = analysis.correlate(y_hat_dist, m_dist)
+    ccv = analysis.correlate(y_hat_dist, v_dist)
     fname = subject + '_' + 'corr_y_hat.pdf'
-    plotting.corr_box_plot(p, m, v, title=subject+' y_hat',
+    plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' y_hat',
                            save_path=os.path.join(plot_folder, fname))
     
     # CV counts

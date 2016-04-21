@@ -383,6 +383,21 @@ def get_phonetic_feature_matrix():
     plt.imshow(features.T, cmap='gray', interpolation='nearest')
     return (cvs, labels, pmv, features)
 
+def compute_pairwise_distances(X, dist_f):
+    """
+    Calculates pairwise distances for vectors in x according
+    to the dist_f distance function.
+    """
+    n_elements = X.shape[0]
+    dists = np.zeros((n_elements, n_elements-1))
+    for ii in range(n_elements):
+        offset = 0
+        for jj in range(n_elements-1):
+            if jj == ii:
+                offset = 1
+            dists[ii, jj] = dist_f(X[ii], X[jj+offset])
+    return dists
+
 def cross_correlate(X1, X2):
     """
     Calculates cross correlation matrix.
@@ -399,3 +414,24 @@ def cross_correlate(X1, X2):
     X2 = X2 - X2.mean(axis=1, keepdims=True)
     X2 = X2 / X2.std(axis=1, keepdims=True)
     return X1.dot(X2.T)/X1.shape[1]
+
+def correlate(X1, X2):
+    """
+    Calculates correlation elementwise between rows.
+    
+    X1: ndarray
+        First set of variables (n, features)
+    X2 : ndarray
+        Second set of variables (m, features)
+    """
+    assert X1.shape == X2.shape
+    print X1.shape, X1.mean(1).shape
+    print X2.shape, X2.mean(1).shape
+    corr = np.zeros(X1.shape[0])
+    X1 = X1 - X1.mean(axis=1, keepdims=True)
+    X1 = X1 / X1.std(axis=1, keepdims=True)
+    X2 = X2 - X2.mean(axis=1, keepdims=True)
+    X2 = X2 / X2.std(axis=1, keepdims=True)
+    for ii in range(X1.shape[0]):
+        corr[ii] = X1[ii].dot(X2[ii])/X1.shape[1]
+    return corr
