@@ -27,7 +27,7 @@ for ii, f in enumerate(files):
         std[2,ii] = float(lines[-6+delta].split(' ')[-1])
 
 max_idx = error[1].argmax()
-print os.path.join(folder,files[error.argmax()])
+print os.path.join(folder,files[max_idx])
 print 'train: ', error[0, max_idx], std[0, max_idx]
 print 'valid: ', error[1, max_idx], std[1, max_idx]
 print 'test: ', error[2, max_idx], std[2, max_idx]
