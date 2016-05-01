@@ -80,7 +80,14 @@ def get_result(ins_dict, fixed_params, lda=False, kf=False):
                 f.write(train)
             print train
             train = yaml_parse.load(train)
-            train.main_loop()
+            saved = False
+            while not saved:
+                try:
+                    train.main_loop()
+                    saved = True
+                except IOError:
+                    print('Disk is probably full!')
+                    time.sleep(600)
             del train
             train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
             valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')

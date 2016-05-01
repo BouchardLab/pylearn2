@@ -407,8 +407,6 @@ def cross_correlate(X1, X2):
     X2 : ndarray
         Second set of variables (m, features)
     """
-    print X1.shape, X1.mean(1).shape
-    print X2.shape, X2.mean(1).shape
     X1 = X1 - X1.mean(axis=1, keepdims=True)
     X1 = X1 / X1.std(axis=1, keepdims=True)
     X2 = X2 - X2.mean(axis=1, keepdims=True)
@@ -425,8 +423,6 @@ def correlate(X1, X2):
         Second set of variables (m, features)
     """
     assert X1.shape == X2.shape
-    print X1.shape, X1.mean(1).shape
-    print X2.shape, X2.mean(1).shape
     corr = np.zeros(X1.shape[0])
     X1 = X1 - X1.mean(axis=1, keepdims=True)
     X1 = X1 / X1.std(axis=1, keepdims=True)

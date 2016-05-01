@@ -18,6 +18,8 @@ rcParams.update({'figure.autolayout': True})
 
 def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.pkl'):
     subject = os.path.basename(data_file).split('_')[0].lower()
+    run = '_'.join([os.path.basename(f) for f in model_folders])
+    fname_base = subject + '_' + run
     files = [sorted([f for f in os.listdir(model_folder) if ((model_file_base in f) and
                                                              (subset in f))])
              for model_folder in model_folders]
@@ -34,9 +36,11 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
               'vowel_prediction': False,
               'two_headed': False,
               'randomize_labels': False}
+    """
     if new:
-        kwargs['min_cvs'] = 20
+        kwargs['min_cvs'] = 10
         kwargs['condense'] = True
+    """
     
     # Run data through the models
     accuracy_dicts = []
@@ -91,17 +95,17 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     c_accuracy, v_accuracy, cv_accuracy, accuracy_per_cv = analysis.conf_mat2accuracy(c_mat, v_mat, cv_mat)
 
     if cv_accuracy is not None:
-        print 'cv mean: ',cv_accuracy.mean()
-        print 'cv std: ',cv_accuracy.std()
+        print('cv mean: ',cv_accuracy.mean())
+        print('cv std: ',cv_accuracy.std())
     if c_accuracy is not None:
-        print 'c mean: ',c_accuracy.mean()
-        print 'c std: ',c_accuracy.std()
+        print('c mean: ',c_accuracy.mean())
+        print('c std: ',c_accuracy.std())
     if v_accuracy is not None:
-        print 'v mean: ',v_accuracy.mean()
-        print 'v std: ',v_accuracy.std()
+        print('v mean: ',v_accuracy.mean())
+        print('v std: ',v_accuracy.std())
         
     # Basic plots
-    fname = subject + '_' + 'cv_accuracy.pdf'
+    fname = fname_base + '_' + 'cv_accuracy.pdf'
     plotting.plot_cv_accuracy(accuracy_per_cv, ecog_E_lbls, has_data, os.path.join(plot_folder, fname))
     
     # Clustering Plots
@@ -125,8 +129,8 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     v_dist = analysis.compute_pairwise_distances(v,
             sp.spatial.distance.hamming)
     # Raw data
-    X, y0 = analysis.load_raw_data()
-    fname = subject + '_' + 'dend_raw.pdf'
+    X, y0 = analysis.load_raw_data(ds)
+    fname = fname_base + '_' + 'dend_raw.pdf'
     plotting.create_dendrogram(X, y0, ecog_E_lbls, has_data, title=subject+' raw',
                                save_path=os.path.join(plot_folder, fname))
     classes = sorted(set(y0.ravel()))
@@ -140,7 +144,7 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     ccp = analysis.correlate(X_dist, p_dist)
     ccm = analysis.correlate(X_dist, m_dist)
     ccv = analysis.correlate(X_dist, v_dist)
-    fname = subject + '_' + 'corr_raw.pdf'
+    fname = fname_base + '_' + 'corr_raw.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' raw',
                            save_path=os.path.join(plot_folder, fname))
     # Logits + Y_hat
@@ -157,7 +161,7 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     y = np.concatenate(ys, axis=0)
     classes = sorted(set(y.ravel()))
     # Logits
-    fname = subject + '_' + 'dend_logits.pdf'
+    fname = fname_base + '_' + 'dend_logits.pdf'
     plotting.create_dendrogram(logits, y, ecog_E_lbls, has_data, title=subject+' logits',
                                save_path=os.path.join(plot_folder, fname))
     logitsp = np.zeros((len(classes), logits.shape[1]))
@@ -170,11 +174,11 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     ccp = analysis.correlate(logits_dist, p_dist)
     ccm = analysis.correlate(logits_dist, m_dist)
     ccv = analysis.correlate(logits_dist, v_dist)
-    fname = subject + '_' + 'corr_logits.pdf'
+    fname = fname_base + '_' + 'corr_logits.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' logits',
                            save_path=os.path.join(plot_folder, fname))
     # Y_hat
-    fname = subject + '_' + 'dend_yhat.pdf'
+    fname = fname_base + '_' + 'dend_yhat.pdf'
     plotting.create_dendrogram(y_hat, y, ecog_E_lbls, has_data, title=subject+' y_hat',
                                save_path=os.path.join(plot_folder, fname))
     y_hatp = np.zeros((len(classes), y_hat.shape[1]))
@@ -187,12 +191,12 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     ccp = analysis.correlate(y_hat_dist, p_dist)
     ccm = analysis.correlate(y_hat_dist, m_dist)
     ccv = analysis.correlate(y_hat_dist, v_dist)
-    fname = subject + '_' + 'corr_y_hat.pdf'
+    fname = fname_base + '_' + 'corr_y_hat.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' y_hat',
                            save_path=os.path.join(plot_folder, fname))
     
     # CV counts
-    fname = subject + '_' + 'example_hist.pdf'
+    fname = fname_base + '_' + 'example_hist.pdf'
     plotting.plot_cv_counts(y0, subject, os.path.join(plot_folder, fname))
 
 if __name__ == '__main__':
