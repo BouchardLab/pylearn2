@@ -4,7 +4,7 @@ from pylearn2.datasets import ecog, ecog_new
 from pylearn2.space import VectorSpace, Conv2DSpace, CompositeSpace
 from pylearn2.expr import nnet
 from pylearn2.models.mlp import FlattenerLayer
-import os, h5py, theano, cPickle, copy, itertools
+import copy, os, h5py, theano, cPickle, copy, itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import theano.tensor as T
@@ -49,30 +49,91 @@ def condensed_2_dense(new, indices_dicts, y_hat_dicts, logits_dicts, ds):
         logits_dicts2 = logits_dicts
     return (indices_dicts2, y_hat_dicts2, logits_dicts2)
 
-def time_accuracy(file_name, ec, kwargs, folds=10):
+def time_accuracy(file_name, ec, kwargs, has_data,
+                  folds=10, train_all_time=False):
     """
     Classify data independently at each point in time.
     """
-    ds = ecog.ECoG(file_name, which_set='train', **kwargs)
+    ds = ec.ECoG(file_name, which_set='train', **kwargs)
     X_shape = ds.get_topological_view().shape
     n_time = X_shape[2]
-    accuracy = np.zeros((10, n_time))
+    ca = np.zeros((10, n_time))
+    va = np.zeros((10, n_time))
+    cva = np.zeros((10, n_time))
+    c_va = np.zeros((10, n_time))
     for fold in range(folds):
+        kwargs_copy = copy.deepcopy(kwargs)
         print('fold: {}'.format(fold))
-        ds = ec.ECoG(file_name,
+        cv_ds = ec.ECoG(file_name,
+                        which_set='train',
+                        fold=fold,
+                        **kwargs_copy)
+        kwargs_copy['consonant_prediction'] = True
+        c_ds = ec.ECoG(file_name,
                      which_set='train',
                      fold=fold,
-                     **kwargs)
-        ts = ds.get_test_set()
-        vs = ds.get_valid_set()
-        train_X = np.concatenate((ds.get_topological_view(), vs.get_topological_view()), axis=0)
-        train_y = np.concatenate((ds.y, vs.y), axis=0)
-        test_X = ts.get_topological_view()
-        test_y = ts.y
+                     **kwargs_copy)
+        kwargs_copy['consonant_prediction'] = False
+        kwargs_copy['vowel_prediction'] = True
+        v_ds = ec.ECoG(file_name,
+                     which_set='train',
+                     fold=fold,
+                     **kwargs_copy)
+        # Consonants
+        c_ts = c_ds.get_test_set()
+        c_vs = c_ds.get_valid_set()
+        c_train_X = np.concatenate((c_ds.get_topological_view(), c_vs.get_topological_view()), axis=0)
+        c_train_y = np.concatenate((c_ds.y, c_vs.y), axis=0)
+        c_test_X = c_ts.get_topological_view()
+        c_test_y = c_ts.y
+        # Vowels
+        v_ts = v_ds.get_test_set()
+        v_vs = v_ds.get_valid_set()
+        v_train_X = np.concatenate((v_ds.get_topological_view(), v_vs.get_topological_view()), axis=0)
+        v_train_y = np.concatenate((v_ds.y, v_vs.y), axis=0)
+        v_test_X = v_ts.get_topological_view()
+        v_test_y = v_ts.y
+        # CV
+        cv_ts = cv_ds.get_test_set()
+        cv_vs = cv_ds.get_valid_set()
+        cv_train_X = np.concatenate((cv_ds.get_topological_view(), cv_vs.get_topological_view()), axis=0)
+        cv_train_y = np.concatenate((cv_ds.y, cv_vs.y), axis=0)
+        cv_test_X = cv_ts.get_topological_view()
+        cv_test_y = cv_ts.y
+        assert np.all(c_train_X == v_train_X)
+        assert np.all(c_train_X == cv_train_X)
+        assert np.all(c_test_X == v_test_X)
+        assert np.all(c_test_X == cv_test_X)
+        if train_all_time:
+            c_tX = c_train_X.reshape(-1, c_train_X.shape[-1])
+            v_tX = v_train_X.reshape(-1, v_train_X.shape[-1], )
+            cv_tX = cv_train_X.reshape(-1, cv_train_X.shape[-1], )
+            c_cl = LR(solver='lbfgs',
+                      multi_class='multinomial').fit(c_tX,
+                              np.tile(c_train_y.ravel(), n_time))
+            v_cl = LR(solver='lbfgs',
+                      multi_class='multinomial').fit(v_tX,
+                              np.tile(v_train_y.ravel(), n_time))
+            cv_cl = LR(solver='lbfgs',
+                       multi_class='multinomial').fit(cv_tX,
+                              np.tile(cv_train_y.ravel(), n_time))
         for tt in range(n_time):
-            svm = LR(solver='lbfgs', multi_class='multinomial').fit(train_X[:, 0, tt], train_y.ravel())
-            accuracy[fold, tt] = svm.score(test_X[:, 0, tt], test_y.ravel())
-    return accuracy
+            if not train_all_time:
+                c_cl = LR(solver='lbfgs', multi_class='multinomial').fit(c_train_X[:, 0, tt],
+                                                                         c_train_y.ravel())
+                v_cl = LR(solver='lbfgs', multi_class='multinomial').fit(v_train_X[:, 0, tt],
+                                                                         v_train_y.ravel())
+                cv_cl = LR(solver='lbfgs', multi_class='multinomial').fit(cv_train_X[:, 0, tt],
+                                                                          cv_train_y.ravel())
+            ca[fold, tt] = c_cl.score(c_test_X[:, 0, tt], c_test_y.ravel())
+            pc = c_cl.predict_proba(c_test_X[:, 0, tt])
+            va[fold, tt] = v_cl.score(v_test_X[:, 0, tt], v_test_y.ravel())
+            pv = v_cl.predict_proba(v_test_X[:, 0, tt])
+            pcv = (pc[:, np.newaxis, :] *
+                   pv[..., np.newaxis]).reshape(pc.shape[0], -1)[:, has_data].argmax(axis=1)
+            c_va[fold, tt] = np.equal(pcv.ravel(), cv_test_y.ravel()).mean()
+            cva[fold, tt] = cv_cl.score(cv_test_X[:, 0, tt], cv_test_y.ravel())
+    return ca, va, cva, c_va
 
 def conf_mat2accuracy(c_mat, v_mat, cv_mat):
     c_accuracy = None

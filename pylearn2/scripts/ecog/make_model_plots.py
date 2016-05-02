@@ -16,10 +16,11 @@ import plotting
 
 rcParams.update({'figure.autolayout': True})
 
-def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.pkl'):
+def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10, model_file_base='.pkl'):
     subject = os.path.basename(data_file).split('_')[0].lower()
     run = '_'.join([os.path.basename(f) for f in model_folders])
     fname_base = subject + '_' + run
+    data_folder = os.path.join(plot_folder, 'data')
     files = [sorted([f for f in os.listdir(model_folder) if ((model_file_base in f) and
                                                              (subset in f))])
              for model_folder in model_folders]
@@ -36,9 +37,9 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
               'vowel_prediction': False,
               'two_headed': False,
               'randomize_labels': False}
-    """
     if new:
-        kwargs['min_cvs'] = 10
+        kwargs['min_cvs'] = min_cvs
+    """
         kwargs['condense'] = True
     """
     
@@ -133,6 +134,7 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     fname = fname_base + '_' + 'dend_raw.pdf'
     plotting.create_dendrogram(X, y0, ecog_E_lbls, has_data, title=subject+' raw',
                                save_path=os.path.join(plot_folder, fname))
+
     classes = sorted(set(y0.ravel()))
     Xp = np.zeros((len(classes), X.shape[1]))
     for ii in range(len(classes)):
@@ -147,6 +149,8 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     fname = fname_base + '_' + 'corr_raw.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' raw',
                            save_path=os.path.join(plot_folder, fname))
+    np.savez(os.path.join(data_folder, fname_base + '_corr_raw'), ccp=ccp,
+             ccm=ccm, ccv=ccv)
     # Logits + Y_hat
     lgs = tuple()
     yhs = tuple()
@@ -194,10 +198,9 @@ def main(data_file, model_folders, plot_folder, new, subset, model_file_base='.p
     fname = fname_base + '_' + 'corr_y_hat.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' y_hat',
                            save_path=os.path.join(plot_folder, fname))
-    
-    # CV counts
-    fname = fname_base + '_' + 'example_hist.pdf'
-    plotting.plot_cv_counts(y0, subject, os.path.join(plot_folder, fname))
+    np.savez(os.path.join(data_folder, fname_base + '_corr_y_hat'), ccp=ccp,
+             ccm=ccm, ccv=ccv)
+    np.savez(os.path.join(data_folder, fname_base + '_y_hat'), y_hat=y_hat, y=y)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
@@ -207,6 +210,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--new', type=bool, default=True)
     parser.add_argument('-a', '--audio', type=bool, default=False)
     parser.add_argument('-s', '--subset', type=str, default='')
+    parser.add_argument('-m', '--min_cvs', type=int, default=10)
     args = parser.parse_args()
     
     if args.audio:
@@ -232,4 +236,5 @@ if __name__ == '__main__':
     else:
         raise ValueError
     
-    main(data_file, [args.model_folder], args.plot_folder, args.new, args.subset)
+    main(data_file, [args.model_folder], args.plot_folder, args.new,
+            args.subset, args.min_cvs)

@@ -3,6 +3,70 @@ import numpy as np
 from scipy import cluster
 
 
+def plot_time_accuracy_c_v(ca, sca, va, sva, folds=10.,
+                           title=None, save_path=None):
+    x = np.arange(-100*5,158*5, 5)
+
+    c_mean = ca.mean(axis=0)
+    c_std = ca.std(axis=0)
+    v_mean = va.mean(axis=0)
+    v_std = va.std(axis=0)
+
+    sc_mean = sca.mean()
+    sv_mean = sva.mean()
+
+    fig = plt.figure()
+    plt.fill_between(x, (c_mean-c_std/np.sqrt(folds))/sc_mean,
+            (c_mean+c_std/np.sqrt(folds))/sc_mean,
+                             facecolor='black', edgecolor='black')
+
+    plt.fill_between(x, (v_mean-v_std/np.sqrt(folds))/sv_mean,
+            (v_mean+v_std/np.sqrt(folds))/sv_mean,
+                             facecolor='red', edgecolor='red')
+
+    plt.plot(x, np.ones_like(x), color='black')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Accuracy/chance')
+    plt.xlim((x.min(),x.max()))
+    plt.ylim((.5, max(5.5, max(c_mean.max(), v_mean.max()))+.5))
+    if title:
+        plt.title(title)
+    if save_path:
+        plt.savefig(save_path)
+    return fig
+
+def plot_time_accuracy_cv(cva, scva, c_va, sc_va, folds=10.,
+                           title=None, save_path=None):
+    x = np.arange(-100*5,158*5, 5)
+
+    cv_mean = ca.mean(axis=0)
+    cv_std = ca.std(axis=0)
+    c_v_mean = va.mean(axis=0)
+    c_v_std = va.std(axis=0)
+
+    scv_mean = sca.mean()
+    sc_v_mean = sva.mean()
+
+    fig = plt.figure()
+    plt.fill_between(x, (cv_mean-cv_std/np.sqrt(folds))/scv_mean,
+            (cv_mean+cv_std/np.sqrt(folds))/scv_mean,
+                             facecolor='black', edgecolor='black')
+
+    plt.fill_between(x, (c_v_mean-c_v_std/np.sqrt(folds))/sc_v_mean,
+            (c_v_mean+c_v_std/np.sqrt(folds))/sc_v_mean,
+                             facecolor='grey', edgecolor='grey')
+
+    plt.plot(x, np.ones_like(x), color='black')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Accuracy/chance')
+    plt.xlim((x.min(),x.max()))
+    plt.ylim((.5, max(cv_mean.max(), c_v_mean.max())+.5))
+    if title:
+        plt.title(title)
+    if save_path:
+        plt.savefig(save_path)
+    return fig
+
 def plot_cv_counts(y, title, save_path, cvs=57):
     nums = np.zeros(cvs)
     for ii in range(cvs):
@@ -20,7 +84,7 @@ def plot_cv_counts(y, title, save_path, cvs=57):
         plt.title(title)
     if save_path:
         plt.savefig(save_path)
-    return fig
+    return fig, hist
 
 def plot_cv_accuracy(accuracy_per_cv, labels, has_data=None, save_path=None):
     folds, cvs = accuracy_per_cv.shape
