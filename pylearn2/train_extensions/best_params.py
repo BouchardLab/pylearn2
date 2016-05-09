@@ -212,3 +212,50 @@ class MonitorBasedSaveBest(TrainExtension):
         """
         # More stuff to be added later. For now, we care about the best cost.
         model.tag[self._tag_key]['best_cost'] = self.best_cost
+
+
+class SaveEpoch(TrainExtension):
+    """
+    A callback that saves a copy of the model every epoch.
+
+    Parameters
+    ----------
+    save_path : str or None, optional
+        Output filename. Must contain {} for epoch.
+    """
+    def __init__(self, save_path):
+        assert '{}' in save_path
+        self.save_path = save_path
+
+    def on_monitor(self, model, dataset, algorithm):
+        """
+        Looks whether the model performs better than earlier. If it's the
+        case, saves the model.
+
+        Parameters
+        ----------
+        model : pylearn2.models.model.Model
+            model.monitor must contain a channel with name given by
+            self.channel_name
+        dataset : pylearn2.datasets.dataset.Dataset
+            Not used
+        algorithm : TrainingAlgorithm
+            Not used
+        """
+        monitor = model.monitor
+        epoch = monitor.get_epochs_seen()
+        epoch_save_path = self.save_path.format('_epoch_'+str(epoch))
+        with log_timing(log, 'Saving to ' + epoch_save_path):
+            serial.save(epoch_save_path, model, on_overwrite='backup')
+
+    def _update_tag(self, model):
+        """
+        Update `model.tag` with information about the current best.
+
+        Parameters
+        ----------
+        model : pylearn2.models.model.Model
+            The model to update.
+        """
+        # More stuff to be added later. For now, we care about the best cost.
+        model.tag[self._tag_key]['best_cost'] = self.best_cost

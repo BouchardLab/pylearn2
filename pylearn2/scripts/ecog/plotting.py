@@ -39,13 +39,13 @@ def plot_time_accuracy_cv(cva, scva, c_va, sc_va, folds=10.,
                            title=None, save_path=None):
     x = np.arange(-100*5,158*5, 5)
 
-    cv_mean = ca.mean(axis=0)
-    cv_std = ca.std(axis=0)
-    c_v_mean = va.mean(axis=0)
-    c_v_std = va.std(axis=0)
+    cv_mean = cva.mean(axis=0)
+    cv_std = cva.std(axis=0)
+    c_v_mean = c_va.mean(axis=0)
+    c_v_std = c_va.std(axis=0)
 
-    scv_mean = sca.mean()
-    sc_v_mean = sva.mean()
+    scv_mean = scva.mean()
+    sc_v_mean = sc_va.mean()
 
     fig = plt.figure()
     plt.fill_between(x, (cv_mean-cv_std/np.sqrt(folds))/scv_mean,
@@ -60,7 +60,6 @@ def plot_time_accuracy_cv(cva, scva, c_va, sc_va, folds=10.,
     plt.xlabel('Time (ms)')
     plt.ylabel('Accuracy/chance')
     plt.xlim((x.min(),x.max()))
-    plt.ylim((.5, max(cv_mean.max(), c_v_mean.max())+.5))
     if title:
         plt.title(title)
     if save_path:

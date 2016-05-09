@@ -16,7 +16,8 @@ import plotting
 
 rcParams.update({'figure.autolayout': True})
 
-def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl'):
+def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl',
+         overwrite=False):
     subject = os.path.basename(data_file).split('_')[0].lower()
     fname_base = subject
     data_folder = os.path.join(plot_folder, 'data')
@@ -56,42 +57,90 @@ def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl'):
     
     # CV counts
     fname = fname_base + '_example_hist.pdf'
+    data_fname = os.path.join(data_folder, fname_base +
+                              '_example_hist.npz')
     f, h = plotting.plot_cv_counts(y0, subject, os.path.join(plot_folder, fname))
-    np.savez(os.path.join(data_folder, fname_base + '_example_hist'), hist=h)
+    np.savez(data_fname, hist=h)
+
 
     # Temporal Classification
     kwargs_copy = copy.deepcopy(kwargs)
-    c_ita, v_ita, cv_ita, c_v_ita = analysis.time_accuracy(data_file, ec,
-                                                           kwargs_copy,
-                                                           has_data)
-    c_ata, v_ata, cv_ata, c_v_ata = analysis.time_accuracy(data_file, ec,
-                                                           kwargs_copy,
-                                                           has_data,
-                                                           train_all_time=True)
-    kwargs_copy['randomize_labels'] = True
-    sc_ita, sv_ita, scv_ita, sc_v_ita = analysis.time_accuracy(data_file, ec,
-                                                           kwargs_copy,
-                                                           has_datda)
-    sc_ata, sv_ata, scv_ata, sc_v_ata = analysis.time_accuracy(data_file, ec,
+    data_fname = os.path.join(data_folder, fname_base +
+                              '_cv_time_indep.npz')
+    print data_fname
+    if (not os.path.exists(data_fname) or overwrite):
+        c_ita, v_ita, cv_ita, c_v_ita = analysis.time_accuracy(data_file, ec,
+                                                               kwargs_copy,
+                                                               has_data)
+        np.savez(data_fname, c_ita=c_ita, v_ita=v_ita,
+                 cv_ita=cv_ita, c_v_ita=c_v_ita)
+    else:
+        with np.load(data_fname) as f:
+            c_ita, v_ita, cv_ita, c_v_ita = (
+                    f['c_ita'], f['v_ita'], f['cv_ita'], f['c_v_ita'])
+
+    data_fname = os.path.join(data_folder, fname_base +
+                              '_cv_time_all.npz')
+    print data_fname
+    if (not os.path.exists(data_fname) or overwrite):
+        c_ata, v_ata, cv_ata, c_v_ata = analysis.time_accuracy(data_file, ec,
                                                                kwargs_copy,
                                                                has_data,
                                                                train_all_time=True)
+        np.savez(data_fname, c_ata=c_ata, v_ata=v_ata,
+                 cv_ata=cv_ata, c_v_ata=c_v_ata)
+    else:
+        with np.load(data_fname) as f:
+            c_ata, v_ata, cv_ata, c_v_ata = (
+                    f['c_ata'], f['v_ata'], f['cv_ata'], f['c_v_ata'])
+
+    kwargs_copy['randomize_labels'] = True
+    data_fname = os.path.join(data_folder, fname_base +
+                              '_scv_time_indep.npz')
+    print data_fname
+    if (not os.path.exists(data_fname) or overwrite):
+        sc_ita, sv_ita, scv_ita, sc_v_ita = analysis.time_accuracy(data_file, ec,
+                                                               kwargs_copy,
+                                                               has_data)
+        np.savez(data_fname, sc_ita=sc_ita, sv_ita=sv_ita,
+                 scv_ita=scv_ita, sc_v_ita=sc_v_ita)
+    else:
+        with np.load(data_fname) as f:
+            sc_ita, sv_ita, scv_ita, sc_v_ita = (
+                    f['sc_ita'], f['sv_ita'], f['scv_ita'], f['sc_v_ita'])
+
+    data_fname = os.path.join(data_folder, fname_base +
+                              '_scv_time_all.npz')
+    print data_fname
+    if (not os.path.exists(data_fname) or overwrite):
+        sc_ata, sv_ata, scv_ata, sc_v_ata = analysis.time_accuracy(data_file, ec,
+                                                                   kwargs_copy,
+                                                                   has_data,
+                                                                   train_all_time=True)
+        np.savez(data_fname, sc_ata=sc_ata, sv_ata=sv_ata,
+                 scv_ata=scv_ata, sc_v_ata=sc_v_ata)
+    else:
+        with np.load(data_fname) as f:
+            sc_ata, sv_ata, scv_ata, sc_v_ata = (
+                    f['sc_ata'], f['sv_ata'], f['scv_ata'], f['sc_v_ata'])
     # C and V
-    fname = fname_base + '_consonant_and_vowel_indep.pdf'
+    fname = os.path.join(plot_folder, fname_base +
+            '_consonant_and_vowel_indep.pdf')
     plotting.plot_time_accuracy_c_v(c_ita, sc_ita, v_ita, sv_ita,
                                     title=subject + ' ' + 'Independent Classifiers',
                                     save_path=fname)
-    fname = fname_base + '_consonant_and_vowel_one.pdf'
+    fname = os.path.join(plot_folder, fname_base +
+            '_consonant_and_vowel_one.pdf')
     plotting.plot_time_accuracy_c_v(c_ata, sc_ata, v_ata, sv_ata,
                                     title=subject + ' ' + 'One Classifier',
                                     save_path=fname)
     # CV
-    fname = fname_base + '_cv_indep.pdf'
+    fname = os.path.join(plot_folder, fname_base + '_cv_indep.pdf')
     plotting.plot_time_accuracy_cv(cv_ita, scv_ita, c_v_ita, sc_v_ita,
                                     title=subject + ' ' + 'Independent Classifiers',
                                     save_path=fname)
-    fname = fname_base + '_cv_one.pdf'
-    plotting.plot_time_accuracy_cv(c_ata, sc_ata, v_ata, sv_ata,
+    fname = os.path.join(plot_folder, fname_base + '_cv_one.pdf')
+    plotting.plot_time_accuracy_cv(cv_ata, scv_ata, c_v_ata, sc_v_ata,
                                     title=subject + ' ' + 'One Classifier',
                                     save_path=fname)
 
@@ -103,6 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--new', type=bool, default=True)
     parser.add_argument('-a', '--audio', type=bool, default=False)
     parser.add_argument('-m', '--min_cvs', type=int, default=10)
+    parser.add_argument('-o', '--overwrite', type=bool, default=0)
     args = parser.parse_args()
     
     if args.audio:
@@ -129,4 +179,4 @@ if __name__ == '__main__':
         raise ValueError
     
     main(data_file, args.plot_folder, args.new,
-         args.min_cvs)
+         args.min_cvs, args.overwrite)
