@@ -11,6 +11,51 @@ import theano.tensor as T
 from sklearn.linear_model import LogisticRegression as LR
 
 
+
+def place_equiv(y, y_hat):
+    """
+    Checks if two cvs have equivalent place.
+    """
+    if y%19 in [0, 2, 10, 1, 11, 6, 3, 17]:
+        if (y%19 in [0, 2, 10]) and (y_hat%19 in [0, 2, 10]):
+            # b, f, r
+            return True
+        elif (y%19 in [1, 11, 6]) and (y_hat%19 in [1, 11, 6]):
+            # d, s, l
+            return True
+        elif (y%19 in [3, 17]) and (y_hat%19 in [3, 17]):
+            # g, y
+            return True
+        else:
+            return False
+    else:
+        return None
+
+def manner_equiv(y, y_hat):
+    """
+    Checks if two cvs have equivalent manner.
+    """
+    if y%19 in [0, 1, 3, 2, 11, 10, 6, 17]:
+        if (y%19 in [0, 1, 3]) and (y_hat%19 in [0, 1, 3]):
+            # b, d, g
+            return True
+        elif (y%19 in [2, 11]) and (y_hat%19 in [2, 11]):
+            # f, s
+            return True
+        elif (y%19 in [10, 6, 17]) and (y_hat%19 in [10, 6, 17]):
+            # r, l, y
+            return True
+        else:
+            return False
+    else:
+        return None
+
+def vowel_equiv(y, y_hat):
+    """
+    Checks if two cvs have equivalent vowel.
+    """
+    return y%3 == y_hat%3
+
 def load_raw_data(ds):
     ts = ds.get_test_set()
     vs = ds.get_valid_set()
@@ -48,6 +93,62 @@ def condensed_2_dense(new, indices_dicts, y_hat_dicts, logits_dicts, ds):
         y_hat_dicts2 = y_hat_dicts
         logits_dicts2 = logits_dicts
     return (indices_dicts2, y_hat_dicts2, logits_dicts2)
+
+def svd_accuracy(file_name, ec, kwargs,
+                 folds=10, max_svs=10):
+    """
+    Classify data independently at each point in time.
+    """
+    kwargs['condense'] = False
+    ds = ec.ECoG(file_name, which_set='train', **kwargs)
+    n_classes = len(set(ds.y.ravel()))
+    max_svs = min(max_svs, n_classes)
+    pa = np.inf * np.ones((10, max_svs, n_classes))
+    ma = np.inf * np.ones((10, max_svs, n_classes))
+    va = np.inf * np.ones((10, max_svs, n_classes))
+    for fold in range(folds):
+        kwargs_copy = copy.deepcopy(kwargs)
+        print('fold: {}'.format(fold))
+        ds = ec.ECoG(file_name,
+                        which_set='train',
+                        fold=fold,
+                        **kwargs_copy)
+        # CV
+        ts = ds.get_test_set()
+        vs = ds.get_valid_set()
+        train_X = np.concatenate((ds.X, vs.X), axis=0)
+        train_y = np.concatenate((ds.y, vs.y), axis=0)
+        test_X = ts.X
+        test_y = ts.y
+        c_yx = np.zeros((n_classes, train_X.shape[1]))
+        for ii in range(n_classes):
+            c_yx[ii] = train_X[train_y == ii].mean()
+        u, s, v = np.linalg.svd(c_yx, full_matrices=False)
+        for n_svs in range(1, max_svs+1):
+            for sv_init in range(n_classes-n_svs+1):
+                vp = v[sv_init:sv_init+n_svs]
+                train_proj = train_X.dot(vp.T)
+                test_proj = test_X.dot(vp.T)
+                cl = LR(solver='lbfgs',
+                        multi_class='multinomial').fit(train_proj, train_y.ravel())
+                y_hat = cl.predict(test_proj)
+                p_results = []
+                m_results = []
+                v_results = []
+                for y, yh in zip(test_y.ravel(), y_hat.ravel()):
+                    pr = place_equiv(y, yh)
+                    if pr is not None:
+                        p_results.append(pr)
+                    mr = manner_equiv(y, yh)
+                    if mr is not None:
+                        m_results.append(mr)
+                    vr = place_equiv(y, yh)
+                    if vr is not None:
+                        v_results.append(vr)
+                pa[fold, n_svs-1, sv_init] = np.array(p_results).mean()
+                ma[fold, n_svs-1, sv_init] = np.array(m_results).mean()
+                va[fold, n_svs-1, sv_init] = np.array(v_results).mean()
+    return pa, ma, va
 
 def time_accuracy(file_name, ec, kwargs, has_data,
                   folds=10, train_all_time=False):

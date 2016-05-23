@@ -115,44 +115,6 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10, model_f
     indices_dicts2, y_hat_dicts2, logits_dicts2 = analysis.condensed_2_dense(new, indices_dicts,
                                                                              y_hat_dicts, logits_dicts, ds)
 
-    # Place
-    def place_equiv(y, y_hat):
-        if y%19 in [0, 2, 10, 1, 11, 6, 3, 17]:
-            if (y%19 in [0, 2, 10]) and (y_hat%19 in [0, 2, 10]):
-                # b, f, r
-                return True
-            elif (y%19 in [1, 11, 6]) and (y_hat%19 in [1, 11, 6]):
-                # d, s, l
-                return True
-            elif (y%19 in [3, 17]) and (y_hat%19 in [3, 17]):
-                # g, y
-                return True
-            else:
-                return False
-        else:
-            return None
-
-    # Manner
-    def manner_equiv(y, y_hat):
-        if y%19 in [0, 1, 3, 2, 11, 10, 6, 17]:
-            if (y%19 in [0, 1, 3]) and (y_hat%19 in [0, 1, 3]):
-                # b, d, g
-                return True
-            elif (y%19 in [2, 11]) and (y_hat%19 in [2, 11]):
-                # f, s
-                return True
-            elif (y%19 in [10, 6, 17]) and (y_hat%19 in [10, 6, 17]):
-                # r, l, y
-                return True
-            else:
-                return False
-        else:
-            return None
-
-    # Vowel
-    def vowel_equiv(y, y_hat):
-        return y%3 == y_hat%3
-
     place = dict()
     manner = dict()
     vowel = dict()
@@ -166,13 +128,13 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10, model_f
             ys = idxs[:, 0]
             y_hats = idxs[:, 1]
             for y, y_hat in zip(ys, y_hats):
-                p = place_equiv(y, y_hat)
+                p = analysis.place_equiv(y, y_hat)
                 if p is not None:
                     pl.append(p)
-                m = place_equiv(y, y_hat)
+                m = analysis.manner_equiv(y, y_hat)
                 if m is not None:
                     ml.append(m)
-                v = place_equiv(y, y_hat)
+                v = analysis.vowel_equiv(y, y_hat)
                 if v is not None:
                     vl.append(v)
             place[f] = np.array(pl).astype(float).mean()

@@ -3,6 +3,32 @@ import numpy as np
 from scipy import cluster
 
 
+def plot_svd_accuracy(pa, ma, va, folds=10.,
+                      title=None, save_path=None):
+
+    max_svs = pa.shape[1]
+    n_classes = pa.shape[2]
+    x = np.arange(n_classes)
+
+    fig = plt.figure()
+    for n_svs in range(1, max_svs+1, 2):
+        for l, rs in zip(['p', 'm', 'a'], [pa, ma, va]):
+            mean = rs[:, n_svs-1].mean(axis=0)
+            std = rs[:, n_svs-1].std(axis=0)
+            plt.fill_between(x, (mean-std/np.sqrt(folds)),
+                             (mean+std/np.sqrt(folds)),
+                             label=l+', n_svs: '+str(n_svs))
+    #plt.legend(loc='upper left')
+
+    plt.xlabel('Start of SV window')
+    plt.ylabel('Accuracy')
+    plt.xlim((x.min(),x.max()))
+    if title:
+        plt.title(title)
+    if save_path:
+        plt.savefig(save_path)
+    return fig
+
 def plot_time_accuracy_c_v(ca, sca, va, sva, folds=10.,
                            title=None, save_path=None):
     x = np.arange(-100*5,158*5, 5)
