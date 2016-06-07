@@ -166,22 +166,31 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10, model_f
     fname = fname_base + '_place_epochs.pdf'
     plt.figure()
     plt.plot(epoch_accuracies[:, 0])
-    plt.xlabel('epochs')
+    plt.xlabel('Epochs')
     plt.ylabel('Place Accuracy')
     plt.savefig(os.path.join(plot_folder, fname))
 
     fname = fname_base + '_manner_epochs.pdf'
     plt.figure()
     plt.plot(epoch_accuracies[:, 1])
-    plt.xlabel('epochs')
+    plt.xlabel('Epochs')
     plt.ylabel('Manner Accuracy')
     plt.savefig(os.path.join(plot_folder, fname))
 
     fname = fname_base + '_vowel_epochs.pdf'
     plt.figure()
     plt.plot(epoch_accuracies[:, 2])
-    plt.xlabel('epochs')
+    plt.xlabel('Epochs')
     plt.ylabel('Vowel Accuracy')
+    plt.savefig(os.path.join(plot_folder, fname))
+
+    fname = fname_base + '_all_epochs.pdf'
+    plt.figure()
+    for ii, l in enumerate(['Place', 'Manner', 'Vowel']):
+        plt.plot(epoch_accuracies[:, ii], label=l)
+    plt.legend(loc='best')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
     plt.savefig(os.path.join(plot_folder, fname))
 
 

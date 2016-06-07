@@ -3,31 +3,53 @@ import numpy as np
 from scipy import cluster
 
 
-def plot_svd_accuracy(pa, ma, va, folds=10.,
+def plot_svd_accuracy(pa, ma, va, ss, il, nl,
+                      folds=10.,
                       title=None, save_path=None):
 
-    max_svs = pa.shape[1]
-    n_classes = pa.shape[2]
-    x = np.arange(n_classes)
+    colors = plt.cm.plasma(np.linspace(0, 1, len(nl)))
+    figs = []
 
     fig = plt.figure()
-    for n_svs in range(1, max_svs+1, 2):
-        for l, rs in zip(['p', 'm', 'a'], [pa, ma, va]):
-            mean = rs[:, n_svs-1].mean(axis=0)
-            std = rs[:, n_svs-1].std(axis=0)
-            plt.fill_between(x, (mean-std/np.sqrt(folds)),
-                             (mean+std/np.sqrt(folds)),
-                             label=l+', n_svs: '+str(n_svs))
-    #plt.legend(loc='upper left')
-
-    plt.xlabel('Start of SV window')
-    plt.ylabel('Accuracy')
-    plt.xlim((x.min(),x.max()))
+    mean = ss.mean(axis=0)[:-1]
+    std = ss.std(axis=0)[:-1]
+    plt.fill_between(np.arange(mean.shape[0])+1, (mean-std/np.sqrt(ss.shape[0])),
+                             (mean+std/np.sqrt(ss.shape[0])),
+                                              facecolor='black',
+                                                               edgecolor='black')
+    plt.xlabel('Singular value index')
+    plt.ylabel('Singular value, log scale')
     if title:
         plt.title(title)
+    plt.title(title)
+    plt.yscale('log')
     if save_path:
-        plt.savefig(save_path)
-    return fig
+        print 'here'
+        pre, post = save_path.split('.')
+        print save_path
+        plt.savefig(pre+'_svd.'+post)
+
+    for l, rs in zip(['place', 'manner', 'vowel'], [pa, ma, va]):
+        fig = plt.figure()
+        figs.append(fig)
+        for ii, n_svs in enumerate(nl):
+            mean = rs[:, ii].mean(axis=0)
+            std = rs[:, ii].std(axis=0)
+            plt.fill_between(il, (mean-std/np.sqrt(folds)),
+                             (mean+std/np.sqrt(folds)),
+                             label='n S.V.: '+str(n_svs),
+                             facecolor=colors[ii],
+                             edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.xlabel('Start of SV window')
+        plt.ylabel('Accuracy')
+        plt.xlim((il.min(),il.max()))
+        if title:
+            plt.title(title+' '+l)
+        if save_path:
+            pre, post = save_path.split('.')
+            plt.savefig(pre+'_'+l+'.'+post)
+    return figs
 
 def plot_time_accuracy_c_v(ca, sca, va, sva, folds=10.,
                            title=None, save_path=None):
