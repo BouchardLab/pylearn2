@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import theano.tensor as T
 from sklearn.linear_model import LogisticRegression as LR
+from scipy.optimize import minimize
 
 
 def place_equiv(y, y_hat):
@@ -95,6 +96,65 @@ def condensed_2_dense(new, indices_dicts, y_hat_dicts, logits_dicts, ds):
         y_hat_dicts2 = y_hat_dicts
         logits_dicts2 = logits_dicts
     return (indices_dicts2, y_hat_dicts2, logits_dicts2)
+
+def fit_accuracy_lognormal(data, il, nl, check_nan=False):
+    if check_nan:
+        assert len(data) == 1
+        data = data
+
+    def split_params(params):
+        total = params.shape[0]
+        n_examples = total // 4
+        logscale = params[:n_examples]
+        mean = params[n_examples:2*n_examples]
+        logvar = params[2*n_examples:3*n_examples]
+        b = params[3*n_examples:]
+        return logscale, mean, logvar, b
+
+    params = T.dvector('params')
+    logscale, mean, logvar, b = split_params(params)
+
+    all_cost = 0.
+
+    all_data = theano.shared(np.zeros((10,len(nl),len(il))).astype('float32'))
+
+    for n in range(2, len(nl)):
+        for i in range(1, len(il)):
+            if (not check_nan) or (not np.any(np.isnan(data[0][:, n-1, i-1]))):
+                form_sum = b
+                for k in range(i, i+n):
+                    form_sum += T.exp(logscale)*T.exp(-(T.log(k)-mean)**2/T.exp(logvar))/k
+                cost = T.sum(.5*(form_sum-all_data[:,n-1,i-1])**2)
+                all_cost += cost
+
+    grad = T.grad(all_cost, params).astype('float64')
+    all_cost = all_cost.astype('float64')
+    f_df = theano.function(inputs=[params], outputs=[all_cost, grad])
+
+    gd = []
+    fit_params = []
+    for ds in data:
+        this_data = ds.astype('float32')
+        n_ex = this_data.shape[0]
+        all_data.set_value(this_data)
+        low = np.nanmean(ds[:,:,-1])
+        high = np.nanmean(ds[:,:-1,0])
+        w_0 = np.zeros(4*n_ex)
+        w_0[:n_ex] = np.log(max([high-low, 1e-5]))
+        w_0[n_ex:2*n_ex] = 0.
+        w_0[2*n_ex:3*n_ex] = 0.
+        w_0[3*n_ex:] = low
+        rval = minimize(f_df, w_0, jac=True, method='L-BFGS-B')
+        fit_params.append(rval.x)
+        logscale, mean, logvar, b = split_params(rval.x)
+        data = np.zeros_like(ds)
+        for f in range(ds.shape[0]):
+            fit_p = lambda n: np.exp(logscale[f])*np.exp(-(np.log(n)-mean[f])**2/np.exp(logvar[f]))/n
+            for n in range(ds.shape[1]):
+                for i in range(ds.shape[2]):
+                    data[f, n, i] = sum([fit_p(k) for k in range(i, i+n+1)])+b[f]
+        gd.append(data)
+    return gd + fit_params
 
 def svd_accuracy(file_name, ec, kwargs,
                  folds=10, max_svs=10,

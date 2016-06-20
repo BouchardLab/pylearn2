@@ -4,7 +4,7 @@ from scipy import cluster
 
 
 def plot_svd_accuracy(pa, ma, va, ss, il, nl,
-                      folds=10.,
+                      folds=10., over_chance=True,
                       title=None, save_path=None):
 
     colors = plt.cm.plasma(np.linspace(0, 1, len(nl)))
@@ -42,7 +42,12 @@ def plot_svd_accuracy(pa, ma, va, ss, il, nl,
                              edgecolor='black')
         plt.legend(loc='upper right')
         plt.xlabel('Start of SV window')
-        plt.ylabel('Accuracy')
+        if over_chance:
+            plt.ylabel('Accuracy/chance')
+            plt.ylim([.5, 2])
+        else:
+            plt.ylabel('Accuracy')
+            plt.ylim([0, 1.5])
         plt.xlim((il.min(),il.max()))
         if title:
             plt.title(title+' '+l)
