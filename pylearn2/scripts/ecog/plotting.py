@@ -3,6 +3,57 @@ import numpy as np
 from scipy import cluster
 
 
+def plot_confusion_matrix(conf_matrix, title=None, save_path=None):
+    phoneme_map = {'aa': 'a',
+                   'ee': 'i',
+                   'oo': 'u',
+                   'y': 'j',
+                   'th': 'Q',
+                   'sh': 'L'}
+
+    def to_phonetic(syllables):
+        rval = []
+        for syl in syllables:
+            for k, v in phoneme_map.iteritems():
+                syl = syl.replace(k, v)
+            rval.append(syl)
+        return rval
+
+    tick_offset = .02
+    tick_scale = .05
+    ratio = 6
+
+    ticks = [0,.25,.5,.75,1]
+    f = plt.figure(figsize=(20, 8))
+    clip = [0,.5]
+    f = plt.figure()
+    plt.imshow(np.clip(conf_matrix_consonant/conf_matrix_consonant.sum(1, keepdims=True),
+                             clip[0], clip[1]),
+                     interpolation='nearest', cmap='gray_r')
+    plt.set_ylabel('Ground Truth')
+    plt.set_xlabel('Predicted')
+    plt.set_xticks(np.arange(y_dim))
+    plt.set_xticklabels(to_phonetic(ecog_E_lbls[to_consonant]), rotation=90)
+    plt.set_yticks(np.arange(y_dim))
+    plt.set_yticklabels(to_phonetic(ecog_E_lbls[to_consonant]))
+    pos = 0
+    for label in f.axes[0].yaxis.get_majorticklabels():
+        label.set_position([tick_scale*((pos%2)-.5)-tick_offset, 0])
+        pos += 1
+    pos = 0
+    for label in f.axes[0].xaxis.get_majorticklabels():
+        label.set_position([0, tick_scale*((pos%2)-.5)-tick_offset])
+        pos += 1
+
+    plt.colorbar(ticks=ticks)
+
+    if title is not None:
+        plt.title(title)
+    if save_path is not None:
+        plt.savefig(f, save_path)
+
+    return f
+
 def plot_svd_accuracy(pa, ma, va, ss, il, nl,
                       folds=10., over_chance=True,
                       title=None, save_path=None):

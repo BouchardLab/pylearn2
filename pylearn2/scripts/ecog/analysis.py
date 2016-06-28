@@ -123,7 +123,9 @@ def fit_accuracy_lognormal(data, il, nl, check_nan=False):
             if (not check_nan) or (not np.any(np.isnan(data[0][:, n-1, i-1]))):
                 form_sum = b
                 for k in range(i, i+n):
-                    form_sum += T.exp(logscale)*T.exp(-(T.log(k)-mean)**2/T.exp(logvar))/k
+                    form_sum += (T.exp(logscale) *
+                                 T.exp(-(T.log(k)-mean)**2/T.exp(logvar)) /
+                                 (k * np.sqrt(2. * np.pi) * T.sqrt(T.exp(logvar))))
                 cost = T.sum(.5*(form_sum-all_data[:,n-1,i-1])**2)
                 all_cost += cost
 
@@ -149,7 +151,9 @@ def fit_accuracy_lognormal(data, il, nl, check_nan=False):
         logscale, mean, logvar, b = split_params(rval.x)
         data = np.zeros_like(ds)
         for f in range(ds.shape[0]):
-            fit_p = lambda n: np.exp(logscale[f])*np.exp(-(np.log(n)-mean[f])**2/np.exp(logvar[f]))/n
+            fit_p = lambda n: (np.exp(logscale[f]) *
+                               np.exp(-(np.log(n)-mean[f])**2/np.exp(logvar[f])) /
+                               (n * np.sqrt(2. * np.pi * np.exp(logvar[f]))))
             for n in range(ds.shape[1]):
                 for i in range(ds.shape[2]):
                     data[f, n, i] = sum([fit_p(k) for k in range(i, i+n+1)])+b[f]
@@ -314,7 +318,7 @@ def time_accuracy(file_name, ec, kwargs, has_data,
             cva[fold, tt] = cv_cl.score(cv_test_X[:, 0, tt], cv_test_y.ravel())
     return ca, va, cva, c_va
 
-def conf_mat2accuracy(c_mat, v_mat, cv_mat):
+def conf_mat2accuracy(c_mat=None, v_mat=None, cv_mat=None):
     c_accuracy = None
     v_accuracy = None
     cv_accuracy = None
