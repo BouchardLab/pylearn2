@@ -323,14 +323,35 @@ def conf_mat2accuracy(c_mat=None, v_mat=None, cv_mat=None):
     v_accuracy = None
     cv_accuracy = None
     accuracy_per_cv = None
+    p_accuracy = None
+    m_accuracy = None
 
     if cv_mat is not None:
         cv_accuracy = np.zeros(len(cv_mat))
         accuracy_per_cv = np.zeros((len(cv_mat), 57))
+        p_right = np.zeros(len(cv_mat))
+        m_right = np.zeros(len(cv_mat))
+        p_wrong = np.zeros(len(cv_mat))
+        m_wrong = np.zeros(len(cv_mat))
         for ii, cvf in enumerate(cv_mat):
             cv_accuracy[ii] = np.diag(cvf).sum()/cvf.sum()
             for jj in range(57):
                 accuracy_per_cv[ii,jj] = cvf[jj,jj]/cvf[jj].sum()
+            for y in range(57):
+                for y_hat in range(57):
+                    pval = place_equiv(y, y_hat)
+                    if pval == True:
+                        p_right[ii] += cvf[y, y_hat]
+                    elif pval == False:
+                        p_wrong[ii] += cvf[y, y_hat]
+                    mval = manner_equiv(y, y_hat)
+                    if mval == True:
+                        m_right[ii] += cvf[y, y_hat]
+                    elif mval == False:
+                        m_wrong[ii] += cvf[y, y_hat]
+        p_accuracy = p_right / (p_right + p_wrong)
+        m_accuracy = m_right / (m_right + m_wrong)
+
     if c_mat is not None:
         c_accuracy = np.zeros(len(c_mat))
         for ii, cf in enumerate(c_mat):
@@ -340,7 +361,8 @@ def conf_mat2accuracy(c_mat=None, v_mat=None, cv_mat=None):
         for ii, vf in enumerate(v_mat):
             v_accuracy[ii] = np.diag(vf).sum()/vf.sum()
 
-    return c_accuracy, v_accuracy, cv_accuracy, accuracy_per_cv
+    return (c_accuracy, v_accuracy, cv_accuracy, accuracy_per_cv,
+            p_accuracy, m_accuracy)
 
 def indx_dict2conf_mat(indices_dicts, y_dims):
     c = None

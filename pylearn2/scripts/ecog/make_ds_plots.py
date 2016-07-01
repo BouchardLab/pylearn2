@@ -67,7 +67,6 @@ def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl',
     kwargs_copy = copy.deepcopy(kwargs)
     data_fname = os.path.join(data_folder, fname_base +
                               '_cv_time_indep.npz')
-    print data_fname
     if (not os.path.exists(data_fname) or overwrite):
         c_ita, v_ita, cv_ita, c_v_ita = analysis.time_accuracy(data_file, ec,
                                                                kwargs_copy,
@@ -81,7 +80,6 @@ def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl',
 
     data_fname = os.path.join(data_folder, fname_base +
                               '_cv_time_all.npz')
-    print data_fname
     if (not os.path.exists(data_fname) or overwrite):
         c_ata, v_ata, cv_ata, c_v_ata = analysis.time_accuracy(data_file, ec,
                                                                kwargs_copy,
@@ -97,7 +95,6 @@ def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl',
     kwargs_copy['randomize_labels'] = True
     data_fname = os.path.join(data_folder, fname_base +
                               '_scv_time_indep.npz')
-    print data_fname
     if (not os.path.exists(data_fname) or overwrite):
         sc_ita, sv_ita, scv_ita, sc_v_ita = analysis.time_accuracy(data_file, ec,
                                                                kwargs_copy,
@@ -111,7 +108,6 @@ def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl',
 
     data_fname = os.path.join(data_folder, fname_base +
                               '_scv_time_all.npz')
-    print data_fname
     if (not os.path.exists(data_fname) or overwrite):
         sc_ata, sv_ata, scv_ata, sc_v_ata = analysis.time_accuracy(data_file, ec,
                                                                    kwargs_copy,
@@ -148,7 +144,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
     parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31'], default='ec2')
     parser.add_argument('-p', '--plot_folder', type=str,
-                        default=os.path.join(os.environ['HOME'], 'plots'))
+                        default=os.path.join(os.environ['HOME'], 'plots', 'ds'))
     parser.add_argument('-n', '--new', type=bool, default=True)
     parser.add_argument('-a', '--audio', type=bool, default=False)
     parser.add_argument('-m', '--min_cvs', type=int, default=10)
