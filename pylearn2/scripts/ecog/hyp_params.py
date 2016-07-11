@@ -10,6 +10,7 @@ def get_params(json_file):
                     'consonant_dim': 19,
                     'vowel_dim': 3,
                     'n_folds': 10,
+                    'pca_dim': 2000,
                     'level_classes': True,
                     'randomize_labels': False,
                     'consonant_prediction': False,
@@ -19,8 +20,7 @@ def get_params(json_file):
                     'center': True,
                     'test': False,
                     'factorize': False,
-                    'data_file':
-                    'hdf5/EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
+                    'data_file': 'hdf5/EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                     'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
@@ -36,7 +36,9 @@ def get_params(json_file):
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
     
-    ds = ecog_new.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']), 'train')
+    ds = ecog_new.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']),
+                       'train',
+                       pca_dim=fixed_params['pca_dim'])
     X_shape = ds.get_topological_view().shape
     n_cvs = len(set(ds.y.ravel()))
 

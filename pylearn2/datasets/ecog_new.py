@@ -12,6 +12,7 @@ from pylearn2.datasets import control
 from pylearn2.datasets import cache
 from pylearn2.utils import serial
 from pylearn2.utils.rng import make_np_rng
+from sklearn.decomposition import PCA
 
 
 _split = {'train': .8, 'valid': .1, 'test': .1}
@@ -64,7 +65,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  vowel_labels=3,
                  consonant_labels=19,
                  min_cvs=10,
-                 condense=True):
+                 condense=True,
+                 pca_dim=None):
         self.args = locals()
 
 
@@ -221,9 +223,14 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         y_valid = y[valid_idx]
         y_test = y[test_idx]
 
+        if pca_dim is not None:
+            pca_model = PCA(pca_dim)
+            pca_model.fit(X_train.reshape(X_train.shape[0], -1))
+
         self.train_mean = X_train.mean(0)
 
         if which_set == 'augment':
+            raise NotImplementedError
             img_shape = X_train.shape[1:]
             y_shape = y_train.shape[1:]
             if pm_aug_range is not None:
@@ -246,8 +253,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             del X_aug
             del y_aug
 
-
-
         if (which_set == 'train') or (which_set == 'augment'):
             topo_view = X_train
             y_final = y_train
@@ -259,6 +264,11 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             y_final = y_test
         if center:
             topo_view = topo_view-self.train_mean[np.newaxis,...]
+
+        if pca_dim is not None:
+            shape = topo_view.shape
+            topo_view = pca_model.transform(topo_view.reshape(shape[0], -1))
+            topo_view = topo_view[:, np.newaxis, np.newaxis, :]
 
         order = rng.permutation(topo_view.shape[0])
         topo_view = topo_view[order]

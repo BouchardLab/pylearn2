@@ -142,7 +142,7 @@ def main(data_file, plot_folder, new, min_cvs=10, model_file_base='.pkl',
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
-    parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31'], default='ec2')
+    parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31', 'gp33'], default='ec2')
     parser.add_argument('-p', '--plot_folder', type=str,
                         default=os.path.join(os.environ['HOME'], 'plots', 'ds'))
     parser.add_argument('-n', '--new', type=bool, default=True)
@@ -157,10 +157,12 @@ if __name__ == '__main__':
     data_base = '${PYLEARN2_DATA_PATH}/ecog/'
     new_data_files = {'ec2': 'EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                       'ec9': 'EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                      'gp31': 'GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5'}
+                      'gp31': 'GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
+                      'gp33': 'GP33_blocks_1_5_30_CV_HG_align_window_-05_to_079_events_nobaseline.h5'}
     old_data_files = {'ec2': 'EC2_CV_85_nobaseline_aug.h5',
                       'ec9': None,
-                      'gp31': None}
+                      'gp31': None,
+                      'gp33': None}
     
     if args.subject == 'ec2':
         if args.new:
@@ -171,6 +173,8 @@ if __name__ == '__main__':
         data_file = os.path.join(data_base, 'hdf5', new_data_files['ec9'])
     elif args.subject == 'gp31':
         data_file = os.path.join(data_base, 'hdf5', new_data_files['gp31'])
+    elif args.subject == 'gp33':
+        data_file = os.path.join(data_base, 'hdf5', new_data_files['gp33'])
     else:
         raise ValueError
     
