@@ -223,6 +223,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         y_valid = y[valid_idx]
         y_test = y[test_idx]
 
+        if pca_dim == 'None':
+            pca_dim = None
         if pca_dim is not None:
             pca_model = PCA(pca_dim)
             pca_model.fit(X_train.reshape(X_train.shape[0], -1))

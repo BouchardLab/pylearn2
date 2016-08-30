@@ -19,17 +19,15 @@ rcParams.update({'figure.autolayout': True})
 def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
          model_file_base='.pkl', overwrite=False):
     subject = os.path.basename(data_file).split('_')[0].lower()
+    print(subject)
+    print(model_folders)
     run = '_'.join([os.path.basename(f) for f in model_folders])
     fname_base = subject + '_' + run
     data_folder = os.path.join(plot_folder, 'data')
-    print model_folders, subset
-    for m in model_folders:
-        print m, os.listdir(m)
     files = [sorted([f for f in os.listdir(model_folder)
                      if ((model_file_base in f) and
                          (subset in f))])
              for model_folder in model_folders]
-    print(files)
     
     with h5py.File(os.path.join(os.environ['HOME'],
                                 'Development/data/ecog/EC2_CV.h5'), 'r') as f:
@@ -121,17 +119,15 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
     if c_accuracy is not None:
         print('c mean: ',c_accuracy.mean())
         print('c std: ',c_accuracy.std())
-    if p_accuracy is not None:
-        print('p mean: ',np.nanmean(p_accuracy))
-        print('p std: ',np.nanstd(p_accuracy))
-        print p_accuracy
-    if m_accuracy is not None:
-        print('m mean: ',np.nanmean(m_accuracy))
-        print('m std: ',np.nanstd(m_accuracy))
-        print m_accuracy
     if v_accuracy is not None:
         print('v mean: ',v_accuracy.mean())
         print('v std: ',v_accuracy.std())
+    if p_accuracy is not None:
+        print('p mean: ',np.nanmean(p_accuracy))
+        print('p std: ',np.nanstd(p_accuracy))
+    if m_accuracy is not None:
+        print('m mean: ',np.nanmean(m_accuracy))
+        print('m std: ',np.nanstd(m_accuracy))
         
     # Basic plots
     fname = fname_base + '_' + 'cv_accuracy.pdf'
@@ -232,7 +228,7 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
-    parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31'], default='ec2')
+    parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31', 'gp33'], default='ec2')
     parser.add_argument('model_folder')
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
@@ -249,9 +245,11 @@ if __name__ == '__main__':
     data_base = '${PYLEARN2_DATA_PATH}/ecog/'
     new_data_files = {'ec2': 'EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                       'ec9': 'EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
+                      'gp33': 'GP33_blocks_1_5_30_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                       'gp31': 'GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5'}
     old_data_files = {'ec2': 'EC2_CV_85_nobaseline_aug.h5',
                       'ec9': None,
+                      'gp33': None,
                       'gp31': None}
     
     if args.subject == 'ec2':
@@ -263,6 +261,8 @@ if __name__ == '__main__':
         data_file = os.path.join(data_base, 'hdf5', new_data_files['ec9'])
     elif args.subject == 'gp31':
         data_file = os.path.join(data_base, 'hdf5', new_data_files['gp31'])
+    elif args.subject == 'gp33':
+        data_file = os.path.join(data_base, 'hdf5', new_data_files['gp33'])
     else:
         raise ValueError
     

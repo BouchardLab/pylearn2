@@ -10,7 +10,7 @@ def get_params(json_file):
                     'consonant_dim': 19,
                     'vowel_dim': 3,
                     'n_folds': 10,
-                    'pca_dim': 2000,
+                    'pca_dim': None,
                     'level_classes': True,
                     'randomize_labels': False,
                     'consonant_prediction': False,

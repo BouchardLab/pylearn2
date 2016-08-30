@@ -311,6 +311,7 @@ def corr_box_plot(p, m, v, title=None, save_path=None):
     data = [v, m, p]
     f = plt.figure()
     plt.boxplot(data, **box_params)
+    plt.xlabel('Correlation Coefficient')
     if title:
         plt.title(title)
     if save_path:
