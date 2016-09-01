@@ -504,7 +504,10 @@ def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
     for yh, ys in zip(y_hat_list, y_sym_list):
         misclass_sym.append(nnet.Misclass(ys, yh))
         indices_sym.append(T.join(1, T.argmax(ys, axis=1, keepdims=True), T.argmax(yh, axis=1, keepdims=True)))
-        logits_sym.append(nnet.arg_of_softmax(yh))
+        if isinstance(yh.owner.op, T.nnet.Softmax):
+            logits_sym.append(nnet.arg_of_softmax(yh))
+        else:
+            logits_sym.append(yh)
 
     f = theano.function([X_sym, y_inpt], misclass_sym+indices_sym+y_hat_list+logits_sym+hidden)
     it = ts.iterator(mode = 'sequential',
