@@ -213,8 +213,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         if randomize_labels:
             if which_set == 'augment':
                 raise NotImplementedError
-            order = rng.permutation(y.shape[0])
-            y = y[order]
+            in_idx = np.concatenate((train_idx, valid_idx, test_idx))
+            order = rng.permutation(in_idx.shape[0])
+            y[in_idx] = y[in_idx][order]
 
         X_train = X[train_idx]
         X_valid = X[valid_idx]
