@@ -215,7 +215,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 raise NotImplementedError
             in_idx = np.concatenate((train_idx, valid_idx, test_idx))
             order = rng.permutation(in_idx.shape[0])
-            y[in_idx] = y[in_idx][order]
+            X[in_idx] = X[in_idx][order]
 
         X_train = X[train_idx]
         X_valid = X[valid_idx]
