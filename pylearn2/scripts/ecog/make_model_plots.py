@@ -17,7 +17,7 @@ import plotting
 rcParams.update({'figure.autolayout': True})
 
 def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
-         model_file_base='.pkl', overwrite=False):
+         model_file_base='.pkl', overwrite=False, randomize=False):
     subject = os.path.basename(data_file).split('_')[0].lower()
     print(subject)
     print(model_folders)
@@ -40,6 +40,10 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
               'vowel_prediction': False,
               'two_headed': False,
               'randomize_labels': False}
+
+    if randomize:
+        kwargs['randomize_labels'] = True
+
     if new:
         kwargs['min_cvs'] = min_cvs
     """
@@ -233,6 +237,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
     parser.add_argument('-n', '--new', type=bool, default=True)
+    parser.add_argument('-r', '--randomize', type=bool, default=False)
     parser.add_argument('-a', '--audio', type=bool, default=False)
     parser.add_argument('-o', '--overwrite', type=bool, default=False)
     parser.add_argument('-s', '--subset', type=str, default='')
@@ -267,4 +272,5 @@ if __name__ == '__main__':
         raise ValueError
     
     main(data_file, [args.model_folder], args.plot_folder, args.new,
-            args.subset, args.min_cvs, overwrite=args.overwrite)
+            args.subset, args.min_cvs, overwrite=args.overwrite,
+            randomize=args.randomize)

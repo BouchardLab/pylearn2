@@ -8,7 +8,8 @@ from pylab import rcParams
 import matplotlib.pyplot as plt
 
 
-rcParams.update({'figure.autolayout': True})
+rcParams.update({'figure.autolayout': True,
+                 'font.size': 24})
 
 folder = '/home/jesse/plots/model/data'
 raw_files = ['ec2_new2_ec2_lin3_corr_raw.npz',
@@ -77,7 +78,7 @@ box_params = {'notch': False,
               'medianprops': {'color': 'black', 'linewidth': 2},
               'boxprops': {'color': 'black', 'linewidth': 2}}
 data = [rv, lv, dv, rm, lm, dm, rp, lp, dp]
-f = plt.figure()
+f = plt.figure(figsize=(15, 8))
 bp = plt.boxplot(data, **box_params)
 for ii in range(len(bp['boxes'])):
     c = colors[ii % len(colors)]
@@ -90,6 +91,7 @@ for ii in range(len(bp['boxes'])):
 plt.plot(0,0, '-', c='green', label='Deep')
 plt.plot(0,0, '-', c='blue', label='Linear')
 plt.plot(0,0, '-', c='red', label='Neural Data')
-plt.legend(loc='best')
+plt.legend(loc='best', prop={'size': 18})
 plt.xlabel('Correlation Coefficient')
-plt.savefig('state.png')
+#plt.savefig('state_correlation.png')
+plt.savefig('state_correlation.pdf')

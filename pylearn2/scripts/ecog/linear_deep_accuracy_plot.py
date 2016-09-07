@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import analysis
 
 
-rcParams.update({'figure.autolayout': True})
+rcParams.update({'figure.autolayout': True,
+                 'font.size': 24})
 
 folder = '/home/jesse/plots/model/data'
 linear_files = ['ec2_new2_ec2_lin3_model_output.pkl',
@@ -21,6 +22,10 @@ deep_files = ['ec2_new2_ec2_fc1_model_output.pkl',
               'ec9_new2_ec9_fc1_model_output.pkl',
               'gp31_new2_gp31_fc1_model_output.pkl',
               'gp33_new2_gp33_fc0_model_output.pkl']
+random_files = ['ec2_new2_ec2_random1_model_output.pkl',
+                'ec9_new2_ec9_random0_model_output.pkl',
+                'gp31_new2_gp31_random0_model_output.pkl',
+                'gp33_new2_gp33_random1_model_output.pkl']
 
 subj_colors = ['green', 'blue', 'black', 'red']
 
@@ -38,34 +43,73 @@ def load_data(path):
     return (c_accuracy, v_accuracy, cv_accuracy, accuracy_per_cv,
             p_accuracy, m_accuracy)
 
-plt.figure()
+plt.figure(figsize=(4, 8))
+
+for ii, (linear_fname, deep_fname, random_fname) in enumerate(zip(linear_files,
+                                                                  deep_files,
+                                                                  random_files)):
+    path = os.path.join(folder, linear_fname)
+    (lc, lv, lcv, _, lp, lm) = load_data(path)
+    path = os.path.join(folder, deep_fname)
+    (dc, dv, dcv, _, dp, dm) = load_data(path)
+    path = os.path.join(folder, random_fname)
+    (rc, rv, rcv, _, rp, rm) = load_data(path)
+
+    for jj, (l, d, r) in enumerate(zip([lcv, lc, lv, lp, lm],
+                                       [dcv, dc, dv, dp, dm],
+                                       [rcv, rc, rv, rp, rm])):
+        if jj < 2:
+            chance = np.nanmean(r)
+            plt.errorbar(jj+1, np.nanmean(l)/chance, fmt='^',
+                         yerr=np.nanstd(l)/chance,
+                         c=subj_colors[ii])
+            plt.errorbar(jj+1.25, np.nanmean(d)/chance, fmt='o',
+                         yerr=np.nanstd(d)/chance,
+                         c=subj_colors[ii])
+            plt.plot([jj+1, jj+1.25], [np.nanmean(l)/chance, np.nanmean(d)/chance],
+                     '-', c=subj_colors[ii], lw=2)
+plt.plot([.5, 5.75], [1, 1], '--', c='gray', lw=1, label='Chance')
+plt.xticks(np.arange(2)+1.125, ['CV', 'Cons.'])
+plt.ylabel('Accuracy/chance')
+plt.xlim([.5, 2.75])
+plt.ylim([.5, 23])
+plt.savefig('linear_vs_deep_accuracy1.pdf')
+plt.savefig('linear_vs_deep_accuracy1.png')
+
+
+plt.figure(figsize=(8, 8))
 for ii in range(4):
     label = 'Subject '+str(ii+1)
     plt.plot(0, 0, '-', c=subj_colors[ii], label=label)
 plt.plot(0, 0, '^', c='gray', label='Linear')
 plt.plot(0, 0, 'o', c='gray', label='Deep')
-
-for ii, (linear_fname, deep_fname) in enumerate(zip(linear_files, deep_files)):
+for ii, (linear_fname, deep_fname, random_fname) in enumerate(zip(linear_files,
+                                                                  deep_files,
+                                                                  random_files)):
     path = os.path.join(folder, linear_fname)
     (lc, lv, lcv, _, lp, lm) = load_data(path)
     path = os.path.join(folder, deep_fname)
     (dc, dv, dcv, _, dp, dm) = load_data(path)
+    path = os.path.join(folder, random_fname)
+    (rc, rv, rcv, _, rp, rm) = load_data(path)
 
-    for jj, (l, d, c) in enumerate(zip([lcv, lc, lv, lp, lm],
-                                       [dcv, dc, dv, dp, dm],
-                                       [.017, .05, .33, .33, .33])):
-        if jj == 0 and ii == 0:
-            c_label = 'Chance'
-        else:
-            c_label = None
-        plt.errorbar(jj+1, np.nanmean(l), fmt='^', yerr=np.nanstd(l),
-                     c=subj_colors[ii])
-        plt.errorbar(jj+1.25, np.nanmean(d), fmt='o', yerr=np.nanstd(d),
-                     c=subj_colors[ii])
-        plt.plot([jj+1, jj+1.25], [np.nanmean(l), np.nanmean(d)], '-', c=subj_colors[ii], lw=2)
-        plt.plot([jj+1, jj+1.25], [c, c], '-', c='gray', lw=1, label=c_label)
-plt.xticks(np.arange(5)+1.125, ['CV', 'Consonant', 'Vowel', 'Place', 'Manner'])
-plt.ylabel('Accuracy')
-plt.xlim([.5, 5.75])
-plt.legend(loc='best')
-plt.savefig('accuracy.png')
+    if jj >= 2:
+        for jj, (l, d, r) in enumerate(zip([lcv, lc, lv, lp, lm],
+                                           [dcv, dc, dv, dp, dm],
+                                           [rcv, rc, rv, rp, rm])):
+            chance = np.nanmean(r)
+            plt.errorbar(jj+1, np.nanmean(l)/chance, fmt='^',
+                         yerr=np.nanstd(l)/chance,
+                         c=subj_colors[ii])
+            plt.errorbar(jj+1.25, np.nanmean(d)/chance, fmt='o',
+                         yerr=np.nanstd(d)/chance,
+                         c=subj_colors[ii])
+            plt.plot([jj+1, jj+1.25], [np.nanmean(l)/chance, np.nanmean(d)/chance],
+                     '-', c=subj_colors[ii], lw=2)
+plt.plot([2.5, 5.75], [1, 1], '--', c='gray', lw=1, label='Chance')
+plt.xticks(np.arange(2, 5)+1.125, ['Vowel', 'Place', 'Manner'])
+plt.xlim([2.5, 5.75])
+plt.ylim([.5, 3])
+plt.legend(loc='best', prop={'size': 18})
+plt.savefig('linear_vs_deep_accuracy2.pdf')
+plt.savefig('linear_vs_deep_accuracy2.png')
