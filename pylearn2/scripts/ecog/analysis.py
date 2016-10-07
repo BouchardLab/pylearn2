@@ -1,6 +1,5 @@
 from pylearn2.utils import serial
 from pylearn2.config import yaml_parse
-from pylearn2.datasets import ecog, ecog_new
 from pylearn2.space import VectorSpace, Conv2DSpace, CompositeSpace
 from pylearn2.expr import nnet
 from pylearn2.models.mlp import FlattenerLayer
@@ -459,6 +458,7 @@ def indx_dict2conf_mat(indices_dicts, y_dims):
 
 
 def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
+    from pylearn2.datasets import ecog, ecog_new
     kwargs = copy.deepcopy(kwargs)
     file_loc = os.path.join(model_folder, filename)
     model = serial.load(file_loc)
