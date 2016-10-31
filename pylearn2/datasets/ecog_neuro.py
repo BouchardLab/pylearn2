@@ -116,7 +116,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         assert all(b in possible_bands for b in bands)
 
         if subject == 'EC2':
-            filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_narrow_neuro_18_align_window_-05_to_079_between_data_nobaseline.h5'
+            filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_narrow_neuro_align_window_-0.5_to_0.79_between_data_nobaseline.h5'
         else:
             raise ValueError
         filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
@@ -131,6 +131,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         with h5py.File(filename,'r') as f:
             try:
+                raise KeyError
                 X_train_tmp = [f['fold{}'.format(fold)][b]['train']['X'].value for b in bands]
                 X_valid_tmp = [f['fold{}'.format(fold)][b]['valid']['X'].value for b in bands]
                 X_test_tmp = [f['fold{}'.format(fold)][b]['test']['X'].value for b in bands]
@@ -333,15 +334,15 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                         g1 = g0[bands[ii]]
 
                     g2 = g1.create_group('train')
-                    g2.create_dataset('X', data=X_train_tmp[-1])
+                    g2.create_dataset('X', data=X_train_tmp[ii])
                     g2.create_dataset('y', data=y_train)
 
                     g2 = g1.create_group('valid')
-                    g2.create_dataset('X', data=X_valid_tmp[-1])
+                    g2.create_dataset('X', data=X_valid_tmp[ii])
                     g2.create_dataset('y', data=y_valid)
 
                     g2 = g1.create_group('test')
-                    g2.create_dataset('X', data=X_test_tmp[-1])
+                    g2.create_dataset('X', data=X_test_tmp[ii])
                     g2.create_dataset('y', data=y_test)
 
         X_train = np.hstack([X[:, :d] for X, d in zip(X_train_tmp, dims)])
