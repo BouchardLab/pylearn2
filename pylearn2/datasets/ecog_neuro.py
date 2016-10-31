@@ -14,9 +14,11 @@ from pylearn2.datasets import control
 from pylearn2.datasets import cache
 from pylearn2.utils import serial
 from pylearn2.utils.rng import make_np_rng
+from sklearn.decomposition import PCA
 
 
 def complex_pca_function(X, final_dim=2000):
+    """
     n_samples, n_features = X.shape
     u, s, v = np.linalg.svd(X, full_matrices=False)
     X_pca = u[:, :final_dim] * s[np.newaxis, :final_dim]
@@ -27,8 +29,11 @@ def complex_pca_function(X, final_dim=2000):
             self.K = K
         def transform(self, X):
             return X.dot(self.K)
+    """
+    model = PCA(n_components=final_dim)
+    X_pca = model.fit_transform(X)
 
-    return X_pca, PCA(K)
+    return X_pca, model
 
 
 _split = {'train': .8, 'valid': .1, 'test': .1}
@@ -116,7 +121,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         assert all(b in possible_bands for b in bands)
 
         if subject == 'EC2':
-            filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_narrow_neuro_align_window_-0.5_to_0.79_between_data_nobaseline.h5'
+            filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_-0.5_to_0.79_between_data_nobaseline.h5'
         else:
             raise ValueError
         filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
@@ -131,7 +136,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         with h5py.File(filename,'r') as f:
             try:
-                raise KeyError
                 X_train_tmp = [f['fold{}'.format(fold)][b]['train']['X'].value for b in bands]
                 X_valid_tmp = [f['fold{}'.format(fold)][b]['valid']['X'].value for b in bands]
                 X_test_tmp = [f['fold{}'.format(fold)][b]['test']['X'].value for b in bands]
