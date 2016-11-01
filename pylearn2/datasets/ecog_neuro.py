@@ -77,19 +77,14 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  which_set, fold=0,
                  seed=20161022, center=True,
                  move = .1, level_classes=True,
-                 consonant_prediction=False,
-                 vowel_prediction=False,
-                 two_headed=False,
                  randomize_labels=False,
-                 frac_train=None,
-                 pm_aug_range=None,
+                 frac_train=1.,
                  y_labels=57,
-                 vowel_labels=3,
-                 consonant_labels=19,
                  min_cvs=10,
                  condense=True,
                  total_dim=2000):
         self.args = locals()
+        print( self.args)
 
         possible_subjects = ['EC2', 'EC9', 'GP31', 'GP33']
         possible_data_types = ['complex', 'amplitude', 'phase']
@@ -97,7 +92,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                           'gamma', 'high gamma']
 
 
-        if which_set not in ['train', 'valid', 'test', 'augment']:
+        if which_set not in ['train', 'valid', 'test']:
             raise ValueError(
                 'Unrecognized which_set value "%s".' % (which_set,) +
                 '". Valid values are ["train","valid","test"].')
@@ -136,6 +131,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         with h5py.File(filename,'r') as f:
             try:
+                raise KeyError
                 X_train_tmp = [f['fold{}'.format(fold)][b]['train']['X'].value for b in bands]
                 X_valid_tmp = [f['fold{}'.format(fold)][b]['valid']['X'].value for b in bands]
                 X_test_tmp = [f['fold{}'.format(fold)][b]['test']['X'].value for b in bands]
@@ -146,23 +142,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             except KeyError:
                 Xs = [f['X{}'.format(b)].value for b in bands]
                 y = f['y'].value.astype(int)
-                if two_headed:
-                    assert not consonant_prediction
-                    assert not vowel_prediction
-                    y_consonant = f['y_consonant'].value
-                    y_vowel = f['y_vowel'].value
-                elif consonant_prediction:
-                    assert not vowel_prediction
-                    y_consonant = f['y_consonant'].value
-                elif vowel_prediction:
-                    assert not consonant_prediction
-                    y_vowel = f['y_vowel'].value
-                if which_set == 'augment':
-                    X_aug = f['X_aug'].value
-                    assert X_aug.shape[1] == y.shape[0]
-                    tile_len = X_aug.shape[0]
-                    y_aug = y[np.newaxis,...]
-                    y_aug = np.tile(y, (tile_len, 1))
 
         def split_indices(indices, frac_train, min_cvs):
             """
@@ -266,21 +245,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
 
             n_classes = y_labels
-            if two_headed:
-                y = np.hstack((y_consonant, y_vowel))
-                raise NotImplementedError
-            elif consonant_prediction:
-                assert not vowel_prediction
-                y = y_consonant
-                n_classes = consonant_labels
-            elif vowel_prediction:
-                assert not consonant_prediction
-                y = y_vowel
-                n_classes = vowel_labels
 
             if randomize_labels:
-                if which_set == 'augment':
-                    raise NotImplementedError
                 in_idx = np.concatenate((train_idx, valid_idx, test_idx))
                 order = rng.permutation(in_idx.shape[0])
                 for X in Xs:
@@ -297,26 +263,13 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             X_valid_tmp = []
             X_test_tmp = []
             for ii, (X, dim, dt) in enumerate(zip(X_train, dims, data_types)):
-                if dt == 'complex':
-                    dim = dim //2
-                    def dt_func(X):
-                        return np.hstack((X.real, X.imag))
-                elif dt == 'phase':
-                    def dt_func(X):
-                        return np.angle(X)
-                elif dt == 'amplitude':
-                    def dt_func(X):
-                        return abs(X)
-                else:
-                    raise ValueError
                 n_ex = X.shape[0]
-                mean = X.reshape(n_ex, -1).mean(axis=0, keepdims=True)
-                X_pca, pca = complex_pca_function(X.reshape(n_ex, -1)-mean)
-                X_train_tmp.append(dt_func(X_pca))
+                X_pca, pca = complex_pca_function(X.reshape(n_ex, -1))
+                X_train_tmp.append(X_pca)
                 n_ex = X_valid[ii].shape[0]
-                X_valid_tmp.append(dt_func(pca.transform(X_valid[ii].reshape(n_ex,-1)-mean)))
+                X_valid_tmp.append(pca.transform(X_valid[ii].reshape(n_ex,-1)))
                 n_ex = X_test[ii].shape[0]
-                X_test_tmp.append(dt_func(pca.transform(X_test[ii].reshape(n_ex,-1)-mean)))
+                X_test_tmp.append(pca.transform(X_test[ii].reshape(n_ex,-1)))
                 with h5py.File(filename) as f:
                     for e in ['train', 'valid', 'test']:
                         for d in ['X', 'y']:
@@ -356,7 +309,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         self.train_mean = X_train.mean(axis=0, keepdims=True)
         print X_train.shape, X_valid.shape, X_test.shape, self.train_mean.shape
 
-        if (which_set == 'train') or (which_set == 'augment'):
+        if which_set == 'train':
             topo_view = X_train
             y_final = y_train
         elif which_set == 'valid':
