@@ -74,19 +74,24 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     """
 
     def __init__(self, subject, bands, data_types,
-                 which_set, fold=0,
+                 which_set, dim0, dim1=0,
+                 fold=0,
                  seed=20161022, center=True,
                  move = .1, level_classes=True,
                  randomize_labels=False,
+                 consonant_prediction=False,
+                 vowel_prediction=False,
+                 two_headed=False,
+                 pm_aug_range=0,
                  frac_train=1.,
                  y_labels=57,
                  min_cvs=10,
-                 condense=True,
-                 total_dim=2000):
+                 condense=True):
         self.args = locals()
         print( self.args)
+        subject = subject.lower()
 
-        possible_subjects = ['EC2', 'EC9', 'GP31', 'GP33']
+        possible_subjects = ['ec2', 'ec9', 'gp31', 'gp33']
         possible_data_types = ['complex', 'amplitude', 'phase']
         possible_bands = ['alpha', 'theta', 'beta', 'high beta',
                           'gamma', 'high gamma']
@@ -115,14 +120,16 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         assert all(d in possible_data_types for d in data_types)
         assert all(b in possible_bands for b in bands)
 
-        if subject == 'EC2':
+        if subject == 'ec2':
             filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_-0.5_to_0.79_between_data_nobaseline.h5'
         else:
             raise ValueError
         filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
 
-        dims = [2*(int(np.ceil(total_dim/len(bands)))//2) for _ in bands]
-        dims[0] = dims[0] + (total_dim - sum(dims))
+        dims = [int(d) for d in [dim0, dim1] if (str(d).lower() != 'none' and int(d)>= 0)]
+        print dims
+        assert len(dims) == len(bands)
+        assert len(dims) == len(data_types)
 
         rng = np.random.RandomState(seed)
 
@@ -131,7 +138,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         with h5py.File(filename,'r') as f:
             try:
-                raise KeyError
+                if not all([d > 0 for d in dims]):
+                    raise KeyError
                 X_train_tmp = [f['fold{}'.format(fold)][b]['train']['X'].value for b in bands]
                 X_valid_tmp = [f['fold{}'.format(fold)][b]['valid']['X'].value for b in bands]
                 X_test_tmp = [f['fold{}'.format(fold)][b]['test']['X'].value for b in bands]
@@ -264,47 +272,60 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             X_test_tmp = []
             for ii, (X, dim, dt) in enumerate(zip(X_train, dims, data_types)):
                 n_ex = X.shape[0]
-                X_pca, pca = complex_pca_function(X.reshape(n_ex, -1))
-                X_train_tmp.append(X_pca)
-                n_ex = X_valid[ii].shape[0]
-                X_valid_tmp.append(pca.transform(X_valid[ii].reshape(n_ex,-1)))
-                n_ex = X_test[ii].shape[0]
-                X_test_tmp.append(pca.transform(X_test[ii].reshape(n_ex,-1)))
-                with h5py.File(filename) as f:
-                    for e in ['train', 'valid', 'test']:
-                        for d in ['X', 'y']:
+                if dim > 0:
+                    X_pca, pca = complex_pca_function(X.reshape(n_ex, -1))
+                    X_train_tmp.append(X_pca)
+                    n_ex = X_valid[ii].shape[0]
+                    X_valid_tmp.append(pca.transform(X_valid[ii].reshape(n_ex,-1)))
+                    n_ex = X_test[ii].shape[0]
+                    X_test_tmp.append(pca.transform(X_test[ii].reshape(n_ex,-1)))
+                    with h5py.File(filename) as f:
+                        for e in ['train', 'valid', 'test']:
+                            for d in ['X', 'y']:
+                                try:
+                                    del f['fold{}'.format(fold)][bands[ii]][e][d]
+                                except KeyError:
+                                    pass
                             try:
-                                del f['fold{}'.format(fold)][bands[ii]][e][d]
+                                del f['fold{}'.format(fold)][bands[ii]][e]
                             except KeyError:
                                 pass
                         try:
-                            del f['fold{}'.format(fold)][bands[ii]][e]
-                        except KeyError:
-                            pass
-                    try:
-                        g0 = f.create_group('fold{}'.format(fold))
-                    except ValueError:
-                        g0 = f['fold{}'.format(fold)]
-                    try:
-                        g1 = g0.create_group(bands[ii])
-                    except ValueError:
-                        g1 = g0[bands[ii]]
+                            g0 = f.create_group('fold{}'.format(fold))
+                        except ValueError:
+                            g0 = f['fold{}'.format(fold)]
+                        try:
+                            g1 = g0.create_group(bands[ii])
+                        except ValueError:
+                            g1 = g0[bands[ii]]
 
-                    g2 = g1.create_group('train')
-                    g2.create_dataset('X', data=X_train_tmp[ii])
-                    g2.create_dataset('y', data=y_train)
+                        g2 = g1.create_group('train')
+                        g2.create_dataset('X', data=X_train_tmp[ii])
+                        g2.create_dataset('y', data=y_train)
 
-                    g2 = g1.create_group('valid')
-                    g2.create_dataset('X', data=X_valid_tmp[ii])
-                    g2.create_dataset('y', data=y_valid)
+                        g2 = g1.create_group('valid')
+                        g2.create_dataset('X', data=X_valid_tmp[ii])
+                        g2.create_dataset('y', data=y_valid)
 
-                    g2 = g1.create_group('test')
-                    g2.create_dataset('X', data=X_test_tmp[ii])
-                    g2.create_dataset('y', data=y_test)
-
-        X_train = np.hstack([X[:, :d] for X, d in zip(X_train_tmp, dims)])
-        X_valid = np.hstack([X[:, :d] for X, d in zip(X_valid_tmp, dims)])
-        X_test = np.hstack([X[:, :d] for X, d in zip(X_test_tmp, dims)])
+                        g2 = g1.create_group('test')
+                        g2.create_dataset('X', data=X_test_tmp[ii])
+                        g2.create_dataset('y', data=y_test)
+                else:
+                    X_pca = X.reshape(n_ex, -1)
+                    X_train_tmp.append(X_pca)
+                    n_ex = X_valid[ii].shape[0]
+                    X_valid_tmp.append(X_valid[ii].reshape(n_ex,-1))
+                    n_ex = X_test[ii].shape[0]
+                    X_test_tmp.append(X_test[ii].reshape(n_ex,-1))
+        
+        if not all([d > 0 for d in dims]):
+            X_train = np.hstack(X_train_tmp)
+            X_valid = np.hstack(X_valid_tmp)
+            X_test = np.hstack(X_test_tmp)
+        else:
+            X_train = np.hstack([X[:, :d] for X, d in zip(X_train_tmp, dims)])
+            X_valid = np.hstack([X[:, :d] for X, d in zip(X_valid_tmp, dims)])
+            X_test = np.hstack([X[:, :d] for X, d in zip(X_test_tmp, dims)])
 
         self.train_mean = X_train.mean(axis=0, keepdims=True)
         print X_train.shape, X_valid.shape, X_test.shape, self.train_mean.shape

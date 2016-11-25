@@ -48,9 +48,14 @@ def make_layers(kwargs):
             this_dict['name'] = 'c'+str(ii)
             this_dict['range'] = np.power(10., kwargs['log_conv_irange'])
             out_string += conv_layer_string % this_dict
-
-    if 'n_fc_layers' in kwargs.keys():
-        for ii in xrange(max(0, kwargs['n_fc_layers'])):
+    
+    n_fc = len(['' for key in kwargs.keys() if 'fc_dim' in key])
+    if 'n_fc_layers' in kwargs.keys() or n_fc > 0:
+        if 'n_fc_layers' in kwargs.keys():
+            count = kwargs['n_fc_layers']
+        else:
+            count = n_fc
+        for ii in xrange(max(0, count)):
             this_dict = kwargs.copy()
             this_dict['dim'] = kwargs['fc_dim'+str(ii)]
             this_dict['name'] = 'f'+str(ii)
@@ -83,6 +88,8 @@ def make_last_layer_and_cost(kwargs):
         this_dict['L0'] = 'c0'
     elif 'n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0:
         this_dict['L0'] = 'f0'
+    elif len(['' for key in kwargs.keys() if 'fc_dim' in key]) > 0:
+        this_dict['L0'] = 'f0'
     else:
         this_dict['L0'] = 'y'
     this_dict['L0']
@@ -90,8 +97,13 @@ def make_last_layer_and_cost(kwargs):
         for ii in xrange(kwargs['n_conv_layers']):
             out_cost_string += wd_string % {'name': 'c'+str(ii),
                                             'wd': this_dict['wd']}
-    if 'n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0:
-        for ii in xrange(0, kwargs['n_fc_layers']):
+    if (('n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0) or 
+        (len(['' for key in kwargs.keys() if 'fc_dim' in key]) > 0)):
+        if 'n_fc_layers' in kwargs.keys():
+            count = kwargs['n_fc_layers']
+        else:
+            count = len(['' for key in kwargs.keys() if 'fc_dim' in key])
+        for ii in xrange(0, count):
             out_cost_string += wd_string % {'name': 'f'+str(ii),
                                             'wd': this_dict['wd']}
     out_cost_string += end_cost_string
@@ -209,6 +221,8 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog_neuro.ECoG {
             subject: %(subject)s,
             bands: [%(bands)s],
             data_types: [%(data_types)s],
+            dim0: '%(dim0)s',
+            dim1: '%(dim1)s',
             which_set: 'train',
             center: %(center)s,
             level_classes: %(level_classes)s,
@@ -239,6 +253,8 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 subject: %(subject)s,
                                 bands: [%(bands)s],
                                 data_types: [%(data_types)s],
+                                dim0: '%(dim0)s',
+                                dim1: '%(dim1)s',
                                 which_set: 'train',
                                 center: %(center)s,
                                 level_classes: %(level_classes)s,
@@ -252,6 +268,8 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 subject: %(subject)s,
                                 bands: [%(bands)s],
                                 data_types: [%(data_types)s],
+                                dim0: '%(dim0)s',
+                                dim1: '%(dim1)s',
                                 which_set: 'valid',
                                 center: %(center)s,
                                 level_classes: %(level_classes)s,
@@ -265,6 +283,8 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 subject: %(subject)s,
                                 bands: [%(bands)s],
                                 data_types: [%(data_types)s],
+                                dim0: '%(dim0)s',
+                                dim1: '%(dim1)s',
                                 which_set: 'test',
                                 center: %(center)s,
                                 level_classes: %(level_classes)s,

@@ -157,6 +157,10 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
     v = features[has_data].T[pmv['vowel']].T
     v_dist = analysis.compute_pairwise_distances(v,
             sp.spatial.distance.hamming)
+    _, _, art_feats = analysis.get_articulator_state_matrix()
+    mjar = art_feats[has_data].T[:4].T
+    mjar_dist = analysis.compute_pairwise_distances(mjar,
+            sp.spatial.distance.hamming)
     # Raw data
     X, y0 = analysis.load_raw_data(ds)
     fname = fname_base + '_' + 'dend_raw.pdf'
@@ -223,11 +227,12 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
     ccp = analysis.correlate(y_hat_dist, p_dist)
     ccm = analysis.correlate(y_hat_dist, m_dist)
     ccv = analysis.correlate(y_hat_dist, v_dist)
+    ccmjar = analysis.correlate(y_hat_dist, mjar_dist)
     fname = fname_base + '_' + 'corr_y_hat.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' y_hat',
                            save_path=os.path.join(plot_folder, fname))
     np.savez(os.path.join(data_folder, fname_base + '_corr_y_hat'), ccp=ccp,
-             ccm=ccm, ccv=ccv)
+             ccm=ccm, ccv=ccv, ccmjar=ccmjar)
     np.savez(os.path.join(data_folder, fname_base + '_y_hat'), y_hat=y_hat, y=y)
 
 if __name__ == '__main__':

@@ -6,8 +6,10 @@ def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
-                    'bands': 'high gamma',
+                    'bands': 'theta',
                     'data_types': 'amplitude',
+                    'dim0': 0,
+                    'dim1': 'None',
                     'frac_train': 1.,
                     'pm_aug_range': 10,
                     'consonant_dim': 19,
@@ -32,7 +34,9 @@ def get_params(json_file):
     ds = ecog_neuro.ECoG(fixed_params['subject'],
                          fixed_params['bands'],
                          fixed_params['data_types'],
-                         'train')
+                         'train',
+                         fixed_params['dim0'],
+                         fixed_params['dim1'])
     X_shape = ds.get_topological_view().shape
     n_cvs = len(set(ds.y.ravel()))
 

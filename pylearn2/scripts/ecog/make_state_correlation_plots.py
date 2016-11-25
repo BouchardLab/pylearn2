@@ -29,7 +29,7 @@ colors = ['green', 'black', 'red']
 
 def load_data(path):
     data = np.load(path)
-    return data['ccp'], data['ccm'], data['ccv']
+    return data['ccp'], data['ccm'], data['ccv'], data['ccmjar']
 
 rp = []
 rm = []
@@ -40,7 +40,9 @@ lv = []
 dp = []
 dm = []
 dv = []
+dmjar = []
 
+"""
 for fname in raw_files:
     path = os.path.join(folder, fname)
     data = load_data(path)
@@ -53,14 +55,17 @@ for fname in linear_files:
     lp.extend(data[0])
     lm.extend(data[1])
     lv.extend(data[2])
+    """
 for fname in deep_files:
     path = os.path.join(folder, fname)
     data = load_data(path)
     dp.extend(data[0])
     dm.extend(data[1])
     dv.extend(data[2])
+    dmjar.extend(data[3])
 
 
+"""
 box_params = {'notch': False,
               'sym': '',
               'vert': False,
@@ -112,10 +117,6 @@ vp['cmins'].set_color(['black', 'red', 'black', 'red', 'black', 'red'])
 vp['cmins'].set_linewidths(2)
 vp['cmaxes'].set_color(['black', 'red', 'black', 'red', 'black', 'red'])
 vp['cmaxes'].set_linewidths(2)
-"""
-from IPython import embed
-embed()
-"""
 for ii in range(len(vp['bodies'])):
     c = colors[ii % (len(colors)-1)+1]
     vp['bodies'][ii].set_color(c)
@@ -132,6 +133,50 @@ for d in data:
 plt.xlim([min_x-.025, max_x+.025])
 plt.plot(0,0, '-', c='red', label='Deep')
 plt.plot(0,0, '-', c='black', label='Linear')
+plt.axvline(0, linestyle='dotted', c='black')
+#plt.plot(0,0, '-', c='red', label='Neural Data')
+plt.legend(loc='lower right', prop={'size': 20})
+plt.xlabel('Correlation Coefficient')
+plt.savefig('state_correlation_violin.png')
+plt.savefig('state_correlation_violin.pdf')
+"""
+
+
+positions = [1, 2, 3, 4]
+box_params = {'vert': False,
+              'showmedians': True,
+              'positions': positions}
+data = [dv, dm, dp, dmjar]
+f = plt.figure(figsize=(15, 8))
+vp = plt.violinplot(data, **box_params)
+vp['cbars'].set_color(['red', 'red', 'red', 'red'])
+vp['cbars'].set_linewidths(2)
+vp['cmedians'].set_color(['red', 'red', 'red', 'red'])
+vp['cmedians'].set_linewidths(2)
+vp['cmins'].set_color(['red', 'red', 'red', 'red'])
+vp['cmins'].set_linewidths(2)
+vp['cmaxes'].set_color(['red', 'red', 'red', 'red'])
+vp['cmaxes'].set_linewidths(2)
+"""
+from IPython import embed
+embed()
+"""
+for ii in range(len(vp['bodies'])):
+    c = colors[ii % (len(colors)-1)+1]
+    vp['bodies'][ii].set_color('red')
+
+plt.yticks(positions,
+           ['Vowel', 'Manner', 'Place', 'Maj. Art.']),
+plt.ylim([positions[0]-.5, positions[-1]+.5])
+min_x = np.inf
+max_x = -np.inf
+for d in data:
+    d = np.array(d)
+    min_x = min(min_x, d.min())
+    max_x = max(max_x, d.max())
+print max_x
+plt.xlim([-.2, max_x+.025])
+plt.plot(0,0, '-', c='red', label='Deep')
 plt.axvline(0, linestyle='dotted', c='black')
 #plt.plot(0,0, '-', c='red', label='Neural Data')
 plt.legend(loc='lower right', prop={'size': 20})
