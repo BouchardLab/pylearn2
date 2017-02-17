@@ -5,7 +5,9 @@ from pylearn2.datasets import ecog, ecog_new
 def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
-                    'frac_train': .5,
+                    'frac_train': 1.,
+                    'clip_front': 40,
+                    'clip_end': 60,
                     'pm_aug_range': 10,
                     'consonant_dim': 19,
                     'vowel_dim': 3,
@@ -20,7 +22,7 @@ def get_params(json_file):
                     'center': True,
                     'test': False,
                     'factorize': False,
-                    'data_file': 'hdf5/EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
+                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
                     'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
@@ -37,9 +39,15 @@ def get_params(json_file):
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
     
+    """
     ds = ecog_new.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']),
                        'train',
                        pca_dim=fixed_params['pca_dim'])
+    """
+    ds = ecog.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']),
+                   'train',
+                   clip_front=fixed_params['clip_front'],
+                   clip_end=fixed_params['clip_end'])
     X_shape = ds.get_topological_view().shape
     n_cvs = len(set(ds.y.ravel()))
 

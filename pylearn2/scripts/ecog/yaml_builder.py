@@ -212,11 +212,12 @@ end_cost_string = ("},\n"
                    +"],\n"
                    +"},\n")
 
-train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog_new.ECoG {
+train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
             which_set: 'train',
             center: %(center)s,
-            pca_dim: %(pca_dim)s,
+            clip_front: %(clip_front)s,
+            clip_end: %(clip_end)s,
             level_classes: %(level_classes)s,
             consonant_prediction: %(consonant_prediction)s,
             vowel_prediction: %(vowel_prediction)s,
@@ -228,11 +229,12 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog_new.ECoG {
             },"""
 
 aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.TransformerDataset {
-        raw: &train !obj:pylearn2.datasets.ecog_new.ECoG {
+        raw: &train !obj:pylearn2.datasets.ecog.ECoG {
               filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
               which_set: 'augment',
               center: %(center)s,
-              pca_dim: %(pca_dim)s,
+              clip_front: %(clip_front)s,
+              clip_end: %(clip_end)s,
               level_classes: %(level_classes)s,
               consonant_prediction: %(consonant_prediction)s,
               vowel_prediction: %(vowel_prediction)s,
@@ -260,11 +262,12 @@ yaml_string = """!obj:pylearn2.train.Train {
         train_iteration_mode: 'sequential',
         monitoring_dataset:
             {
-                'train' : !obj:pylearn2.datasets.ecog_new.ECoG {
+                'train' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'train',
                                 center: %(center)s,
-                                pca_dim: %(pca_dim)s,
+                                clip_front: %(clip_front)s,
+                                clip_end: %(clip_end)s,
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
@@ -272,11 +275,12 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
-                'valid' : !obj:pylearn2.datasets.ecog_new.ECoG {
+                'valid' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'valid',
                                 center: %(center)s,
-                                pca_dim: %(pca_dim)s,
+                                clip_front: %(clip_front)s,
+                                clip_end: %(clip_end)s,
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
@@ -284,11 +288,12 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
-                'test' : !obj:pylearn2.datasets.ecog_new.ECoG {
+                'test' : !obj:pylearn2.datasets.ecog.ECoG {
                                 filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
                                 which_set: 'test',
                                 center: %(center)s,
-                                pca_dim: %(pca_dim)s,
+                                clip_front: %(clip_front)s,
+                                clip_end: %(clip_end)s,
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,

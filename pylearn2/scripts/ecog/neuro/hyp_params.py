@@ -6,7 +6,7 @@ def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
-                    'bands': 'theta',
+                    'bands': 'high gamma',
                     'data_types': 'amplitude',
                     'dim0': 0,
                     'dim1': 'None',

@@ -53,14 +53,16 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
     """
 
     def __init__(self, filename, which_set,
-                 fold=0, seed=20141210, center=False,
-                 move = .1, level_classes=False,
+                 fold=0, seed=20141210, center=True,
+                 move = .1, level_classes=True,
                  consonant_prediction=False,
                  vowel_prediction=False,
                  two_headed=False,
                  randomize_labels=False,
                  frac_train=None,
                  pm_aug_range=None,
+                 clip_front=0,
+                 clip_end=0,
                  load_all=None, cache_size=400000000):
         self.args = locals()
 
@@ -80,6 +82,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         with h5py.File(filename,'r') as f:
             X = f['X'].value
             y = f['y'].value
+            if clip_front > 0:
+                X = X[:, :, clip_front:]
+            if clip_end > 0:
+                X = X[:, :, :-clip_end]
             if two_headed:
                 assert not consonant_prediction
                 assert not vowel_prediction
@@ -97,6 +103,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 tile_len = X_aug.shape[0]
                 y_aug = y[np.newaxis,...]
                 y_aug = np.tile(y, (tile_len, 1, 1))
+                if clip_front > 0:
+                    X_aug = X_aug[:, :, clip_front:]
+                if clip_end > 0:
+                    X_aug = X_aug[:, :, :-clip_end]
+        print X.shape
+        print y.shape
             
         rng = np.random.RandomState(seed)
 
@@ -112,7 +124,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             n_valid = int(np.round(num_idx*_split['valid']))
             n_test = num_idx-n_train-n_valid
 
-            train_start = fold*num_idx*move
+            train_start = int(fold*num_idx*move)
             train_end = (train_start+n_train) % num_idx
             valid_start = train_end
             valid_end = (valid_start+n_valid) % num_idx
@@ -244,8 +256,14 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         if center:
             topo_view = topo_view-self.train_mean[np.newaxis,...]
 
+        y_final = y_final.argmax(axis=1)
+        y_final = y_final[:, np.newaxis]
+        print y_final.shape
+        print level_classes
+
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
-                                    y=y_final.astype('float32'),
+                                    y=y_final,
+                                    y_labels=n_classes,
                                     #load_all=load_all,
                                     #cache_size=cache_size,
                                     axes=('b',0,1,'c'))
