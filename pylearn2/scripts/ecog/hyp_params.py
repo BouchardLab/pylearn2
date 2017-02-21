@@ -6,8 +6,8 @@ def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
                     'frac_train': 1.,
-                    'clip_front': 40,
-                    'clip_end': 60,
+                    'clip_front': 80,
+                    'clip_end': 120,
                     'pm_aug_range': 10,
                     'consonant_dim': 19,
                     'vowel_dim': 3,
@@ -83,5 +83,3 @@ def make_dir(fixed_params):
     target_folder = os.path.join(scratch,exp_name)
     if not (os.path.exists(target_folder) or fixed_params['test']):
         os.mkdir(target_folder)
-    return
-

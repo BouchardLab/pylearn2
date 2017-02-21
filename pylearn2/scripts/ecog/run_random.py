@@ -4,17 +4,16 @@ from run_folds import get_result
 from hyp_params import get_params, make_dir
 import numpy as np
 
-def main():
+def main(seed, json_file=None):
     print 'Imports done...'
-    json_file = 'spearmint/config.json'
+    if json_file is None:
+        json_file = 'spearmint/config.json'
     opt_params, fixed_params = get_params(json_file)
 
-    seed = 20150427
     rng = np.random.RandomState(seed)
 
     job = random_params(rng, opt_params)
-    job_id = seed
-    fixed_params['job_id'] = job_id
+    fixed_params['job_id'] = seed
 
     make_dir(fixed_params)
 
