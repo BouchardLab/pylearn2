@@ -1,17 +1,16 @@
 #!/usr/bin/env python
-import sys, os
+import glob, sys, os
 import numpy as np
 
 folder = sys.argv[1]
-prepend = os.path.join(os.getcwd(), folder)
-files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(prepend, f))]
+files = glob.glob(os.path.join(folder, '*.o*'))
+files = [f for f in files if os.path.isfile(os.path.join(folder, f))]
 
-files = [f for f in files if '.out' in f]
 error = np.zeros((3,len(files)))
 std = np.zeros((3,len(files)))
 
 for ii, f in enumerate(files):
-    with open(os.path.join(prepend, f), 'r') as fh:
+    with open(f, 'r') as fh:
         lines = fh.readlines()
         if len(lines) > 12:
             if 'final_train_mean' in lines[-12]:

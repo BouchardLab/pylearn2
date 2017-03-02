@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os, sys
 from run_folds import get_result
 from hyp_params import get_params, make_dir
 import numpy as np
@@ -10,7 +10,7 @@ def main(seed, json_file=None):
         json_file = 'spearmint/config.json'
     opt_params, fixed_params = get_params(json_file)
 
-    rng = np.random.RandomState(seed)
+    rng = np.random.RandomState(int(seed))
 
     job = random_params(rng, opt_params)
     fixed_params['job_id'] = seed
@@ -40,4 +40,4 @@ def random_params(rng, kwargs):
     return params
 
 if __name__ == "__main__":
-    main()
+    main(*sys.argv[1:])

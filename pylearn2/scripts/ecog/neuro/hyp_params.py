@@ -26,7 +26,7 @@ def get_params(json_file):
                     'factorize': False,
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'scratch': 'exps'}
+                    'scratch': os.path.join(os.environ['SAVE'], 'exps')}
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']

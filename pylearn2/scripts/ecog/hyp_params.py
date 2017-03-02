@@ -6,8 +6,8 @@ def get_params(json_file):
 
     fixed_params = {'train_set': 'train',
                     'frac_train': 1.,
-                    'clip_front': 80,
-                    'clip_end': 120,
+                    'clip_front': 0,
+                    'clip_end': 0,
                     'pm_aug_range': 10,
                     'consonant_dim': 19,
                     'vowel_dim': 3,
@@ -22,12 +22,13 @@ def get_params(json_file):
                     'center': True,
                     'test': False,
                     'factorize': False,
-                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
+                    'data_file': 'EC2_CV_85_nobaseline.h5',
                     'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'scratch': 'exps'}
+                    'scratch': os.path.join(os.environ['SCRATCH'], 'exps')}
     """
+                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
                     'data_file': 'hdf5/EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                     'data_file': 'hdf5/GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
                     'data_file': 'hdf5/GP33_blocks_1_5_30_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
