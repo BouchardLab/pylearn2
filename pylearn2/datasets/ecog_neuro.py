@@ -121,7 +121,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         assert all(b in possible_bands for b in bands)
 
         if subject == 'ec2':
-            filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_-0.5_to_0.79_between_data_nobaseline.h5'
+            filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-0.5_to_0.79_file_nobaseline.h5'
         else:
             raise ValueError
         filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)

@@ -1,0 +1,113 @@
+import cPickle, os, time
+from pylearn2.config import yaml_parse
+from pylearn2.utils import serial
+from yaml_builder import build_yaml, build_dataset
+import numpy as np
+
+def get_final_val(fname, key):
+    model = serial.load(fname)
+    channels = model.monitor.channels
+    return 1.-float(channels[key].val_record[-1])
+
+def get_result(ins_dict, fixed_params, lda=False, kf=False):
+    n_folds = fixed_params['n_folds']
+    scratch = fixed_params['scratch']
+    exp_name = fixed_params['exp_name']
+    job_id = fixed_params['job_id']
+    valid_accuracy = np.zeros(n_folds)
+    test_accuracy = np.zeros(n_folds)
+    train_accuracy = np.zeros(n_folds)
+    if lda:
+        from sklearn.lda import LDA
+        from pca import PCA
+        print 'Starting training...'
+        start = time.time()
+        for fold in xrange(n_folds):
+            pca_model = PCA(dim=ins_dict['pcs'])
+            ds_params = fixed_params.copy()
+            ds_params['fold'] = fold
+            ds = yaml_parse.load(build_dataset(ds_params))
+            X = pca_model.fit_transform(ds.X)
+            model = LDA(ins_dict)
+            model.fit(X, ds.y.argmax(axis=1))
+            vs = ds.get_valid_set()
+            ts = ds.get_test_set()
+            train_accuracy[fold] = model.score(X, ds.y.argmax(axis=1))
+            valid_accuracy[fold] = model.score(pca_model.transform(vs.X), vs.y.argmax(axis=1))
+            test_accuracy[fold] = model.score(pca_model.transform(ts.X), ts.y.argmax(axis=1))
+            filename = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+            with open(filename, 'w') as f:
+                cPickle.dump(model, f)
+    elif kf:
+        from pykalman import KalmanFilterClassifier
+        print 'Starting training...'
+        start = time.time()
+        for fold in xrange(n_folds):
+            ds_params = fixed_params.copy()
+            ds_params['fold'] = fold
+            ds = yaml_parse.load(build_dataset(ds_params))
+            model = KalmanFilterClassifier(n_classes=fixed_params['out_dim'],
+                                           obs_dim=ins_dict['obs_dim'],
+                                           state_dim=ins_dict['state_dim'])
+            X = np.squeeze(ds.get_topological_view())
+            model.fit(X, ds.y.argmax(axis=1))
+            vs = ds.get_valid_set()
+            ts = ds.get_test_set()
+            train_accuracy[fold] = model.score(X, ds.y.argmax(axis=1))
+            valid_accuracy[fold] = model.score(np.squeeze(vs.get_topological_view()), vs.y.argmax(axis=1))
+            test_accuracy[fold] = model.score(np.squeeze(ts.get_topological_view()), ts.y.argmax(axis=1))
+            filename = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+            with open(filename, 'w') as f:
+                cPickle.dump(model, f)
+    else:
+        if 'n_conv_layers' in ins_dict.keys() and ins_dict['n_conv_layers'] > 0:
+            fixed_params['conv'] = True
+        else:
+            fixed_params['conv'] = False
+        fixed_params['in_shape'] = fixed_params['shape']
+        fixed_params['in_channels'] = fixed_params['channels']
+
+        ins_dict = ins_dict.copy()
+        fixed_params = fixed_params.copy()
+        print 'Starting training...'
+        start = time.time()
+        for fold in xrange(n_folds):
+            ins_dict['fold'] = fold
+            ins_dict['filename'] = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.pkl')
+            train = build_yaml(ins_dict, fixed_params)
+            yaml_file = os.path.join(scratch, exp_name, str(job_id)+'_fold'+str(fold)+'.yaml')
+            with open(yaml_file, 'w') as f:
+                f.write(train)
+            print train
+            train = yaml_parse.load(train)
+            saved = False
+            while not saved:
+                try:
+                    train.main_loop()
+                    saved = True
+                except IOError:
+                    print('Disk is probably full!')
+                    time.sleep(600)
+            del train
+            train_accuracy[fold] = get_final_val(ins_dict['filename'], 'train_y_misclass')
+            valid_accuracy[fold] = get_final_val(ins_dict['filename'], 'valid_y_misclass')
+            test_accuracy[fold] = get_final_val(ins_dict['filename'], 'test_y_misclass')
+
+    for fold in xrange(n_folds):
+        print '--------------------------------------'
+        print 'Accuracy fold '+str(fold)+':'
+        print 'train: ',train_accuracy[fold]
+        print 'valid: ',valid_accuracy[fold]
+        print 'test: ',test_accuracy[fold]
+    print '--------------------------------------'
+    print 'final_train_mean_'+str(job_id)+': ',train_accuracy.mean()
+    print 'final_valid_mean'+str(job_id)+': ',valid_accuracy.mean()
+    print 'final_test_mean'+str(job_id)+': ',test_accuracy.mean()
+    print '--------------------------------------'
+    print 'final_train_std'+str(job_id)+': ',train_accuracy.std()
+    print 'final_valid_std'+str(job_id)+': ',valid_accuracy.std()
+    print 'final_test_std'+str(job_id)+': ',test_accuracy.std()
+    print '--------------------------------------'
+    print 'Total training time in seconds'
+    print time.time()-start
+    return valid_accuracy
