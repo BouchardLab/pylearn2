@@ -4,13 +4,11 @@ from run_folds import get_result
 from hyp_params import get_params, make_dir
 import numpy as np
 
-def main(seed, json_file, subject, scratch, bands, data_types):
+def main(seed, json_file, subject, scratch, bands, data_types, frac_train):
     print 'Imports done...'
-    opt_params, fixed_params = get_params(json_file)
-    fixed_params['subject'] = subject
-    fixed_params['scratch'] = scratch
-    fixed_params['bands'] = bands
-    fixed_params['data_types'] = data_types
+    opt_params, fixed_params = get_params(json_file, subject, bands,
+                                          data_types, frac_train,
+                                          scratch)
 
     rng = np.random.RandomState(int(seed))
 

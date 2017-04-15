@@ -122,6 +122,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         if subject == 'ec2':
             filename = 'EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-0.5_to_0.79_file_nobaseline.h5'
+        elif subject == 'ec9':
+            filename = 'EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-0.5_to_0.79_file_nobaseline.h5'
+        elif subject == 'gp31':
+            filename = 'GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-0.5_to_0.79_file_nobaseline.h5'
+        elif subject == 'gp33':
+            filename = 'GP33_blocks_1_5_30_CV_HG_align_window_-0.5_to_0.79_file_nobaseline.h5'
         else:
             raise ValueError
         filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)

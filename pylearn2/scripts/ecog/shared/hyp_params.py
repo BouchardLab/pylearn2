@@ -1,8 +1,10 @@
-import decimal, json, os, yaml
+import os, yaml
 
 from pylearn2.datasets import ecog_neuro
 
-def get_params(json_file):
+def get_params(json_file, subject=None, bands=None,
+               data_types=None,frac_train=None,
+               scratch=None):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
@@ -27,6 +29,17 @@ def get_params(json_file):
                     'init_type': 'istdev',
                     'script_folder': '.',
                     'scratch': os.path.join(os.environ['SAVE'], 'exps')}
+
+    if subject is not None:
+        fixed_params['subject'] = subject
+    if bands is not None:
+        fixed_params['bands'] = bands
+    if data_types is not None:
+        fixed_params['data_types'] = data_types
+    if frac_train is not None:
+        fixed_params['frac_train'] = float(frac_train)
+    if scratch is not None:
+        fixed_params['scratch'] = scratch
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
