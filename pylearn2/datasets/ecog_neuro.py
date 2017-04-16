@@ -88,7 +88,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  min_cvs=10,
                  condense=True):
         self.args = locals()
-        print( self.args)
         subject = subject.lower()
 
         possible_subjects = ['ec2', 'ec9', 'gp31', 'gp33']
@@ -102,7 +101,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 'Unrecognized which_set value "%s".' % (which_set,) +
                 '". Valid values are ["train","valid","test"].')
 
-        print data_types, bands
         assert subject in possible_subjects
         if not isinstance(data_types, list):
             if ',' in data_types:
@@ -116,7 +114,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 bands = bands.split(',')
             else:
                 bands = [bands]
-        print data_types, bands
         assert all(d in possible_data_types for d in data_types)
         assert all(b in possible_bands for b in bands)
 
@@ -133,7 +130,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
 
         dims = [int(d) for d in [dim0, dim1] if (str(d).lower() != 'none' and int(d)>= 0)]
-        print dims
         assert len(dims) == len(bands)
         assert len(dims) == len(data_types)
 
@@ -334,7 +330,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             X_test = np.hstack([X[:, :d] for X, d in zip(X_test_tmp, dims)])
 
         self.train_mean = X_train.mean(axis=0, keepdims=True)
-        print X_train.shape, X_valid.shape, X_test.shape, self.train_mean.shape
 
         if which_set == 'train':
             topo_view = X_train
@@ -345,7 +340,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         else:
             topo_view = X_test
             y_final = y_test
-        print topo_view.shape
         if center:
             topo_view = topo_view-self.train_mean
 
@@ -369,6 +363,12 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                     curr_idx += 1
             n_classes = curr_idx
             y_final = y_condensed
+        elif vowel_prediction:
+            assert consonant_prediction == False
+            y_final = y_final % 3
+        elif consonant_prediction:
+            assert vowel_prediction == False
+            y_final = (y_final / 19).astype(int)
 
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
                                     y=y_final[:, np.newaxis],

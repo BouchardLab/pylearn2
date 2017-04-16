@@ -167,7 +167,7 @@ def svd_accuracy(file_name, ec, kwargs,
     """
     kwargs['condense'] = False
     ds = ec.ECoG(file_name, which_set='train', **kwargs)
-    n_classes = ds.y.max()+1
+    n_classes = int(np.around(ds.y.max()+1))
     max_svs = min(max_svs, n_classes)
 
     init_list = np.arange(0, n_classes-max_svs+1)
@@ -231,14 +231,19 @@ def svd_accuracy(file_name, ec, kwargs,
                 va[fold, ii, jj] = np.array(v_results).mean()
     return pa, ma, va, u_s, s_s, v_s, init_list, nsvs_list
 
-def time_accuracy(file_name, ec, kwargs, has_data,
-                  folds=10, train_all_time=False):
+def time_accuracy(subject, bands, data_types, dim0, dim1, ec, kwargs, has_data,
+                  folds=10):
     """
     Classify data independently at each point in time.
     """
-    ds = ec.ECoG(file_name, which_set='train', **kwargs)
+    def reshape_time(X):
+        n_ex = X.shape[0]
+        Xp = X.reshape(n_ex, 1, -1, 258)
+        return np.transpose(Xp, (0, 1, 3, 2))
+
+    ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1, **kwargs)
     X_shape = ds.get_topological_view().shape
-    n_time = X_shape[2]
+    n_time = 258
     ca = np.zeros((10, n_time))
     va = np.zeros((10, n_time))
     cva = np.zeros((10, n_time))
@@ -246,67 +251,53 @@ def time_accuracy(file_name, ec, kwargs, has_data,
     for fold in range(folds):
         kwargs_copy = copy.deepcopy(kwargs)
         print('fold: {}'.format(fold))
-        cv_ds = ec.ECoG(file_name,
-                        which_set='train',
+        cv_ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1,
                         fold=fold,
                         **kwargs_copy)
         kwargs_copy['consonant_prediction'] = True
-        c_ds = ec.ECoG(file_name,
-                     which_set='train',
+        c_ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1,
                      fold=fold,
                      **kwargs_copy)
         kwargs_copy['consonant_prediction'] = False
         kwargs_copy['vowel_prediction'] = True
-        v_ds = ec.ECoG(file_name,
-                     which_set='train',
+        v_ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1,
                      fold=fold,
                      **kwargs_copy)
         # Consonants
         c_ts = c_ds.get_test_set()
         c_vs = c_ds.get_valid_set()
-        c_train_X = np.concatenate((c_ds.get_topological_view(), c_vs.get_topological_view()), axis=0)
+        c_train_X = reshape_time(np.concatenate((c_ds.get_topological_view(),
+            c_vs.get_topological_view()), axis=0))
         c_train_y = np.concatenate((c_ds.y, c_vs.y), axis=0)
-        c_test_X = c_ts.get_topological_view()
+        c_test_X = reshape_time(c_ts.get_topological_view())
         c_test_y = c_ts.y
         # Vowels
         v_ts = v_ds.get_test_set()
         v_vs = v_ds.get_valid_set()
-        v_train_X = np.concatenate((v_ds.get_topological_view(), v_vs.get_topological_view()), axis=0)
+        v_train_X = reshape_time(np.concatenate((v_ds.get_topological_view(),
+            v_vs.get_topological_view()), axis=0))
         v_train_y = np.concatenate((v_ds.y, v_vs.y), axis=0)
-        v_test_X = v_ts.get_topological_view()
+        v_test_X = reshape_time(v_ts.get_topological_view())
         v_test_y = v_ts.y
         # CV
         cv_ts = cv_ds.get_test_set()
         cv_vs = cv_ds.get_valid_set()
-        cv_train_X = np.concatenate((cv_ds.get_topological_view(), cv_vs.get_topological_view()), axis=0)
+        cv_train_X = reshape_time(np.concatenate((cv_ds.get_topological_view(),
+            cv_vs.get_topological_view()), axis=0))
         cv_train_y = np.concatenate((cv_ds.y, cv_vs.y), axis=0)
-        cv_test_X = cv_ts.get_topological_view()
+        cv_test_X = reshape_time(cv_ts.get_topological_view())
         cv_test_y = cv_ts.y
         assert np.all(c_train_X == v_train_X)
         assert np.all(c_train_X == cv_train_X)
         assert np.all(c_test_X == v_test_X)
         assert np.all(c_test_X == cv_test_X)
-        if train_all_time:
-            c_tX = c_train_X.reshape(-1, c_train_X.shape[-1])
-            v_tX = v_train_X.reshape(-1, v_train_X.shape[-1], )
-            cv_tX = cv_train_X.reshape(-1, cv_train_X.shape[-1], )
-            c_cl = LR(solver='lbfgs',
-                      multi_class='multinomial').fit(c_tX,
-                              np.tile(c_train_y.ravel(), n_time))
-            v_cl = LR(solver='lbfgs',
-                      multi_class='multinomial').fit(v_tX,
-                              np.tile(v_train_y.ravel(), n_time))
-            cv_cl = LR(solver='lbfgs',
-                       multi_class='multinomial').fit(cv_tX,
-                              np.tile(cv_train_y.ravel(), n_time))
         for tt in range(n_time):
-            if not train_all_time:
-                c_cl = LR(solver='lbfgs', multi_class='multinomial').fit(c_train_X[:, 0, tt],
-                                                                         c_train_y.ravel())
-                v_cl = LR(solver='lbfgs', multi_class='multinomial').fit(v_train_X[:, 0, tt],
-                                                                         v_train_y.ravel())
-                cv_cl = LR(solver='lbfgs', multi_class='multinomial').fit(cv_train_X[:, 0, tt],
-                                                                          cv_train_y.ravel())
+            c_cl = LR(solver='lbfgs', multi_class='multinomial').fit(c_train_X[:, 0, tt],
+                                                                     c_train_y.ravel())
+            v_cl = LR(solver='lbfgs', multi_class='multinomial').fit(v_train_X[:, 0, tt],
+                                                                     v_train_y.ravel())
+            cv_cl = LR(solver='lbfgs', multi_class='multinomial').fit(cv_train_X[:, 0, tt],
+                                                                      cv_train_y.ravel())
             ca[fold, tt] = c_cl.score(c_test_X[:, 0, tt], c_test_y.ravel())
             pc = c_cl.predict_proba(c_test_X[:, 0, tt])
             va[fold, tt] = v_cl.score(v_test_X[:, 0, tt], v_test_y.ravel())
