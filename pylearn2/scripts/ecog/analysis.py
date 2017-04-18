@@ -292,12 +292,16 @@ def time_accuracy(subject, bands, data_types, dim0, dim1, ec, kwargs, has_data,
         assert np.all(c_test_X == v_test_X)
         assert np.all(c_test_X == cv_test_X)
         for tt in range(n_time):
-            c_cl = LR(solver='lbfgs', multi_class='multinomial').fit(c_train_X[:, 0, tt],
+            X_train = c_train_X[:, 0, tt]
+            c_cl = LR(solver='lbfgs', multi_class='multinomial').fit(X_train,
                                                                      c_train_y.ravel())
             v_cl = LR(solver='lbfgs', multi_class='multinomial').fit(v_train_X[:, 0, tt],
                                                                      v_train_y.ravel())
+            """
             cv_cl = LR(solver='lbfgs', multi_class='multinomial').fit(cv_train_X[:, 0, tt],
                                                                       cv_train_y.ravel())
+            cva[fold, tt] = cv_cl.score(cv_test_X[:, 0, tt], cv_test_y.ravel())
+                                                                      """
             ca[fold, tt] = c_cl.score(c_test_X[:, 0, tt], c_test_y.ravel())
             pc = c_cl.predict_proba(c_test_X[:, 0, tt])
             va[fold, tt] = v_cl.score(v_test_X[:, 0, tt], v_test_y.ravel())
@@ -305,7 +309,6 @@ def time_accuracy(subject, bands, data_types, dim0, dim1, ec, kwargs, has_data,
             pcv = (pc[:, np.newaxis, :] *
                    pv[..., np.newaxis]).reshape(pc.shape[0], -1)[:, has_data].argmax(axis=1)
             c_va[fold, tt] = np.equal(pcv.ravel(), cv_test_y.ravel()).mean()
-            cva[fold, tt] = cv_cl.score(cv_test_X[:, 0, tt], cv_test_y.ravel())
     return ca, va, cva, c_va
 
 def conf_mat2accuracy(c_mat=None, v_mat=None, cv_mat=None):
