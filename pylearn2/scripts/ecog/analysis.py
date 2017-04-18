@@ -65,35 +65,30 @@ def load_raw_data(ds):
     y = np.concatenate((ds.y, ts.y, vs.y), axis=0).ravel()
     return X, y
 
-def condensed_2_dense(new, indices_dicts, y_hat_dicts, logits_dicts, ds):
-    if new:
-        y_dims = [57]
-        indices_dicts2 = []
-        y_hat_dicts2 = []
-        logits_dicts2 = []
-        for ii, (ind, yhd, lgd) in enumerate(zip(indices_dicts, y_hat_dicts, logits_dicts)):
-            ind2 = {}
-            yhd2 = {}
-            lgd2 = {}
-            for key in ind.keys():
-                indices2 = np.zeros_like(ind[key])
-                y_hat2 = np.zeros((yhd[key][0].shape[0], y_dims[0]))
-                logits2 = -np.inf * np.ones_like(y_hat2) 
-                for old, new in enumerate(ds.mapping):
-                    if not np.isinf(new):
-                        indices2[ind[key] == new] = old
-                        y_hat2[:, old] = yhd[key][0][:, int(new)]
-                        logits2[:, old] = lgd[key][0][:, int(new)]
-                ind2[key] = indices2
-                yhd2[key] = [y_hat2]
-                lgd2[key] = logits2
-            indices_dicts2.append(ind2)
-            y_hat_dicts2.append(yhd2)
-            logits_dicts2.append(lgd2)
-    else:
-        indices_dicts2 = indices_dicts
-        y_hat_dicts2 = y_hat_dicts
-        logits_dicts2 = logits_dicts
+def condensed_2_dense(indices_dicts, y_hat_dicts, logits_dicts, ds):
+    y_dims = [57]
+    indices_dicts2 = []
+    y_hat_dicts2 = []
+    logits_dicts2 = []
+    for ii, (ind, yhd, lgd) in enumerate(zip(indices_dicts, y_hat_dicts, logits_dicts)):
+        ind2 = {}
+        yhd2 = {}
+        lgd2 = {}
+        for key in ind.keys():
+            indices2 = np.zeros_like(ind[key])
+            y_hat2 = np.zeros((yhd[key][0].shape[0], y_dims[0]))
+            logits2 = -np.inf * np.ones_like(y_hat2) 
+            for old, new in enumerate(ds.mapping):
+                if not np.isinf(new):
+                    indices2[ind[key] == new] = old
+                    y_hat2[:, old] = yhd[key][0][:, int(new)]
+                    logits2[:, old] = lgd[key][0][:, int(new)]
+            ind2[key] = indices2
+            yhd2[key] = [y_hat2]
+            lgd2[key] = logits2
+        indices_dicts2.append(ind2)
+        y_hat_dicts2.append(yhd2)
+        logits_dicts2.append(lgd2)
     return (indices_dicts2, y_hat_dicts2, logits_dicts2)
 
 def fit_accuracy_lognormal(data, il, nl, check_nan=False):
@@ -448,8 +443,8 @@ def indx_dict2conf_mat(indices_dicts, y_dims):
     return c, v, cv
 
 
-def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
-    from pylearn2.datasets import ecog, ecog_new
+def get_model_results(model_folder, subject, bands, data_types, dim0, dim1, fold, kwargs, data_file):
+    from pylearn2.datasets import ecog_neuro
     kwargs = copy.deepcopy(kwargs)
     file_loc = os.path.join(model_folder, filename)
     model = serial.load(file_loc)
@@ -458,21 +453,12 @@ def get_model_results(model_folder, filename, fold, kwargs, data_file, new):
     y_inpt = target_space.make_theano_batch()
     y_sym = y_inpt
     input_space = model.get_input_space()
-    if new:
-        ec = ecog_new
-    else:
-        ec = ecog
-        try:
-            del kwargs['condense']
-        except:
-            pass
-        try:
-            del kwargs['min_cvs']
-        except:
-            pass
+    ec = ecog_neuro
 
-    ds = ec.ECoG(data_file,
-                 which_set='train',
+    ds = ec.ECoG(subject, bands, data_types,
+                 'train',
+                 dim0,
+                 dim1,
                  fold=fold,
                  **kwargs)
     ts = ds.get_test_set()

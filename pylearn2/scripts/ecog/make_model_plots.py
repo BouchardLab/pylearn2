@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from pylearn2.datasets import ecog, ecog_new
+from pylearn2.datasets import ecog_neuro
 
 import os, h5py, argparse, cPickle
 import numpy as np
@@ -17,7 +17,7 @@ import plotting
 rcParams.update({'figure.autolayout': True})
 
 def main(subject, bands, data_types, model_folders, plot_folder,
-         model_file_base='.pkl', overwrite=False, randomize=False,
+         model_file_base='.pkl', overwrite=False, randomize_labels=False,
          dim0=0, dim1=None):
     print(subject)
     print(model_folders)
@@ -33,22 +33,10 @@ def main(subject, bands, data_types, model_folders, plot_folder,
                                 'ecog/EC2_CV.h5'), 'r') as f:
         ecog_E_lbls = f['Descriptors']['Event_ELbls'].value
 
-    kwargs = {'move': .1,
-              'center': True,
-              'level_classes': True,
+    kwargs = {
               'consonant_prediction': False,
               'vowel_prediction': False,
-              'two_headed': False,
-              'randomize_labels': False}
-
-    if randomize:
-        kwargs['randomize_labels'] = True
-
-    if new:
-        kwargs['min_cvs'] = min_cvs
-    """
-        kwargs['condense'] = True
-    """
+              'randomize_labels': randomize_labels}
 
     data_fname = os.path.join(data_folder, fname_base + '_model_output.pkl')
     if (not os.path.exists(data_fname) or overwrite):
@@ -70,8 +58,14 @@ def main(subject, bands, data_types, model_folders, plot_folder,
             hidden_dict = {}
             hidden_dicts.append(hidden_dict)
             for ii, filename in enumerate(file_list):
-                misclass, indices, y_hat, logits, hidden = analysis.get_model_results(model_folder, filename, ii,
-                                                                                      kwargs, data_file, new)
+                misclass, indices, y_hat, logits, hidden = analysis.get_model_results(model_folder, 
+                                                                                      subject,
+                                                                                      bands,
+                                                                                      data_types,
+                                                                                      dim0,
+                                                                                      dim1,
+                                                                                      ii,
+                                                                                      kwargs)
                 accuracy_dict[filename] = [1.-m for m in misclass]
                 indices_dict[filename] = indices
                 y_hat_dict[filename] = y_hat
@@ -103,7 +97,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
 
         dicts = (accuracy_dicts, indices_dicts, y_hat_dicts, logits_dicts,
                  hidden_dicts)
-        dicts2 = analysis.condensed_2_dense(new, indices_dicts,
+        dicts2 = analysis.condensed_2_dense(indices_dicts,
                                             y_hat_dicts, logits_dicts, ds)
         with open(data_fname, 'w') as f:
             cPickle.dump((dicts, dicts2, y_dims, has_data), f)
@@ -162,6 +156,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     mjar = art_feats[has_data].T[:4].T
     mjar_dist = analysis.compute_pairwise_distances(mjar,
             sp.spatial.distance.hamming)
+    """
     # Raw data
     X, y0 = analysis.load_raw_data(ds)
     fname = fname_base + '_' + 'dend_raw.pdf'
@@ -214,6 +209,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     fname = fname_base + '_' + 'corr_logits.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' logits',
                            save_path=os.path.join(plot_folder, fname))
+             """
     # Y_hat
     fname = fname_base + '_' + 'dend_yhat.pdf'
     plotting.create_dendrogram(y_hat, y, ecog_E_lbls, has_data, title=subject+' y_hat',
