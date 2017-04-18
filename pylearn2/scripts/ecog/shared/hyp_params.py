@@ -4,7 +4,7 @@ from pylearn2.datasets import ecog_neuro
 
 def get_params(json_file, subject=None, bands=None,
                data_types=None,frac_train=None,
-               scratch=None):
+               scratch=None, randomize_labels=None):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
@@ -40,6 +40,8 @@ def get_params(json_file, subject=None, bands=None,
         fixed_params['frac_train'] = float(frac_train)
     if scratch is not None:
         fixed_params['scratch'] = scratch
+    if randomize_labels is not None:
+        fixed_params['randomize_labels'] = randomize_labels
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
