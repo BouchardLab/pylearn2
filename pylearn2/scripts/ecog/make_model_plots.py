@@ -241,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
     parser.add_argument('-r', '--randomize', type=bool, default=False)
-    parser.add_argument('-o', '--overwrite', default=store_true)
+    parser.add_argument('-o', '--overwrite', default='store_true')
     parser.add_argument('-s', '--subset', type=str, default='')
     args = parser.parse_args()
 

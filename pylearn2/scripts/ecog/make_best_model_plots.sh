@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./make_model_plots.py ec2 exps/new2_ec2_fc1
-./make_model_plots.py gp33 exps/new2_gp33_fc0
-./make_model_plots.py ec9 exps/new2_ec9_fc1
-./make_model_plots.py gp31 exps/new2_gp31_fc1
+./make_model_plots.py ec2 exps/ec2_hg_a
+./make_model_plots.py gp33 exps/gp33_hg_a
+./make_model_plots.py ec9 exps/ec9_hg_a
+./make_model_plots.py gp31 exps/gp31_hg_a
