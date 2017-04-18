@@ -351,7 +351,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         y_final = y_final[order]
         self.y_final = y_final
         
-        if condense:
+        if condense and not (vowel_prediction or consonant_prediction):
             available_indxs = sorted(set(y_final))
             curr_idx = 0
             y_condensed = np.zeros_like(y_final)
@@ -368,7 +368,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             y_final = y_final % 3
         elif consonant_prediction:
             assert vowel_prediction == False
-            y_final = (y_final / 19).astype(int)
+            y_final = (y_final / 3).astype(int)
 
         super(ECoG, self).__init__(topo_view=topo_view.astype('float32'),
                                     y=y_final[:, np.newaxis],
