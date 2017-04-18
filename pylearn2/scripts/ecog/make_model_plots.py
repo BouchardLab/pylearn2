@@ -16,9 +16,9 @@ import plotting
 
 rcParams.update({'figure.autolayout': True})
 
-def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
-         model_file_base='.pkl', overwrite=False, randomize=False):
-    subject = os.path.basename(data_file).split('_')[0].lower()
+def main(subject, bands, data_types, model_folders, plot_folder,
+         model_file_base='.pkl', overwrite=False, randomize=False,
+         dim0=0, dim1=None):
     print(subject)
     print(model_folders)
     run = '_'.join([os.path.basename(f) for f in model_folders])
@@ -29,8 +29,8 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
                          (subset in f))])
              for model_folder in model_folders]
     
-    with h5py.File(os.path.join(os.environ['HOME'],
-                                'Development/data/ecog/EC2_CV.h5'), 'r') as f:
+    with h5py.File(os.path.join(os.environ['PYLEARN2_DATA_PATH'],
+                                'ecog/EC2_CV.h5'), 'r') as f:
         ecog_E_lbls = f['Descriptors']['Event_ELbls'].value
 
     kwargs = {'move': .1,
@@ -88,17 +88,19 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
                 else:
                     assert all(yds == ydi for yds, ydi in zip(y_dims, ydim))
                     
-        if new:
-            ds = ecog_new.ECoG(data_file,
-                               which_set='train',
-                               **kwargs)
-            has_data = []
-            for ii in range(len(ecog_E_lbls)):
-                if (ds.y == ii).sum() > 0:
-                    has_data.append(ii)
-            y_dims = [57]
-        else:
-            None
+        ds = ecog_neuro.ECoG(subject,
+                             bands,
+                             data_types,
+                             'train',
+                             dim0,
+                             dim1,
+                             **kwargs)
+        has_data = []
+        for ii in range(len(ecog_E_lbls)):
+            if (ds.y == ii).sum() > 0:
+                has_data.append(ii)
+        y_dims = [57]
+
         dicts = (accuracy_dicts, indices_dicts, y_hat_dicts, logits_dicts,
                  hidden_dicts)
         dicts2 = analysis.condensed_2_dense(new, indices_dicts,
@@ -138,15 +140,14 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
     plotting.plot_cv_accuracy(accuracy_per_cv, ecog_E_lbls, has_data, os.path.join(plot_folder, fname))
     
     # Clustering Plots
-    if new:
-        ds = ecog_new.ECoG(data_file,
-                           which_set='train',
-                           **kwargs)
+    ds = ecog_neuro.ECoG(subject,
+                         bands,
+                         data_types,
+                         'train',
+                         dim0,
+                         dim1,
+                         **kwargs)
 
-    else:
-        ds = ecog.ECoG(data_file,
-                       which_set='train',
-                       **kwargs)
     cvs, labels, pmv, features = analysis.get_phonetic_feature_matrix()
     p = features[has_data].T[pmv['place']].T
     p_dist = analysis.compute_pairwise_distances(p,
@@ -238,44 +239,15 @@ def main(data_file, model_folders, plot_folder, new, subset, min_cvs=10,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
     parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31', 'gp33'], default='ec2')
+    parser.add_argument('bands', type=str)
+    parser.add_argument('data_types', type=str)
     parser.add_argument('model_folder')
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
-    parser.add_argument('-n', '--new', type=bool, default=True)
     parser.add_argument('-r', '--randomize', type=bool, default=False)
-    parser.add_argument('-a', '--audio', type=bool, default=False)
-    parser.add_argument('-o', '--overwrite', type=bool, default=False)
+    parser.add_argument('-o', '--overwrite', default=store_true)
     parser.add_argument('-s', '--subset', type=str, default='')
-    parser.add_argument('-m', '--min_cvs', type=int, default=10)
     args = parser.parse_args()
-    
-    if args.audio:
-        raise NotImplemetedError
-    
-    data_base = '${PYLEARN2_DATA_PATH}/ecog/'
-    new_data_files = {'ec2': 'EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                      'ec9': 'EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                      'gp33': 'GP33_blocks_1_5_30_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                      'gp31': 'GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5'}
-    old_data_files = {'ec2': 'EC2_CV_85_nobaseline_aug.h5',
-                      'ec9': None,
-                      'gp33': None,
-                      'gp31': None}
-    
-    if args.subject == 'ec2':
-        if args.new:
-            data_file = os.path.join(data_base, 'hdf5', new_data_files['ec2'])
-        else:
-            data_file = os.path.join(data_base, old_data_files['ec2'])
-    elif args.subject == 'ec9':
-        data_file = os.path.join(data_base, 'hdf5', new_data_files['ec9'])
-    elif args.subject == 'gp31':
-        data_file = os.path.join(data_base, 'hdf5', new_data_files['gp31'])
-    elif args.subject == 'gp33':
-        data_file = os.path.join(data_base, 'hdf5', new_data_files['gp33'])
-    else:
-        raise ValueError
-    
-    main(data_file, [args.model_folder], args.plot_folder, args.new,
-            args.subset, args.min_cvs, overwrite=args.overwrite,
-            randomize=args.randomize)
+
+    main(args.subject, args.bands, args.data_types, [args.model_folder],
+         args.plot_folder, overwrite=args.overwrite, randomize=args.randomize)
