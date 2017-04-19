@@ -446,7 +446,7 @@ def indx_dict2conf_mat(indices_dicts, y_dims):
     return c, v, cv
 
 
-def get_model_results(model_folder, subject, bands, data_types, dim0, dim1, fold, kwargs, data_file):
+def get_model_results(filename, model_folder, subject, bands, data_types, dim0, dim1, fold, kwargs):
     from pylearn2.datasets import ecog_neuro
     kwargs = copy.deepcopy(kwargs)
     file_loc = os.path.join(model_folder, filename)

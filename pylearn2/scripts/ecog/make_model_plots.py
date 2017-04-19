@@ -25,8 +25,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     fname_base = subject + '_' + run
     data_folder = os.path.join(plot_folder, 'data')
     files = [sorted([f for f in os.listdir(model_folder)
-                     if ((model_file_base in f) and
-                         (subset in f))])
+                     if model_file_base in f])
              for model_folder in model_folders]
     
     with h5py.File(os.path.join(os.environ['PYLEARN2_DATA_PATH'],
@@ -58,7 +57,8 @@ def main(subject, bands, data_types, model_folders, plot_folder,
             hidden_dict = {}
             hidden_dicts.append(hidden_dict)
             for ii, filename in enumerate(file_list):
-                misclass, indices, y_hat, logits, hidden = analysis.get_model_results(model_folder, 
+                misclass, indices, y_hat, logits, hidden = analysis.get_model_results(filename,
+                                                                                      model_folder, 
                                                                                       subject,
                                                                                       bands,
                                                                                       data_types,
@@ -180,6 +180,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     np.savez(os.path.join(data_folder, fname_base + '_corr_raw'), ccp=ccp,
              ccm=ccm, ccv=ccv)
     # Logits + Y_hat
+    """
     lgs = tuple()
     yhs = tuple()
     ys = tuple()
@@ -192,6 +193,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     y_hat = np.concatenate(yhs, axis=0)
     y = np.concatenate(ys, axis=0)
     classes = sorted(set(y.ravel()))
+    """
     # Logits
     fname = fname_base + '_' + 'dend_logits.pdf'
     plotting.create_dendrogram(logits, y, ecog_E_lbls, has_data, title=subject+' logits',
@@ -240,10 +242,8 @@ if __name__ == '__main__':
     parser.add_argument('model_folder')
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
-    parser.add_argument('-r', '--randomize', type=bool, default=False)
     parser.add_argument('-o', '--overwrite', default='store_true')
-    parser.add_argument('-s', '--subset', type=str, default='')
     args = parser.parse_args()
 
     main(args.subject, args.bands, args.data_types, [args.model_folder],
-         args.plot_folder, overwrite=args.overwrite, randomize=args.randomize)
+         args.plot_folder, overwrite=args.overwrite)
