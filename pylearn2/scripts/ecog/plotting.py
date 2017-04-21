@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import cluster
+import functools
 
 
 def plot_confusion_matrix(conf_matrix, title=None, save_path=None):
@@ -273,18 +274,41 @@ def plot_trials(trials, labels, label_to_string, time=None, onset=None, pp=None)
                         plt.xlabel('time')
                         plt.ylabel('electrodes')
     
-def create_dendrogram(X, y, labels, has_data, color_threshold=None,
-                      title=None, save_path=None):
+def create_dendrogram(features, color_threshold, labels,
+                      title=None, save_path=None, ax=None):
     """
     Create dendrogram from data X. Averages over labels y.
     """
-    vecs = np.zeros((len(has_data), X.shape[1]))
-    y = y.ravel()
-    for ii, idx in enumerate(has_data):
-        vecs[ii] = X[y == idx].mean(0)
-    z = cluster.hierarchy.ward(vecs)
-    r = cluster.hierarchy.dendrogram(z, labels = labels[has_data],
-                                     orientation='left', color_threshold=color_threshold)
+    def color(z, thresh, groups, k):
+        dist = z[k-57, 2]
+        child = z[k-57, 0].astype('int')
+        while child > 56:
+            child = z[child-57, 0].astype(int)
+        if dist > thresh:
+            set_c = 'k'
+        else:
+            for c, idxs in groups.iteritems():
+                if child in idxs:
+                    set_c = c
+        return set_c
+
+    z = cluster.hierarchy.ward(features)
+    r = cluster.hierarchy.dendrogram(z, labels=labels,
+                                     no_plot=True)
+    old_idx = []
+    for cv in r['ivl']:
+        old_idx.append(labels.index(cv))
+    groups = {'#1f77b4': old_idx[0:11],
+              '#ff7f0e': old_idx[11:23],
+              '#2ca02c': old_idx[23:39],
+              '#9467bd': old_idx[39:57]}
+
+
+    r = cluster.hierarchy.dendrogram(z, labels=labels,
+                                     link_color_func=functools.partial(color,
+                                         z, color_threshold, groups),
+                                     ax=ax)
+
     if title:
         plt.title(title)
     if save_path:

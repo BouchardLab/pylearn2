@@ -12,18 +12,10 @@ rcParams.update({'figure.autolayout': True,
                  'font.size': 24})
 
 folder = '/home/jesse/plots/model/data'
-raw_files = ['ec2_new2_ec2_lin3_corr_raw.npz',
-             'ec9_new2_ec9_lin1_corr_raw.npz',
-             'gp31_new2_gp31_lin0_corr_raw.npz',
-             'gp33_new2_gp33_lin0_corr_raw.npz']
-linear_files = ['ec2_new2_ec2_lin3_corr_y_hat.npz',
-                'ec9_new2_ec9_lin1_corr_y_hat.npz',
-                'gp31_new2_gp31_lin0_corr_y_hat.npz',
-                'gp33_new2_gp33_lin0_corr_y_hat.npz']
-deep_files = ['ec2_new2_ec2_fc1_corr_y_hat.npz',
-              'ec9_new2_ec9_fc1_corr_y_hat.npz',
-              'gp31_new2_gp31_fc1_corr_y_hat.npz',
-              'gp33_new2_gp33_fc0_corr_y_hat.npz']
+deep_files = ['ec2_ec2_hg_a_corr_y_hat.npz',
+              'ec9_ec9_hg_a_corr_y_hat.npz',
+              'gp31_gp31_hg_a_corr_y_hat.npz',
+              'gp33_gp33_hg_a_corr_y_hat.npz']
 
 colors = ['green', 'black', 'red']
 
@@ -102,7 +94,7 @@ plt.xlim([-.06, .65])
 #plt.legend(loc='best', prop={'size': 20})
 plt.xlabel('Correlation Coefficient')
 plt.savefig('state_correlation.png')
-plt.savefig('state_correlation.pdf')
+plt.savefig('/home/jesse/Downloads/state_correlation.pdf')
 
 """
 positions = [1-.375, 1+.375, 3-.375, 3+.375, 5-.375, 5+.375]
