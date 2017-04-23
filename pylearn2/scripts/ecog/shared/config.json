@@ -1,0 +1,34 @@
+{
+    "language"        : "PYTHON",
+    "main-file"       : "run_spearmint.py",
+    "experiment-name" : "none",
+    "likelihood"      : "GAUSSIAN",
+    "resources"       : {
+        "my-machine" : {
+            "scheduler" : "local",
+            "max-concurrent" : 1,
+            "max-finished-jobs" : 1 
+        }
+    },
+    "variables" : {
+"batch_size" : { "min" : 100, "max" : 512, "type" : "int", "size" : 1 },
+"cost_type" : { "options" : ["xent", "h1", "h2"], "type" : "enum", "size" : 1 },
+"default_input_include_prob" : { "min" : 1.0e-1, "max" : 1, "type" : "float", "size" : 1 },
+"default_input_scale" : { "min" : 1.0e-1, "max" : 5, "type" : "float", "size" : 1 },
+"fc_dim0" : { "min" : 57, "max" : 1000, "type" : "int", "size" : 1 },
+"fc_dim1" : { "min" : 57, "max" : 500, "type" : "int", "size" : 1 },
+"fc_layer_type" : { "options" : ["RectifiedLinear", "Tanh", "Sigmoid"], "type" : "enum", "size" : 1 },
+"input_dropout" : { "min" : 1.0e-1, "max" : 1, "type" : "float", "size" : 1 },
+"input_scale" : { "min" : 1.0e-1, "max" : 5, "type" : "float", "size" : 1 },
+"log_decay_eps" : { "min" : -5, "max" : -1, "type" : "float", "size" : 1 },
+"log_fc_irange" : { "min" : -5, "max" : 0, "type" : "float", "size" : 1 },
+"log_final_mom_eps" : { "min" : -4, "max" : -3.0102e-1, "type" : "float", "size" : 1 },
+"log_lr" : { "min" : -3, "max" : -1, "type" : "float", "size" : 1 },
+"log_min_lr" : { "min" : -4, "max" : -1, "type" : "float", "size" : 1 },
+"log_weight_decay" : { "min" : -7, "max" : 0, "type" : "float", "size" : 1 },
+"max_col_norm" : { "min" : 1.0e-1, "max" : 5, "type" : "float", "size" : 1 },
+"max_epochs" : { "min" : 10, "max" : 100, "type" : "int", "size" : 1 },
+"mom_sat" : { "min" : 1, "max" : 100, "type" : "int", "size" : 1 },
+"n_fc_layers" : { "min" : 1, "max" : 2, "type" : "int", "size" : 1 }
+    }
+}
