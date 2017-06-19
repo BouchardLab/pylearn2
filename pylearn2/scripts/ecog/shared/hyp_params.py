@@ -3,15 +3,12 @@ import os, yaml
 from pylearn2.datasets import ecog_neuro
 
 def get_params(json_file, subject=None, bands=None,
-               data_types=None,frac_train=None,
+               frac_train=None,
                scratch=None, randomize_labels=None):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
                     'bands': 'high gamma',
-                    'data_types': 'amplitude',
-                    'dim0': 0,
-                    'dim1': 'None',
                     'frac_train': 1.,
                     'pm_aug_range': 10,
                     'consonant_dim': 19,
@@ -34,8 +31,6 @@ def get_params(json_file, subject=None, bands=None,
         fixed_params['subject'] = subject
     if bands is not None:
         fixed_params['bands'] = bands
-    if data_types is not None:
-        fixed_params['data_types'] = data_types
     if frac_train is not None:
         fixed_params['frac_train'] = float(frac_train)
     if scratch is not None:
@@ -48,10 +43,7 @@ def get_params(json_file, subject=None, bands=None,
     
     ds = ecog_neuro.ECoG(fixed_params['subject'],
                          fixed_params['bands'],
-                         fixed_params['data_types'],
-                         'train',
-                         fixed_params['dim0'],
-                         fixed_params['dim1'])
+                         'train')
     X_shape = ds.get_topological_view().shape
     n_cvs = len(set(ds.y.ravel()))
 

@@ -31,6 +31,9 @@ for ii, f in enumerate(files):
             std[1,ii] = float(lines[-7+delta].split(' ')[-1])
             std[2,ii] = float(lines[-6+delta].split(' ')[-1])
 
+
+print (np.nanmax(error[0]), np.nanmax(error[1]), np.nanmax(error[1]))
+
 nan_idx = np.isnan(error[1])
 good_error = error[:, ~nan_idx]
 good_std = std[:, ~nan_idx]

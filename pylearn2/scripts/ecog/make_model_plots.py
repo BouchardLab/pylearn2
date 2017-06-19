@@ -211,11 +211,11 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     fname = fname_base + '_' + 'corr_logits.pdf'
     plotting.corr_box_plot(ccp, ccm, ccv, title=subject+' logits',
                            save_path=os.path.join(plot_folder, fname))
-             """
     # Y_hat
     fname = fname_base + '_' + 'dend_yhat.pdf'
     plotting.create_dendrogram(y_hat, y, ecog_E_lbls, has_data, title=subject+' y_hat',
                                save_path=os.path.join(plot_folder, fname))
+             """
     y_hatp = np.zeros((len(classes), y_hat.shape[1]))
     for ii in range(len(classes)):
         y_hatp[ii] = y_hat[y == ii].mean(axis=0)
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     parser.add_argument('model_folder')
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
-    parser.add_argument('-o', '--overwrite', default='store_true')
+    parser.add_argument('-o', '--overwrite', action='store_true')
     args = parser.parse_args()
 
     main(args.subject, args.bands, args.data_types, [args.model_folder],

@@ -220,9 +220,6 @@ end_cost_string = ("},\n"
 train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog_neuro.ECoG {
             subject: %(subject)s,
             bands: [%(bands)s],
-            data_types: [%(data_types)s],
-            dim0: '%(dim0)s',
-            dim1: '%(dim1)s',
             which_set: 'train',
             center: %(center)s,
             level_classes: %(level_classes)s,
@@ -252,9 +249,6 @@ yaml_string = """!obj:pylearn2.train.Train {
                 'train' : !obj:pylearn2.datasets.ecog_neuro.ECoG {
                                 subject: %(subject)s,
                                 bands: [%(bands)s],
-                                data_types: [%(data_types)s],
-                                dim0: '%(dim0)s',
-                                dim1: '%(dim1)s',
                                 which_set: 'train',
                                 center: %(center)s,
                                 level_classes: %(level_classes)s,
@@ -267,9 +261,6 @@ yaml_string = """!obj:pylearn2.train.Train {
                 'valid' : !obj:pylearn2.datasets.ecog_neuro.ECoG {
                                 subject: %(subject)s,
                                 bands: [%(bands)s],
-                                data_types: [%(data_types)s],
-                                dim0: '%(dim0)s',
-                                dim1: '%(dim1)s',
                                 which_set: 'valid',
                                 center: %(center)s,
                                 level_classes: %(level_classes)s,
@@ -282,9 +273,6 @@ yaml_string = """!obj:pylearn2.train.Train {
                 'test' : !obj:pylearn2.datasets.ecog_neuro.ECoG {
                                 subject: %(subject)s,
                                 bands: [%(bands)s],
-                                data_types: [%(data_types)s],
-                                dim0: '%(dim0)s',
-                                dim1: '%(dim1)s',
                                 which_set: 'test',
                                 center: %(center)s,
                                 level_classes: %(level_classes)s,
