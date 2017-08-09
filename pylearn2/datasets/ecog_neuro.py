@@ -104,8 +104,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                         '-0.5_to_0.79_file_nobaseline.h5')
         else:
             raise ValueError
-        #filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
-        filename = os.path.join('/scratch2/scratchdirs/jlivezey/output/hdf5', filename)
+        filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
+        #filename = os.path.join('/scratch2/scratchdirs/jlivezey/output/hdf5', filename)
 
         rng = np.random.RandomState(seed)
 

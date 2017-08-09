@@ -16,8 +16,8 @@ import plotting
 
 rcParams.update({'figure.autolayout': True})
 
-def main(subject, bands, data_types, plot_folder, model_file_base='.pkl',
-         overwrite=False, dim0=0, dim1=None):
+def main(subject, bands, plot_folder, model_file_base='.pkl',
+         overwrite=False):
     fname_base = subject
     data_folder = os.path.join(plot_folder, 'data')
 
@@ -35,10 +35,7 @@ def main(subject, bands, data_types, plot_folder, model_file_base='.pkl',
 
     ds = ecog_neuro.ECoG(subject,
                          bands,
-                         data_types,
                          'train',
-                         dim0,
-                         dim1,
                          **kwargs)
     ec = ecog_neuro
     has_data = []
@@ -64,8 +61,7 @@ def main(subject, bands, data_types, plot_folder, model_file_base='.pkl',
     print overwrite, not os.path.exists(data_fname)
     if (not os.path.exists(data_fname) or overwrite):
         (c_ita, v_ita,
-         cv_ita, c_v_ita) = analysis.time_accuracy(subject, bands, data_types,
-                                                   dim0, dim1,
+         cv_ita, c_v_ita) = analysis.time_accuracy(subject, bands,
                                                    ec, kwargs_copy,
                                                    has_data)
         np.savez(data_fname, c_ita=c_ita, v_ita=v_ita,
@@ -80,8 +76,7 @@ def main(subject, bands, data_types, plot_folder, model_file_base='.pkl',
                               '_scv_time_indep.npz')
     if (not os.path.exists(data_fname) or overwrite):
         (sc_ita, sv_ita,
-         scv_ita, sc_v_ita) = analysis.time_accuracy(subject, bands, data_types,
-                                                     dim0, dim1,
+         scv_ita, sc_v_ita) = analysis.time_accuracy(subject, bands,
                                                      ec, kwargs_copy,
                                                      has_data)
         np.savez(data_fname, sc_ita=sc_ita, sv_ita=sv_ita,
@@ -107,11 +102,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
     parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31', 'gp33'], default='ec2')
     parser.add_argument('bands', type=str)
-    parser.add_argument('data_types', type=str)
     parser.add_argument('-p', '--plot_folder', type=str,
                         default=os.path.join(os.environ['HOME'], 'plots', 'ds'))
     parser.add_argument('-o', '--overwrite', action='store_true')
     args = parser.parse_args()
     
-    main(args.subject, args.bands, args.data_types, args.plot_folder,
+    main(args.subject, args.bands, args.plot_folder,
          overwrite=args.overwrite)
