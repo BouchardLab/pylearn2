@@ -446,7 +446,7 @@ def indx_dict2conf_mat(indices_dicts, y_dims):
     return c, v, cv
 
 
-def get_model_results(filename, model_folder, subject, bands, data_types, dim0, dim1, fold, kwargs):
+def get_model_results(filename, model_folder, subject, bands, fold, kwargs):
     from pylearn2.datasets import ecog_neuro
     kwargs = copy.deepcopy(kwargs)
     file_loc = os.path.join(model_folder, filename)
@@ -458,10 +458,8 @@ def get_model_results(filename, model_folder, subject, bands, data_types, dim0, 
     input_space = model.get_input_space()
     ec = ecog_neuro
 
-    ds = ec.ECoG(subject, bands, data_types,
+    ds = ec.ECoG(subject, bands, 
                  'train',
-                 dim0,
-                 dim1,
                  fold=fold,
                  **kwargs)
     ts = ds.get_test_set()

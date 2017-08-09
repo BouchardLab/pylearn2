@@ -16,9 +16,8 @@ import plotting
 
 rcParams.update({'figure.autolayout': True})
 
-def main(subject, bands, data_types, model_folders, plot_folder,
-         model_file_base='.pkl', overwrite=False, randomize_labels=False,
-         dim0=0, dim1=None):
+def main(subject, bands, model_folders, plot_folder,
+         model_file_base='.pkl', overwrite=False, randomize_labels=False):
     print(subject)
     print(model_folders)
     run = '_'.join([os.path.basename(f) for f in model_folders])
@@ -61,9 +60,6 @@ def main(subject, bands, data_types, model_folders, plot_folder,
                                                                                       model_folder, 
                                                                                       subject,
                                                                                       bands,
-                                                                                      data_types,
-                                                                                      dim0,
-                                                                                      dim1,
                                                                                       ii,
                                                                                       kwargs)
                 accuracy_dict[filename] = [1.-m for m in misclass]
@@ -84,10 +80,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
                     
         ds = ecog_neuro.ECoG(subject,
                              bands,
-                             data_types,
                              'train',
-                             dim0,
-                             dim1,
                              **kwargs)
         has_data = []
         for ii in range(len(ecog_E_lbls)):
@@ -136,10 +129,7 @@ def main(subject, bands, data_types, model_folders, plot_folder,
     # Clustering Plots
     ds = ecog_neuro.ECoG(subject,
                          bands,
-                         data_types,
                          'train',
-                         dim0,
-                         dim1,
                          **kwargs)
 
     cvs, labels, pmv, features = analysis.get_phonetic_feature_matrix()
@@ -238,12 +228,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make plots for an ECoG DNN model.')
     parser.add_argument('subject', choices=['ec2', 'ec9', 'gp31', 'gp33'], default='ec2')
     parser.add_argument('bands', type=str)
-    parser.add_argument('data_types', type=str)
     parser.add_argument('model_folder')
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
     parser.add_argument('-o', '--overwrite', action='store_true')
     args = parser.parse_args()
 
-    main(args.subject, args.bands, args.data_types, [args.model_folder],
+    main(args.subject, args.bands, [args.model_folder],
          args.plot_folder, overwrite=args.overwrite)
