@@ -6,7 +6,7 @@
 ##SBATCH -N 1
 #SBATCH --mem=12GB
 #SBATCH -t 10:00:00
-#SBATCH -J ec2_hg_t_a
+#SBATCH -J gp33_hg_a_a
 #SBATCH -o /scratch2/scratchdirs/jlivezey/output/%J.out
 
 cores=4
