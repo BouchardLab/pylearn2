@@ -269,3 +269,130 @@ def plot_correlations(subject):
         ax.set_xlabel('Lag (ms)')
         ax.set_ylabel(r'H$\gamma$-$\beta$ Corr. Coef.')
         fig.tight_layout()
+
+
+def save_hg_power(f, subject):
+    vsmc = np.concatenate([f['anatomy']['preCG'].value, f['anatomy']['postCG'].value])
+    vsmc_electrodes = np.zeros(256)
+    vsmc_electrodes[vsmc] = 1
+    
+    good_examples, good_channels = good_examples_and_channels(f['X0'].value)
+    good_channels = np.nonzero(vsmc_electrodes * good_channels)[0].tolist()
+    n_time = f['X0'].shape[-1]
+
+    good_examples = np.nonzero(good_examples)[0].tolist()
+    
+    cv_idxs, n_cv = get_cv_idxs(f['y'].value, good_examples)
+
+    hg_bands = np.logical_and(bands.chang_lab['cfs'] >= bands.neuro['min_freqs'][-1],
+                              bands.chang_lab['cfs'] <= bands.neuro['max_freqs'][-1])
+    hg_bands = np.nonzero(hg_bands)[0].tolist()
+    
+    power_data = np.zeros((len(hg_bands), n_cv, len(good_channels), n_time))
+    print(power_data.shape)
+    for ii, c in enumerate(hg_bands):
+        print(ii, c)
+        for jj, idxs in enumerate(cv_idxs):
+            power_data[ii, jj] = f['X{}'.format(c)][idxs][:, good_channels].mean(axis=0)
+    power_data = power_data.mean(axis=0)
+    np.savez(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                          '{}_hg_power.npz'.format(subject)), **{'power_data': power_data})
+
+def plot_power_correlations(subject):
+    d = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                '{}_correlations.npz'.format(subject)))
+    xcorr_time = d['xcorr_time']
+
+    fig, (ax0, ax1, ax2, ax3) = plt.subplots(4, figsize=(5, 10))
+
+    n_time = xcorr_time.shape[0]
+    corr_data = np.ravel(xcorr_time[n_time // 2])
+    ax0.hist(corr_data, bins=50, histtype='step', fill=False, color='k', lw=2)
+    ax0.set_ylabel('Counts')
+    ax0.set_xlabel(r'H$\gamma$-$\beta$ Correlation (R)')
+    
+    power_data = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                          '{}_hg_power.npz'.format(subject)))['power_data']
+    power_data_not_flat = np.mean(power_data[..., hg_power_s], axis=-1)
+    power_data = power_data_not_flat.ravel() 
+    ax1.hist(power_data, bins=50, histtype='step', fill=False, color='k', lw=2)
+    ax1.set_ylabel('Counts')
+    ax1.set_xlabel(r'Average H$\gamma$ Power (z-score)')
+    
+    pos = power_data >= 0
+    ax2.scatter(power_data[pos], corr_data[pos], marker='.', c='k', alpha=.1)
+    ax2.set_ylabel(r'H$\gamma$-$\beta$ Correlation (R)')
+    ax2.set_xlabel(r'Average H$\gamma$ Power (z-score)')
+    slope, intercept, r_value, p_value, std_err = sp.stats.linregress(power_data[pos], corr_data[pos])
+    print('positive: slope {}, intercept {}, R, {}, p {}, std_err {}'.format(slope, intercept,
+                                                                             r_value, p_value, std_err))
+    x = np.linspace(0, power_data.max(), 1000)
+    y = slope * x + intercept
+    yp = 0
+    xp = -intercept / slope
+    cutoff = xp
+    ax2.plot(x, y, 'r--')
+    ax3.plot(x, y, 'r--')
+    ax2.plot([0, xp], [0, 0], 'k--')
+    ax2.plot([xp, xp], [corr_data.min(), 0], 'k--')
+    ax2.set_ylim(corr_data[pos].min(), corr_data[pos].max())
+    ax2.set_xlim(0, None)
+    ax1.axvline(xp, ls='--', color='k')
+    
+    neg = power_data < 0
+    ax3.scatter(power_data, corr_data, marker='.', c='k', alpha=.1)
+    ax3.set_ylabel(r'H$\gamma$-$\beta$ Correlation (R)')
+    ax3.set_xlabel(r'Average H$\gamma$ Power (z-score)')
+    slope, intercept, r_value, p_value, std_err = sp.stats.linregress(power_data[neg], corr_data[neg])
+    print('negative: slope {}, intercept {}, R, {}, p {}, std_err {}'.format(slope, intercept,
+                                                                             r_value, p_value, std_err))
+    x = np.linspace(power_data.min(), 0, 1000)
+    y = slope * x + intercept
+    ax3.plot(x, y, 'r--')
+    ax3.set_xlim(power_data.min(), -power_data.min())
+    
+    fig.tight_layout()
+    plt.savefig(os.path.join(os.environ['HOME'], 'plots/xfreq',
+                             '{}_hg_b_power_correlations.pdf'.format(subject)))
+    
+    np.savez(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                          '{}_hg_power_cutoff.npz'.format(subject)), **{'cutoff': xp,
+                                                                        'cv_channels': power_data_not_flat >= cutoff})
+
+def plot_resolved_power_correlations(subject):
+    cv_channels = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                          '{}_hg_power_cutoff.npz'.format(subject)))['cv_channels']
+
+    d = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                '{}_correlations.npz'.format(subject)))
+    xcorr_freq = d['xcorr_freq']
+    print(xcorr_freq.shape)
+
+    fig, ax = plt.subplots(1, figsize=(5, 5))
+
+    xcorr_freq_high = xcorr_freq[:, cv_channels]
+    print(xcorr_freq_high.shape)
+    print(cv_channels.sum())
+    mean = xcorr_freq_high.mean(axis=(1))
+    sem = xcorr_freq_high.std(axis=(1)) / np.sqrt(np.prod(xcorr_freq_high.shape[1]))
+    ax.plot(bands.chang_lab['cfs'], mean, color='r')
+    ax.fill_between(bands.chang_lab['cfs'], mean-sem, mean+sem, alpha=.5, color='r')
+    ax.set_xlim(0, 70)
+    ax.set_ylim(-.2, None)
+    ax.set_xlabel('Freq. (Hz)')
+    ax.set_ylabel(r'H$\gamma$ Corr. Coef.')
+    
+    xcorr_freq_low = xcorr_freq[:, ~cv_channels]
+    mean = xcorr_freq_low.mean(axis=(1))
+    sem = xcorr_freq_low.std(axis=(1)) / np.sqrt(np.prod(xcorr_freq_low.shape[1]))
+    ax.plot(bands.chang_lab['cfs'], mean, color='k')
+    ax.fill_between(bands.chang_lab['cfs'], mean-sem, mean+sem, alpha=.5, color='k')
+    ax.set_xlim(0, 70)
+    ax.set_ylim(-.2, None)
+    ax.set_xlabel('Freq. (Hz)')
+    ax.set_ylabel(r'H$\gamma$ Corr. Coef.')
+    
+    ax.set_xlim(0, 80)
+    fig.tight_layout()
+    plt.savefig(os.path.join(os.environ['HOME'], 'plots/xfreq',
+                             '{}_resolved_hg_correlations.pdf'.format(subject)))
