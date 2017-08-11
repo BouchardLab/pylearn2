@@ -6,9 +6,6 @@ from scipy import stats
 from ecog.utils import bands
 
 
-folder = os.path.join(os.environ['HOME'],'Development/data/ecog/AA_ff/')
-plot_folder = os.path.join('xfreq_plots')
-
 plot_time = np.array([0, .5+.6])
 plot_idx = (plot_time * 200.).astype(int)
 s = slice(*plot_idx.tolist())
@@ -72,6 +69,7 @@ def get_cv_idxs(y, good_examples):
     n_cv = keep_cvs.sum()
 
     cv_idxs = [sorted(list(set(idxs).intersection(good_examples))) for idxs in cv_idxs]
+    cv_idxs = [idxs for idxs in cv_idxs if len(idxs) > 0]
     return cv_idxs, n_cv
 
 
@@ -219,10 +217,8 @@ def plot_power(subject, channel, cv, axes, vmin=None, vmax=None):
     im = ax0.imshow(power_data[::-1, s], interpolation='nearest', cmap='afmhot', aspect='auto', vmin=vmin, vmax=vmax)
     ax0.set_yticks(np.arange(0, 40, 5))
     ax0.set_yticklabels(bands.chang_lab['cfs'][::-5].astype(int))
-    #ax0.set_xticks([0, 100, 258])
-    #ax0.set_xticklabels([-500, 0, 800])
     ax0.set_title('{}_{}_{}'.format(subject, channel, cv))
-    ax0.set_ylabel('Freq.')
+    ax0.set_ylabel('Freq. (Hz)')
     ax0.set_xlabel('Time (ms)')
     
     hg_bands = np.logical_and(bands.chang_lab['cfs'] >= bands.neuro['min_freqs'][-1],
@@ -252,7 +248,7 @@ def plot_power(subject, channel, cv, axes, vmin=None, vmax=None):
     for ax in [ax0, ax1]:
         ax.set_xticks([0, 100, plot_idx[-1]])
         ax.set_xticklabels([-500, 0, int(1000 * plot_time[-1])-500])
-    ax1.set_ylabel('Normalized Power')
+    ax1.set_ylabel('Normalized Amplitude')
     ax1.set_xlabel('Time (ms)')
     ax1.set_xlim([0, plot_idx[-1]])
 
@@ -267,7 +263,6 @@ def plot_correlations(subject, ax, kind='freq'):
         mean = xcorr_freq.mean(axis=(1, 2))
         sem = xcorr_freq.std(axis=(1, 2)) / np.sqrt(np.prod(xcorr_freq.shape[1:]))
         idxs = bands.chang_lab['cfs'] <= 40
-        print(idxs)
         x = bands.chang_lab['cfs'][idxs]
         mean = mean[idxs]
         sem = sem[idxs]
@@ -350,37 +345,39 @@ def plot_power_correlations(subject, ax, num):
                                                                         'cv_channels': power_data_not_flat >= cutoff})
 
 
-def plot_resolved_power_correlations(subject):
-    cv_channels = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
-                          '{}_hg_power_cutoff.npz'.format(subject)))['cv_channels']
+def plot_resolved_power_correlations(subjects, ax):
+    if not isinstance(subjects, list):
+        subjets = [subjects]
 
-    d = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
-                '{}_correlations.npz'.format(subject)))
-    xcorr_freq = d['xcorr_freq']
+    for subject in subjects:
+        cv_channels = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                              '{}_hg_power_cutoff.npz'.format(subject)))['cv_channels']
 
-    fig, ax = plt.subplots(1, figsize=(5, 5))
+        d = np.load(os.path.join(os.environ['HOME'], 'plots/xfreq/data',
+                    '{}_correlations.npz'.format(subject)))
+        xcorr_freq = d['xcorr_freq']
 
-    xcorr_freq_high = xcorr_freq[:, cv_channels]
-    mean = xcorr_freq_high.mean(axis=(1))
-    sem = xcorr_freq_high.std(axis=(1)) / np.sqrt(np.prod(xcorr_freq_high.shape[1]))
-    ax.plot(bands.chang_lab['cfs'], mean, color='r')
-    ax.fill_between(bands.chang_lab['cfs'], mean-sem, mean+sem, alpha=.5, color='r')
-    ax.set_xlim(0, 70)
-    ax.set_ylim(-.2, None)
-    ax.set_xlabel('Freq. (Hz)')
-    ax.set_ylabel(r'H$\gamma$ Corr. Coef.')
-    
-    xcorr_freq_low = xcorr_freq[:, ~cv_channels]
-    mean = xcorr_freq_low.mean(axis=(1))
-    sem = xcorr_freq_low.std(axis=(1)) / np.sqrt(np.prod(xcorr_freq_low.shape[1]))
-    ax.plot(bands.chang_lab['cfs'], mean, color='k')
-    ax.fill_between(bands.chang_lab['cfs'], mean-sem, mean+sem, alpha=.5, color='k')
-    ax.set_xlim(0, 70)
-    ax.set_ylim(-.2, None)
-    ax.set_xlabel('Freq. (Hz)')
-    ax.set_ylabel(r'H$\gamma$ Corr. Coef.')
-    
-    ax.set_xlim(0, 80)
-    fig.tight_layout()
-    plt.savefig(os.path.join(os.environ['HOME'], 'plots/xfreq',
-                             '{}_resolved_hg_correlations.pdf'.format(subject)))
+        xcorr_freq_high = xcorr_freq[:, cv_channels]
+
+        idxs = bands.chang_lab['cfs'] <= 40
+        x = bands.chang_lab['cfs'][idxs]
+        mean = xcorr_freq_high.mean(axis=(1))
+        sem = xcorr_freq_high.std(axis=(1)) / np.sqrt(np.prod(xcorr_freq_high.shape[1]))
+        mean = mean[idxs]
+        sem = sem[idxs]
+        ax.plot(x, mean, color='r')
+        ax.fill_between(x, mean-sem, mean+sem, alpha=.5, color='r')
+        ax.set_xlabel('Freq. (Hz)')
+        ax.set_ylabel(r'H$\gamma$ Corr. Coef.')
+        
+        xcorr_freq_low = xcorr_freq[:, ~cv_channels]
+        mean = xcorr_freq_low.mean(axis=(1))
+        sem = xcorr_freq_low.std(axis=(1)) / np.sqrt(np.prod(xcorr_freq_low.shape[1]))
+        mean = mean[idxs]
+        sem = sem[idxs]
+        ax.plot(x, mean, color='k')
+        ax.fill_between(x, mean-sem, mean+sem, alpha=.5, color='k')
+        ax.set_xlabel('Freq. (Hz)')
+        ax.set_ylabel(r'H$\gamma$ Corr. Coef.')
+        ax.set_xlim(0, 40)
+        ax.set_ylim(-.2, .4)
