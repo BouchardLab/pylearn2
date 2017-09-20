@@ -462,6 +462,7 @@ def get_model_results(filename, model_folder, subject, bands, fold, kwargs):
                  'train',
                  fold=fold,
                  **kwargs)
+    print(ds.y)
     ts = ds.get_test_set()
     acts = model.fprop(X_sym, return_all=True)
     y_hat = acts[-1]

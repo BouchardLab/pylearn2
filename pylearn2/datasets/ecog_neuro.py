@@ -140,7 +140,8 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                     train_idx = order[train_start:train_end]
                 else:
                     train_idx = np.hstack((order[train_start:],order[:train_end]))
-                assert train_idx.size == n_train, (train_start, train_end)
+                assert train_idx.size == n_train, (train_start, train_end,
+                        train_idx.size, order.size, n_train, num_idx, fold)
 
                 if valid_end > valid_start:
                     valid_idx = order[valid_start:valid_end]

@@ -106,6 +106,13 @@ def make_last_layer_and_cost(kwargs):
         for ii in xrange(0, count):
             out_cost_string += wd_string % {'name': 'f'+str(ii),
                                             'wd': this_dict['wd']}
+
+    # Checks for single layer models
+    if 'default_input_include_prob' not in this_dict:
+        this_dict['default_input_include_prob'] = this_dict['input_dropout']
+    if 'default_input_scale' not in this_dict:
+        this_dict['default_input_scale'] = this_dict['input_scale']
+
     out_cost_string += end_cost_string
     out_cost_string = out_cost_string % this_dict
     return out_layer_string, out_cost_string

@@ -26,13 +26,13 @@ def main(subject, bands, model_folders, plot_folder,
     files = [sorted([f for f in os.listdir(model_folder)
                      if model_file_base in f])
              for model_folder in model_folders]
+    print(files)
     
     with h5py.File(os.path.join(os.environ['PYLEARN2_DATA_PATH'],
                                 'ecog/EC2_CV.h5'), 'r') as f:
         ecog_E_lbls = f['Descriptors']['Event_ELbls'].value
 
-    kwargs = {
-              'consonant_prediction': False,
+    kwargs = {'consonant_prediction': False,
               'vowel_prediction': False,
               'randomize_labels': randomize_labels}
 
@@ -232,7 +232,9 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--plot_folder', type=str,
             default=os.path.join(os.environ['HOME'], 'plots', 'model'))
     parser.add_argument('-o', '--overwrite', action='store_true')
+    parser.add_argument('-r', '--randomize_labels', action='store_true')
     args = parser.parse_args()
 
     main(args.subject, args.bands, [args.model_folder],
-         args.plot_folder, overwrite=args.overwrite)
+         args.plot_folder, overwrite=args.overwrite,
+         randomize_labels=args.randomize_labels)
