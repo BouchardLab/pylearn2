@@ -72,7 +72,7 @@ ax0 = f.add_axes([l_edge, bot_edge, width_cm, height])
 
 height_d = 1 - bot_edge - v_gap - height - top_edge
 ax1 = f.add_axes([l_edge, bot_edge + height + v_gap, width_cm, height_d])
-threshold = .3
+threshold = .25
 ax1.plot([0, 1e10], [threshold, threshold], '--', c='k')
 
 z, r = create_dendrogram(yhs, threshold, ax=ax1, labels=cvs)
@@ -145,7 +145,7 @@ c.ax.tick_params(labelsize=8)
 #c.set_lim([0, .12])
 #ax4.set_ticklabels([0, .12])
 
-max_d = .65
+max_d = .45
 for ax in [ax1, ax3]:
     ax.set_ylim(None, max_d)
 ax1.set_yticks([0, max_d])
@@ -158,3 +158,4 @@ f.text(.95, .7, 'D', fontsize=10)
 
 
 plt.savefig('/home/jesse/Downloads/hierarchy.pdf')
+plt.savefig('/home/jesse/Downloads/hierarchy.png')

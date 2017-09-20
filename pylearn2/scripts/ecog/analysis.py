@@ -226,7 +226,7 @@ def svd_accuracy(file_name, ec, kwargs,
                 va[fold, ii, jj] = np.array(v_results).mean()
     return pa, ma, va, u_s, s_s, v_s, init_list, nsvs_list
 
-def time_accuracy(subject, bands, data_types, dim0, dim1, ec, kwargs, has_data,
+def time_accuracy(subject, bands, ec, kwargs, has_data,
                   folds=10):
     """
     Classify data independently at each point in time.
@@ -236,7 +236,7 @@ def time_accuracy(subject, bands, data_types, dim0, dim1, ec, kwargs, has_data,
         Xp = X.reshape(n_ex, 1, -1, 258)
         return np.transpose(Xp, (0, 1, 3, 2))
 
-    ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1, **kwargs)
+    ds = ec.ECoG(subject, bands, 'train', **kwargs)
     X_shape = ds.get_topological_view().shape
     n_time = 258
     ca = np.zeros((10, n_time))
@@ -246,16 +246,16 @@ def time_accuracy(subject, bands, data_types, dim0, dim1, ec, kwargs, has_data,
     for fold in range(folds):
         kwargs_copy = copy.deepcopy(kwargs)
         print('fold: {}'.format(fold))
-        cv_ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1,
+        cv_ds = ec.ECoG(subject, bands, 'train',
                         fold=fold,
                         **kwargs_copy)
         kwargs_copy['consonant_prediction'] = True
-        c_ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1,
+        c_ds = ec.ECoG(subject, bands, 'train',
                      fold=fold,
                      **kwargs_copy)
         kwargs_copy['consonant_prediction'] = False
         kwargs_copy['vowel_prediction'] = True
-        v_ds = ec.ECoG(subject, bands, data_types, 'train', dim0, dim1,
+        v_ds = ec.ECoG(subject, bands, 'train',
                      fold=fold,
                      **kwargs_copy)
         # Consonants

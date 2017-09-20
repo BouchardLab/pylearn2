@@ -93,8 +93,8 @@ plt.xlim([-.06, .65])
 #plt.plot(0,0, '-', c='red', label='Neural Data')
 #plt.legend(loc='best', prop={'size': 20})
 plt.xlabel('Correlation Coefficient')
-plt.savefig('state_correlation.png')
 plt.savefig('/home/jesse/Downloads/state_correlation.pdf')
+plt.savefig('/home/jesse/Downloads/state_correlation.png')
 
 """
 positions = [1-.375, 1+.375, 3-.375, 3+.375, 5-.375, 5+.375]
