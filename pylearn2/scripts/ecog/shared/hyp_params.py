@@ -4,7 +4,7 @@ from pylearn2.datasets import ecog_neuro
 
 def get_params(json_file, subject=None, bands=None,
                frac_train=None,
-               scratch=None, randomize_labels=None):
+               scratch=None, randomize_labels=None, pca=None):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
@@ -18,6 +18,7 @@ def get_params(json_file, subject=None, bands=None,
                     'randomize_labels': False,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
+                    'pca': False,
                     'two_headed': False,
                     'audio_features': False,
                     'center': True,
@@ -37,13 +38,16 @@ def get_params(json_file, subject=None, bands=None,
         fixed_params['scratch'] = scratch
     if randomize_labels is not None:
         fixed_params['randomize_labels'] = randomize_labels
+    if pca is not None:
+        fixed_params['pca'] = pca
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
     
     ds = ecog_neuro.ECoG(fixed_params['subject'],
                          fixed_params['bands'],
-                         'train')
+                         'train',
+                         pca=fixed_params['pca'])
     X_shape = ds.get_topological_view().shape
     n_cvs = len(set(ds.y.ravel()))
 

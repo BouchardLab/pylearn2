@@ -4,17 +4,13 @@ ECoG dataset.
 """
 __authors__ = "Jesse Livezey"
 
-import numpy as N
-np = N
+import numpy as np
 import scipy as sp
 import h5py, os
 from theano.compat.six.moves import xrange
-from pylearn2.datasets import hdf5, dense_design_matrix
-from pylearn2.datasets import control
-from pylearn2.datasets import cache
+from pylearn2.datasets import dense_design_matrix
 from pylearn2.utils import serial
 from pylearn2.utils.rng import make_np_rng
-from sklearn.decomposition import PCA
 
 
 _split = {'train': .8, 'valid': .1, 'test': .1}
@@ -67,13 +63,17 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  frac_train=1.,
                  y_labels=57,
                  min_cvs=10,
-                 condense=True):
+                 condense=True,
+                 pca=False):
         self.args = locals()
         subject = subject.lower()
 
         possible_subjects = ['ec2', 'ec9', 'gp31', 'gp33']
         possible_bands = ['alpha', 'theta', 'beta', 'high beta',
                           'gamma', 'high gamma']
+
+        if pca:
+            assert not randomize_labels
 
 
         if which_set not in ['train', 'valid', 'test']:
@@ -93,6 +93,11 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         if subject == 'ec2':
             filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
                         '-0.5_to_0.79_file_nobaseline.h5')
+            """
+            ratio file
+            filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
+                        '-0.5_to_0.79_ratio_nobaseline.h5')
+            """
         elif subject == 'ec9':
             filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_avg_align_window_' +
                         '-0.5_to_0.79_file_nobaseline.h5')
@@ -112,7 +117,15 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         filename = serial.preprocess(filename)
 
         with h5py.File(filename,'r') as f:
-            Xs = [f['X{}'.format(b)].value for b in bands]
+            if pca:
+                X_train = [f['pca/{}/X{}train'.format(fold, b)].value for b in bands]
+                X_valid = [f['pca/{}/X{}valid'.format(fold, b)].value for b in bands]
+                X_test = [f['pca/{}/X{}test'.format(fold, b)].value for b in bands]
+                y_train = np.squeeze(f['pca/{}/ytrain'.format(fold)].value)
+                y_valid = np.squeeze(f['pca/{}/yvalid'.format(fold)].value)
+                y_test = np.squeeze(f['pca/{}/ytest'.format(fold)].value)
+            else:
+                Xs = [f['X{}'.format(b)].value for b in bands]
             y = f['y'].value.astype(int)
 
         def split_indices(indices, frac_train, min_cvs):
@@ -182,8 +195,9 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             assert len(union)-1 == max_val
             assert len(tr)+len(va)+len(te)+len(ex) == len(union)
 
-        n_examples = Xs[0].shape[0]
-        assert all(n_examples == X.shape[0] for X in Xs)
+        if not pca:
+            n_examples = Xs[0].shape[0]
+            assert all(n_examples == X.shape[0] for X in Xs)
         self.present_cvs = np.zeros(y_labels, dtype=int)
         if level_classes:
             n_classes = y_labels
@@ -207,7 +221,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 test_idx += te
                 extra_idx += ex
         else:
-            indices = range(n_examples)
+            indices = range(y.shape[0])
             train_idx, valid_idx, test_idx, extra_idx = split_indices(indices, frac_train, min_cvs)
 
         check_indices(train_idx, valid_idx, test_idx, extra_idx)
@@ -223,12 +237,13 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             for X in Xs:
                 X[in_idx] = X[in_idx][order]
 
-        X_train = [X[train_idx] for X in Xs]
-        X_valid = [X[valid_idx] for X in Xs]
-        X_test = [X[test_idx] for X in Xs]
-        y_train = y[train_idx]
-        y_valid = y[valid_idx]
-        y_test = y[test_idx]
+        if not pca:
+            X_train = [X[train_idx] for X in Xs]
+            X_valid = [X[valid_idx] for X in Xs]
+            X_test = [X[test_idx] for X in Xs]
+            y_train = y[train_idx]
+            y_valid = y[valid_idx]
+            y_test = y[test_idx]
 
         X_train_tmp = []
         X_valid_tmp = []

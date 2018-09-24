@@ -450,19 +450,18 @@ def get_model_results(filename, model_folder, subject, bands, fold, kwargs):
     from pylearn2.datasets import ecog_neuro
     kwargs = copy.deepcopy(kwargs)
     file_loc = os.path.join(model_folder, filename)
+    print(file_loc)
     model = serial.load(file_loc)
     X_sym = model.get_input_space().make_theano_batch()
     target_space = model.get_target_space()
     y_inpt = target_space.make_theano_batch()
     y_sym = y_inpt
     input_space = model.get_input_space()
-    ec = ecog_neuro
 
-    ds = ec.ECoG(subject, bands, 
-                 'train',
-                 fold=fold,
-                 **kwargs)
-    print(ds.y)
+    ds = ecog_neuro.ECoG(subject, bands, 
+                         'train',
+                         fold=fold,
+                         **kwargs)
     ts = ds.get_test_set()
     acts = model.fprop(X_sym, return_all=True)
     y_hat = acts[-1]

@@ -107,6 +107,7 @@ def main(subject, bands, model_folders, plot_folder,
      p_accuracy, m_accuracy) = accuracy
 
     if cv_accuracy is not None:
+        print('cv: ',cv_accuracy)
         print('cv mean: ',cv_accuracy.mean())
         print('cv std: ',cv_accuracy.std())
     if c_accuracy is not None:
