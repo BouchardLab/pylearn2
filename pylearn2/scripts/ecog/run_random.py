@@ -5,8 +5,8 @@ from hyp_params import get_params, make_dir
 import numpy as np
 
 def main(seed, json_file, subject, scratch, bands, frac_train,
-         randomize_labels=False, pca=False, avg_ff=False, avg_1f=False,
-         ds=False):
+         randomize_labels='False', pca='False', avg_ff='False', avg_1f='False',
+         ds='False'):
     randomize_labels = str(randomize_labels)
     if randomize_labels.lower() == 'false':
         randomize_labels = False
