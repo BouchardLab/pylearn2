@@ -107,7 +107,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         else:
             if avg_1f:
                 if subject == 'ec2':
-                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' + 
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' +
                                 '-0.5_to_0.79_none_AA_avg_1f.h5')
                 elif subject == 'ec9':
                     filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_ff_align_window_' +
@@ -120,10 +120,10 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                                 '-0.5_to_0.79_none_AA_avg_1f.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/AA_ff', filename)
+                filename = os.path.join('${PYLEARN2_DATA_PATH}', filename)
             elif avg_ff:
                 if subject == 'ec2':
-                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' + 
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' +
                                 '-0.5_to_0.79_none_AA_avg_ff.h5')
                 elif subject == 'ec9':
                     filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_ff_align_window_' +
@@ -136,14 +136,14 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                                 '-0.5_to_0.79_none_AA_avg_ff.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/AA_ff', filename)
+                filename = os.path.join('${PYLEARN2_DATA_PATH}', filename)
             else:
                 if subject == 'ec2':
-                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' +
                                 '-0.5_to_0.79_file_nobaseline.h5')
                     """
                     ratio file
-                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' +
                                 '-0.5_to_0.79_ratio_nobaseline.h5')
                     """
                 elif subject == 'ec9':
@@ -157,7 +157,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                                 '-0.5_to_0.79_file_nobaseline.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
+                filename = os.path.join('${PYLEARN2_DATA_PATH}', filename)
         #filename = os.path.join('/scratch2/scratchdirs/jlivezey/output/hdf5', filename)
 
         rng = np.random.RandomState(seed)
@@ -307,7 +307,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
             X_valid_tmp.append(X_valid[ii].reshape(n_ex,-1))
             n_ex = X_test[ii].shape[0]
             X_test_tmp.append(X_test[ii].reshape(n_ex,-1))
-        
+
         X_train = np.hstack(X_train_tmp)
         X_valid = np.hstack(X_valid_tmp)
         X_test = np.hstack(X_test_tmp)
@@ -333,7 +333,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
         topo_view = topo_view[order]
         y_final = y_final[order]
         self.y_final = y_final
-        
+
         if condense and not (vowel_prediction or consonant_prediction):
             available_indxs = sorted(set(y_final))
             curr_idx = 0
