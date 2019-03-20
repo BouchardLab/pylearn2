@@ -20,7 +20,7 @@ from theano import config
 from theano.gof.op import get_debug_values
 from theano.sandbox.rng_mrg import MRG_RandomStreams
 from theano.sandbox.cuda.dnn import dnn_available, dnn_pool
-from theano.tensor.signal.downsample import max_pool_2d
+from theano.tensor.signal.pool import pool_2d
 import theano.tensor as T
 
 from pylearn2.compat import OrderedDict
@@ -3509,7 +3509,7 @@ def max_pool(bc01, pool_shape, pool_stride, image_shape, try_dnn=True):
         use_dnn = False
 
     if pool_shape == pool_stride and not use_dnn:
-        mx = max_pool_2d(bc01, pool_shape, False)
+        mx = pool_2d(bc01, pool_shape, False)
         mx.name = 'max_pool(' + name + ')'
         return mx
 
