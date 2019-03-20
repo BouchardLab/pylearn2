@@ -4,7 +4,8 @@ from pylearn2.datasets import ecog_neuro
 
 def get_params(json_file, subject=None, bands=None,
                frac_train=None,
-               scratch=None, randomize_labels=None, pca=None):
+               scratch=None, randomize_labels=None, pca=None,
+               avg_ff=None, avg_1f=None, ds=None):
 
     fixed_params = {'train_set': 'train',
                     'subject': 'EC2',
@@ -19,6 +20,9 @@ def get_params(json_file, subject=None, bands=None,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
                     'pca': False,
+                    'avg_ff': False,
+                    'avg_1f': False,
+                    'ds': False,
                     'two_headed': False,
                     'audio_features': False,
                     'center': True,
@@ -40,16 +44,25 @@ def get_params(json_file, subject=None, bands=None,
         fixed_params['randomize_labels'] = randomize_labels
     if pca is not None:
         fixed_params['pca'] = pca
+    if avg_ff is not None:
+        fixed_params['avg_ff'] = avg_ff
+    if avg_1f is not None:
+        fixed_params['avg_1f'] = avg_1f
+    if ds is not None:
+        fixed_params['ds'] = ds
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
     
-    ds = ecog_neuro.ECoG(fixed_params['subject'],
+    dset = ecog_neuro.ECoG(fixed_params['subject'],
                          fixed_params['bands'],
                          'train',
-                         pca=fixed_params['pca'])
-    X_shape = ds.get_topological_view().shape
-    n_cvs = len(set(ds.y.ravel()))
+                         pca=fixed_params['pca'],
+                         avg_ff=fixed_params['avg_ff'],
+                         avg_1f=fixed_params['avg_1f'],
+                         ds=fixed_params['ds'])
+    X_shape = dset.get_topological_view().shape
+    n_cvs = len(set(dset.y.ravel()))
 
     out_dim = n_cvs
     if fixed_params['consonant_prediction']:

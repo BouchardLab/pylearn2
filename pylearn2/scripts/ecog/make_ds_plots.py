@@ -25,13 +25,8 @@ def main(subject, bands, plot_folder, model_file_base='.pkl',
                                 'Development/data/ecog/EC2_CV.h5'), 'r') as f:
         ecog_E_lbls = f['Descriptors']['Event_ELbls'].value
 
-    kwargs = {'move': .1,
-              'center': True,
-              'level_classes': True,
-              'consonant_prediction': False,
-              'vowel_prediction': False,
-              'two_headed': False,
-              'randomize_labels': False}
+    kwargs = {'consonant_prediction': False,
+              'vowel_prediction': False}
 
     ds = ecog_neuro.ECoG(subject,
                          bands,

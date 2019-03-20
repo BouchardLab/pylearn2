@@ -64,17 +64,25 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                  y_labels=57,
                  min_cvs=10,
                  condense=True,
-                 pca=False):
+                 pca=False,
+                 audio=False,
+                 avg_ff=False,
+                 avg_1f=False,
+                 ds=False):
         self.args = locals()
         subject = subject.lower()
 
         possible_subjects = ['ec2', 'ec9', 'gp31', 'gp33']
-        possible_bands = ['alpha', 'theta', 'beta', 'high beta',
+        possible_bands = ['alpha', 'theta', 'beta',
                           'gamma', 'high gamma']
 
         if pca:
             assert not randomize_labels
 
+        if ds:
+            ds = 'ds'
+        else:
+            ds = ''
 
         if which_set not in ['train', 'valid', 'test']:
             raise ValueError(
@@ -90,26 +98,66 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                 bands = [bands]
         assert all(b in possible_bands for b in bands)
 
-        if subject == 'ec2':
-            filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
-                        '-0.5_to_0.79_file_nobaseline.h5')
-            """
-            ratio file
-            filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
-                        '-0.5_to_0.79_ratio_nobaseline.h5')
-            """
-        elif subject == 'ec9':
-            filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_avg_align_window_' +
-                        '-0.5_to_0.79_file_nobaseline.h5')
-        elif subject == 'gp31':
-            filename = ('GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_AA_avg_align_window_' +
-                        '-0.5_to_0.79_file_nobaseline.h5')
-        elif subject == 'gp33':
-            filename = ('GP33_blocks_1_5_30_CV_AA_avg_align_window_' +
-                        '-0.5_to_0.79_file_nobaseline.h5')
+        if audio:
+            if subject == 'ec2':
+                filename = ('audio_EC2_CV_mcep.h5')
+                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
+            else:
+                raise ValueError
         else:
-            raise ValueError
-        filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
+            if avg_1f:
+                if subject == 'ec2':
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' + 
+                                '-0.5_to_0.79_none_AA_avg_1f.h5')
+                elif subject == 'ec9':
+                    filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_ff_align_window_' +
+                                '-0.5_to_0.79_none_AA_avg_1f.h5')
+                elif subject == 'gp31':
+                    filename = ('GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_AA_ff_align_window_' +
+                                '-0.5_to_0.79_none_AA_avg_1f.h5')
+                elif subject == 'gp33':
+                    filename = ('GP33_blocks_1_5_30_CV_AA_ff_align_window_' +
+                                '-0.5_to_0.79_none_AA_avg_1f.h5')
+                else:
+                    raise ValueError
+                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/AA_ff', filename)
+            elif avg_ff:
+                if subject == 'ec2':
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' + 
+                                '-0.5_to_0.79_none_AA_avg_ff.h5')
+                elif subject == 'ec9':
+                    filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_ff_align_window_' +
+                                '-0.5_to_0.79_none_AA_avg_ff.h5')
+                elif subject == 'gp31':
+                    filename = ('GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_AA_ff_align_window_' +
+                                '-0.5_to_0.79_none_AA_avg_ff.h5')
+                elif subject == 'gp33':
+                    filename = ('GP33_blocks_1_5_30_CV_AA_ff_align_window_' +
+                                '-0.5_to_0.79_none_AA_avg_ff.h5')
+                else:
+                    raise ValueError
+                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/AA_ff', filename)
+            else:
+                if subject == 'ec2':
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
+                                '-0.5_to_0.79_file_nobaseline.h5')
+                    """
+                    ratio file
+                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' + 
+                                '-0.5_to_0.79_ratio_nobaseline.h5')
+                    """
+                elif subject == 'ec9':
+                    filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_avg_align_window_' +
+                                '-0.5_to_0.79_file_nobaseline.h5')
+                elif subject == 'gp31':
+                    filename = ('GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_AA_avg_align_window_' +
+                                '-0.5_to_0.79_file_nobaseline.h5')
+                elif subject == 'gp33':
+                    filename = ('GP33_blocks_1_5_30_CV_AA_avg_align_window_' +
+                                '-0.5_to_0.79_file_nobaseline.h5')
+                else:
+                    raise ValueError
+                filename = os.path.join('${PYLEARN2_DATA_PATH}/ecog/hdf5', filename)
         #filename = os.path.join('/scratch2/scratchdirs/jlivezey/output/hdf5', filename)
 
         rng = np.random.RandomState(seed)
@@ -118,15 +166,19 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
 
         with h5py.File(filename,'r') as f:
             if pca:
-                X_train = [f['pca/{}/X{}train'.format(fold, b)].value for b in bands]
-                X_valid = [f['pca/{}/X{}valid'.format(fold, b)].value for b in bands]
-                X_test = [f['pca/{}/X{}test'.format(fold, b)].value for b in bands]
+                X_train = [f['pca/{}/X{}{}train'.format(fold, ds, b)].value for b in bands]
+                X_valid = [f['pca/{}/X{}{}valid'.format(fold, ds, b)].value for b in bands]
+                X_test = [f['pca/{}/X{}{}test'.format(fold, ds, b)].value for b in bands]
                 y_train = np.squeeze(f['pca/{}/ytrain'.format(fold)].value)
                 y_valid = np.squeeze(f['pca/{}/yvalid'.format(fold)].value)
                 y_test = np.squeeze(f['pca/{}/ytest'.format(fold)].value)
+            elif audio:
+                Xs = [f['X'].value]
             else:
-                Xs = [f['X{}'.format(b)].value for b in bands]
+                Xs = [f['X{}{}'.format(ds, b)].value for b in bands]
             y = f['y'].value.astype(int)
+            if audio:
+                y = y.argmax(axis=1)
 
         def split_indices(indices, frac_train, min_cvs):
             """
