@@ -4,11 +4,31 @@ from run_folds import get_result
 from hyp_params import get_params, make_dir
 import numpy as np
 
-def main(seed, json_file=None):
+def main(seed, json_file, subject, scratch, bands, frac_train,
+         randomize_labels=False, pca=False, avg_ff=False, avg_1f=False,
+         ds=False):
+    randomize_labels = str(randomize_labels)
+    if randomize_labels.lower() == 'false':
+        randomize_labels = False
+    else:
+        randomize_labels = True
+    if pca.lower() == 'false':
+        pca = False
+    else:
+        pca = True
+    if avg_ff.lower() == 'false':
+        avg_ff = False
+    else:
+        avg_ff = True
+    if ds.lower() == 'false':
+        ds = False
+    else:
+        ds = True
     print 'Imports done...'
-    if json_file is None:
-        json_file = 'spearmint/config.json'
-    opt_params, fixed_params = get_params(json_file)
+    opt_params, fixed_params = get_params(json_file, subject, bands,
+                                          frac_train,
+                                          scratch, randomize_labels, pca,
+                                          avg_ff, avg_1f, ds)
 
     rng = np.random.RandomState(int(seed))
 

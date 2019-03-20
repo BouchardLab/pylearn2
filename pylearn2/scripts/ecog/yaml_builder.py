@@ -48,9 +48,14 @@ def make_layers(kwargs):
             this_dict['name'] = 'c'+str(ii)
             this_dict['range'] = np.power(10., kwargs['log_conv_irange'])
             out_string += conv_layer_string % this_dict
-
-    if 'n_fc_layers' in kwargs.keys():
-        for ii in xrange(max(0, kwargs['n_fc_layers'])):
+    
+    n_fc = len(['' for key in kwargs.keys() if 'fc_dim' in key])
+    if 'n_fc_layers' in kwargs.keys() or n_fc > 0:
+        if 'n_fc_layers' in kwargs.keys():
+            count = kwargs['n_fc_layers']
+        else:
+            count = n_fc
+        for ii in xrange(max(0, count)):
             this_dict = kwargs.copy()
             this_dict['dim'] = kwargs['fc_dim'+str(ii)]
             this_dict['name'] = 'f'+str(ii)
@@ -71,14 +76,10 @@ def make_last_layer_and_cost(kwargs):
     this_dict['wd'] = np.power(10., kwargs['log_weight_decay'])
     if kwargs['two_headed']:
         final_layer_string = two_headed_layer_string
-    elif kwargs['cost_type'] == 'xent':
+    else:
         final_layer_string = layer_string
         this_dict['string'] = 'n_classes'
         this_dict['final_layer_type'] = 'Softmax'
-    else:
-        final_layer_string = layer_string
-        this_dict['string'] = 'dim'
-        this_dict['final_layer_type'] = 'Linear'
 
     out_layer_string = final_layer_string % this_dict
 
@@ -87,6 +88,8 @@ def make_last_layer_and_cost(kwargs):
         this_dict['L0'] = 'c0'
     elif 'n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0:
         this_dict['L0'] = 'f0'
+    elif len(['' for key in kwargs.keys() if 'fc_dim' in key]) > 0:
+        this_dict['L0'] = 'f0'
     else:
         this_dict['L0'] = 'y'
     this_dict['L0']
@@ -94,10 +97,22 @@ def make_last_layer_and_cost(kwargs):
         for ii in xrange(kwargs['n_conv_layers']):
             out_cost_string += wd_string % {'name': 'c'+str(ii),
                                             'wd': this_dict['wd']}
-    if 'n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0:
-        for ii in xrange(0, kwargs['n_fc_layers']):
+    if (('n_fc_layers' in kwargs.keys() and kwargs['n_fc_layers'] > 0) or 
+        (len(['' for key in kwargs.keys() if 'fc_dim' in key]) > 0)):
+        if 'n_fc_layers' in kwargs.keys():
+            count = kwargs['n_fc_layers']
+        else:
+            count = len(['' for key in kwargs.keys() if 'fc_dim' in key])
+        for ii in xrange(0, count):
             out_cost_string += wd_string % {'name': 'f'+str(ii),
                                             'wd': this_dict['wd']}
+
+    # Checks for single layer models
+    if 'default_input_include_prob' not in this_dict:
+        this_dict['default_input_include_prob'] = this_dict['input_dropout']
+    if 'default_input_scale' not in this_dict:
+        this_dict['default_input_scale'] = this_dict['input_scale']
+
     out_cost_string += end_cost_string
     out_cost_string = out_cost_string % this_dict
     return out_layer_string, out_cost_string
@@ -106,10 +121,7 @@ def make_last_layer_and_cost(kwargs):
 def build_yaml(ins_dict, fixed_params):
     ins_dict = unlistify_job(ins_dict)
     ins_dict['lr'] = np.power(10., ins_dict['log_lr'])
-    if fixed_params['two_headed']:
-        ins_dict['cost_obj'] = cost_type_map['xent']
-    else:
-        ins_dict['cost_obj'] = cost_type_map[ins_dict['cost_type']]
+    ins_dict['cost_obj'] = cost_type_map['xent']
     ins_dict['decay_factor'] = 1.+np.power(10., ins_dict['log_decay_eps'])
     ins_dict['min_lr'] = np.power(10., ins_dict['log_min_lr'])
     ins_dict['final_mom'] = 1.-np.power(10, ins_dict['log_final_mom_eps'])
@@ -212,12 +224,15 @@ end_cost_string = ("},\n"
                    +"],\n"
                    +"},\n")
 
-train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
-            filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
+train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog_neuro.ECoG {
+            subject: %(subject)s,
+            bands: [%(bands)s],
             which_set: 'train',
             center: %(center)s,
-            clip_front: %(clip_front)s,
-            clip_end: %(clip_end)s,
+            pca: %(pca)s,
+            avg_ff: %(avg_ff)s,
+            avg_1f: %(avg_1f)s,
+            ds: %(ds)s,
             level_classes: %(level_classes)s,
             consonant_prediction: %(consonant_prediction)s,
             vowel_prediction: %(vowel_prediction)s,
@@ -228,26 +243,6 @@ train_dataset = """dataset: &train !obj:pylearn2.datasets.ecog.ECoG {
             fold: %(fold)i,
             },"""
 
-aug_dataset = """dataset: !obj:pylearn2.datasets.transformer_dataset.TransformerDataset {
-        raw: &train !obj:pylearn2.datasets.ecog.ECoG {
-              filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
-              which_set: 'augment',
-              center: %(center)s,
-              clip_front: %(clip_front)s,
-              clip_end: %(clip_end)s,
-              level_classes: %(level_classes)s,
-              consonant_prediction: %(consonant_prediction)s,
-              vowel_prediction: %(vowel_prediction)s,
-              two_headed: %(two_headed)s,
-              randomize_labels: %(randomize_labels)s,
-              frac_train: %(frac_train)s,
-              pm_aug_range: %(pm_aug_range)s,
-              fold: %(fold)i,
-        },
-        transformer: !obj:pylearn2.data_augmentation.ScaleAugmentation {
-            space: %(space)s
-            },
-    },"""
 yaml_string = """!obj:pylearn2.train.Train {
 %(dataset_string)s
     model: !obj:pylearn2.models.mlp.MLP {
@@ -262,12 +257,15 @@ yaml_string = """!obj:pylearn2.train.Train {
         train_iteration_mode: 'sequential',
         monitoring_dataset:
             {
-                'train' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
+                'train' : !obj:pylearn2.datasets.ecog_neuro.ECoG {
+                                subject: %(subject)s,
+                                bands: [%(bands)s],
                                 which_set: 'train',
                                 center: %(center)s,
-                                clip_front: %(clip_front)s,
-                                clip_end: %(clip_end)s,
+                                pca: %(pca)s,
+                                avg_ff: %(avg_ff)s,
+                                avg_1f: %(avg_1f)s,
+                                ds: %(ds)s,
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
@@ -275,12 +273,15 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
-                'valid' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
+                'valid' : !obj:pylearn2.datasets.ecog_neuro.ECoG {
+                                subject: %(subject)s,
+                                bands: [%(bands)s],
                                 which_set: 'valid',
                                 center: %(center)s,
-                                clip_front: %(clip_front)s,
-                                clip_end: %(clip_end)s,
+                                pca: %(pca)s,
+                                avg_ff: %(avg_ff)s,
+                                avg_1f: %(avg_1f)s,
+                                ds: %(ds)s,
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,
@@ -288,12 +289,15 @@ yaml_string = """!obj:pylearn2.train.Train {
                                 randomize_labels: %(randomize_labels)s,
                                 fold: %(fold)i,
                           },
-                'test' : !obj:pylearn2.datasets.ecog.ECoG {
-                                filename: '${PYLEARN2_DATA_PATH}/ecog/%(data_file)s',
+                'test' : !obj:pylearn2.datasets.ecog_neuro.ECoG {
+                                subject: %(subject)s,
+                                bands: [%(bands)s],
                                 which_set: 'test',
                                 center: %(center)s,
-                                clip_front: %(clip_front)s,
-                                clip_end: %(clip_end)s,
+                                pca: %(pca)s,
+                                avg_ff: %(avg_ff)s,
+                                avg_1f: %(avg_1f)s,
+                                ds: %(ds)s,
                                 level_classes: %(level_classes)s,
                                 consonant_prediction: %(consonant_prediction)s,
                                 vowel_prediction: %(vowel_prediction)s,

@@ -1,56 +1,68 @@
-import decimal, json, os, yaml
+import os, yaml
 
-from pylearn2.datasets import ecog, ecog_new
+from pylearn2.datasets import ecog_neuro
 
-def get_params(json_file):
+def get_params(json_file, subject=None, bands=None,
+               frac_train=None,
+               scratch=None, randomize_labels=None, pca=None,
+               avg_ff=None, avg_1f=None, ds=None):
 
     fixed_params = {'train_set': 'train',
+                    'subject': 'EC2',
+                    'bands': 'high gamma',
                     'frac_train': 1.,
-                    'clip_front': 0,
-                    'clip_end': 0,
                     'pm_aug_range': 10,
                     'consonant_dim': 19,
                     'vowel_dim': 3,
                     'n_folds': 10,
-                    'pca_dim': None,
                     'level_classes': True,
                     'randomize_labels': False,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
+                    'pca': False,
+                    'avg_ff': False,
+                    'avg_1f': False,
+                    'ds': False,
                     'two_headed': False,
                     'audio_features': False,
                     'center': True,
                     'test': False,
                     'factorize': False,
-                    'data_file': 'EC2_CV_85_nobaseline.h5',
-                    'audio_file': 'audio_EC2_CV_mcep.h5',
                     'init_type': 'istdev',
                     'script_folder': '.',
-                    'scratch': os.path.join(os.environ['SCRATCH'], 'exps')}
-    """
-                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
-                    'data_file': 'hdf5/EC9_blocks_15_39_46_49_53_60_63_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                    'data_file': 'hdf5/GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                    'data_file': 'hdf5/GP33_blocks_1_5_30_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                    'data_file': 'hdf5/EC2_blocks_1_8_9_15_76_89_105_CV_HG_align_window_-05_to_079_events_nobaseline.h5',
-                    'data_file': 'EC2_CV_85_nobaseline_aug.h5',
-                    'audio_file': 'audio_EC2_CV_mcep.h5',
-    """
+                    'scratch': os.path.join(os.environ['SAVE'], 'exps')}
+
+    if subject is not None:
+        fixed_params['subject'] = subject
+    if bands is not None:
+        fixed_params['bands'] = bands
+    if frac_train is not None:
+        fixed_params['frac_train'] = float(frac_train)
+    if scratch is not None:
+        fixed_params['scratch'] = scratch
+    if randomize_labels is not None:
+        fixed_params['randomize_labels'] = randomize_labels
+    if pca is not None:
+        fixed_params['pca'] = pca
+    if avg_ff is not None:
+        fixed_params['avg_ff'] = avg_ff
+    if avg_1f is not None:
+        fixed_params['avg_1f'] = avg_1f
+    if ds is not None:
+        fixed_params['ds'] = ds
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
     
-    """
-    ds = ecog_new.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']),
-                       'train',
-                       pca_dim=fixed_params['pca_dim'])
-    """
-    ds = ecog.ECoG(os.path.join('${PYLEARN2_DATA_PATH}', 'ecog', fixed_params['data_file']),
-                   'train',
-                   clip_front=fixed_params['clip_front'],
-                   clip_end=fixed_params['clip_end'])
-    X_shape = ds.get_topological_view().shape
-    n_cvs = len(set(ds.y.ravel()))
+    dset = ecog_neuro.ECoG(fixed_params['subject'],
+                         fixed_params['bands'],
+                         'train',
+                         pca=fixed_params['pca'],
+                         avg_ff=fixed_params['avg_ff'],
+                         avg_1f=fixed_params['avg_1f'],
+                         ds=fixed_params['ds'])
+    X_shape = dset.get_topological_view().shape
+    n_cvs = len(set(dset.y.ravel()))
 
     out_dim = n_cvs
     if fixed_params['consonant_prediction']:
@@ -73,8 +85,8 @@ def get_params(json_file):
     with open(json_file, 'r') as f:
         exp = yaml.safe_load(f)
     opt_params = exp['variables']
-    fixed_params['exp_name'] = exp['experiment-name']
-    fixed_params['description'] = exp['experiment-name']
+    fixed_params['exp_name'] = os.environ.get('SLURM_JOB_NAME', exp['experiment-name'])
+    fixed_params['description'] = os.environ.get('SLURM_JOB_NAME', exp['experiment-name'])
 
     return opt_params, fixed_params
 
@@ -82,5 +94,9 @@ def make_dir(fixed_params):
     scratch = fixed_params['scratch']
     exp_name = fixed_params['exp_name']
     target_folder = os.path.join(scratch,exp_name)
-    if not (os.path.exists(target_folder) or fixed_params['test']):
-        os.mkdir(target_folder)
+    if not fixed_params['test']:
+        try:
+            os.mkdir(target_folder)
+        except OSError:
+            pass
+    return
