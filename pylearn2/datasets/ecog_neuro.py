@@ -136,7 +136,7 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                                 '-0.5_to_0.79_none_AA_avg_ff.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}', filename)
+                filename = os.path.join('${PYLEARN2_DATA_PATH}', subject.upper(), filename)
             else:
                 if subject == 'ec2':
                     filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' +
