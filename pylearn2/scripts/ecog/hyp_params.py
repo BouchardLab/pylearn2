@@ -20,7 +20,7 @@ def get_params(json_file, subject=None, bands=None,
                     'consonant_prediction': False,
                     'vowel_prediction': False,
                     'pca': False,
-                    'avg_ff': False,
+                    'avg_ff': True,
                     'avg_1f': False,
                     'ds': False,
                     'two_headed': False,
@@ -53,7 +53,7 @@ def get_params(json_file, subject=None, bands=None,
 
     if fixed_params['audio_features']:
         fixed_params['data_file'] = fixed_params['audio_file']
-    
+
     dset = ecog_neuro.ECoG(fixed_params['subject'],
                          fixed_params['bands'],
                          'train',

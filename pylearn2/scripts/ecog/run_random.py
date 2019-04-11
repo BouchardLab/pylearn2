@@ -20,11 +20,16 @@ def main(seed, json_file, subject, scratch, bands, frac_train,
         avg_ff = False
     else:
         avg_ff = True
+    if avg_1f.lower() == 'false':
+        avg_1f = False
+    else:
+        avg_1f = True
     if ds.lower() == 'false':
         ds = False
     else:
         ds = True
     print 'Imports done...'
+    print(randomize_labels, pca, avg_ff, avg_1f)
     opt_params, fixed_params = get_params(json_file, subject, bands,
                                           frac_train,
                                           scratch, randomize_labels, pca,
