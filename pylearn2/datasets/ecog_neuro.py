@@ -120,7 +120,6 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                                 '-0.5_to_0.79_none_AA_avg_1f.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}', filename)
             elif avg_ff:
                 if subject == 'ec2':
                     filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_ff_align_window_' +
@@ -136,28 +135,22 @@ class ECoG(dense_design_matrix.DenseDesignMatrix):
                                 '-0.5_to_0.79_none_AA_avg_ff.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}', subject.upper(), filename)
             else:
                 if subject == 'ec2':
                     filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' +
-                                '-0.5_to_0.79_file_nobaseline.h5')
-                    """
-                    ratio file
-                    filename = ('EC2_blocks_1_8_9_15_76_89_105_CV_AA_avg_align_window_' +
-                                '-0.5_to_0.79_ratio_nobaseline.h5')
-                    """
+                                '-0.5_to_0.79_silence.h5')
                 elif subject == 'ec9':
                     filename = ('EC9_blocks_15_39_46_49_53_60_63_CV_AA_avg_align_window_' +
-                                '-0.5_to_0.79_file_nobaseline.h5')
+                                '-0.5_to_0.79_silence.h5')
                 elif subject == 'gp31':
                     filename = ('GP31_blocks_1_2_4_6_9_21_63_65_67_69_71_78_82_83_CV_AA_avg_align_window_' +
-                                '-0.5_to_0.79_file_nobaseline.h5')
+                                '-0.5_to_0.79_silence.h5')
                 elif subject == 'gp33':
                     filename = ('GP33_blocks_1_5_30_CV_AA_avg_align_window_' +
-                                '-0.5_to_0.79_file_nobaseline.h5')
+                                '-0.5_to_0.79_silence.h5')
                 else:
                     raise ValueError
-                filename = os.path.join('${PYLEARN2_DATA_PATH}', filename)
+            filename = os.path.join('${PYLEARN2_DATA_PATH}', subject.upper(), filename)
         #filename = os.path.join('/scratch2/scratchdirs/jlivezey/output/hdf5', filename)
 
         rng = np.random.RandomState(seed)
